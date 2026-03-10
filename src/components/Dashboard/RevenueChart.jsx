@@ -59,8 +59,8 @@ export default function RevenueChart({ chartData, range, setRange, ranges, stats
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
                                 formatter={(value, name) => [formatCurrency(value), name === 'revenue' ? 'Ingresos' : 'Ganancia Neta']}
                             />
-                            <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
                             <Area type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={2} strokeDasharray="4 2" fillOpacity={1} fill="url(#colorProfit)" />
+                            <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
                         </AreaChart>
                     </ResponsiveContainer>
                 )}
