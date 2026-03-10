@@ -56,8 +56,19 @@ export default function RevenueChart({ chartData, range, setRange, ranges, stats
                             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} />
                             <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={(v) => v === 0 ? '$0' : `$${v >= 1000000 ? (v / 1000000).toFixed(1) + 'M' : (v / 1000).toFixed(0) + 'k'}`} />
                             <Tooltip
-                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                formatter={(value, name) => [formatCurrency(value), name === 'revenue' ? 'Ingresos' : 'Ganancia Neta']}
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', padding: '10px 14px' }}
+                                content={({ active, payload, label }) => {
+                                    if (!active || !payload || !payload.length) return null
+                                    const revenue = payload.find(p => p.dataKey === 'revenue')
+                                    const profit = payload.find(p => p.dataKey === 'profit')
+                                    return (
+                                        <div style={{ background: 'white', borderRadius: '12px', padding: '10px 14px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
+                                            <p style={{ fontWeight: 700, marginBottom: '6px', color: '#0f172a' }}>{label}</p>
+                                            {revenue && <p style={{ color: '#6366f1', margin: '2px 0' }}>Ingresos : {formatCurrency(revenue.value)}</p>}
+                                            {profit && <p style={{ color: '#10b981', margin: '2px 0' }}>Ganancia Neta : {formatCurrency(profit.value)}</p>}
+                                        </div>
+                                    )
+                                }}
                             />
                             <Area type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={2} strokeDasharray="4 2" fillOpacity={1} fill="url(#colorProfit)" />
                             <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
