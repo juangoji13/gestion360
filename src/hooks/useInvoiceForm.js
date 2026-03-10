@@ -17,7 +17,7 @@ export function useInvoiceForm(business) {
 
     const [selectedClient, setSelectedClient] = useState('')
     const [invoiceNumber, setInvoiceNumber] = useState('')
-    const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0])
+    const [invoiceDate, setInvoiceDate] = useState(new Date().toLocaleDateString('en-CA'))
     const [notes, setNotes] = useState('')
     const [items, setItems] = useState([])
     const [clientBalance, setClientBalance] = useState(null)

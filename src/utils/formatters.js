@@ -8,9 +8,13 @@ export const formatCurrency = (val) => {
 
 export const formatDate = (dateStr) => {
     if (!dateStr) return '-'
-    const d = new Date(dateStr)
-    // Offset correction for local display if needed, but basic approach:
-    return d.toLocaleDateString('es-CO')
+    // Si es una fecha pura 'YYYY-MM-DD', parsearla como hora LOCAL para
+    // evitar el bug UTC: new Date('2026-03-10') = medianoche UTC = día anterior en UTC-5
+    if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        const [y, m, d] = dateStr.split('-').map(Number)
+        return new Date(y, m - 1, d).toLocaleDateString('es-CO')
+    }
+    return new Date(dateStr).toLocaleDateString('es-CO')
 }
 
 export const getStatusBadge = (status) => {
