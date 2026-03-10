@@ -194,14 +194,20 @@ export function useInvoiceForm(business) {
                 notes,
             }
 
-            const invoiceItems = items.map(item => ({
-                product_id: item.product_id || null,
-                product_name: item.product_name || item.description || 'Personalizado',
-                description: item.description,
-                quantity: parseFloat(item.quantity) || 0,
-                unit_price: parseFloat(item.unit_price) || 0,
-                total: item.total,
-            }))
+            const invoiceItems = items.map(item => {
+                // Obtener el precio de compra del catálogo de productos para calcular ganancia
+                const product = products.find(p => p.id === item.product_id)
+                const purchasePrice = product ? (parseFloat(product.base_price) || 0) : 0
+                return {
+                    product_id: item.product_id || null,
+                    product_name: item.product_name || item.description || 'Personalizado',
+                    description: item.description,
+                    quantity: parseFloat(item.quantity) || 0,
+                    unit_price: parseFloat(item.unit_price) || 0,
+                    total: item.total,
+                    purchase_price: purchasePrice,
+                }
+            })
 
             const created = await invoiceService.create(invoice, invoiceItems)
 
