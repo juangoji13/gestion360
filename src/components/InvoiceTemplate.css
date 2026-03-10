@@ -1,0 +1,272 @@
+/* ===========================
+   Invoice Template - Rewritten
+   =========================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&display=swap');
+
+.invoice-template-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    background-color: var(--bg-tertiary);
+    border-radius: 12px;
+}
+
+.invoice-template {
+    width: 100%;
+    max-width: 800px;
+    background: #ffffff;
+    color: #1c2a3a;
+    font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 4px 10px -4px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+}
+
+/* ===== HEADER ===== */
+.it-header {
+    background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 100%);
+    border-bottom: 4px solid #b4975a;
+    color: white;
+    padding: 32px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    border-radius: 8px 8px 0 0;
+}
+
+.it-company {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.it-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: white;
+    padding: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.it-company-name {
+    font-size: 26px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+}
+
+.it-company-detail {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 11.5px;
+    margin: 2px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.it-meta {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.it-invoice-title {
+    font-family: 'Playfair Display', 'Merriweather', Georgia, serif;
+    font-size: 42px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.it-meta-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 3px 0;
+}
+
+.it-meta-row strong {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+/* ===== BODY ===== */
+.it-body {
+    padding: 32px 40px 36px;
+    flex-grow: 1;
+}
+
+/* Client */
+.it-client-section {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #1e3a8a;
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 28px;
+}
+
+.it-section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #6b7280;
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.it-client-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.it-client-detail {
+    font-size: 12px;
+    color: #4a5568;
+    margin: 2px 0;
+}
+
+/* Table */
+.it-table-wrapper {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.it-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.it-table thead {
+    background-color: #1e3a8a;
+}
+
+.it-table th {
+    color: white;
+    padding: 14px 20px;
+    text-align: left;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+.it-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+.it-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.it-table tbody tr:hover td {
+    background-color: #f9fafb;
+}
+
+/* Totals */
+.it-totals {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 24px;
+}
+
+.it-totals-box {
+    width: 300px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.it-totals-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 13px;
+    color: #4a5568;
+}
+
+.it-totals-row span:last-child {
+    font-weight: 600;
+    color: #1c2a3a;
+}
+
+.it-totals-final {
+    border-top: 1px solid #d1d5db;
+    margin-top: 10px;
+    padding-top: 12px;
+}
+
+.it-totals-final span:first-child {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px;
+    font-weight: 900;
+    color: #1e3a8a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.it-totals-final span:last-child {
+    font-size: 20px;
+    font-weight: 900;
+    color: #1e3a8a;
+}
+
+/* Notes */
+.it-notes {
+    background: #fefdf8;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    border: 1px solid #e8e2c8;
+    border-left: 4px solid #b4975a;
+}
+
+.it-notes h4 {
+    font-size: 10px;
+    color: #96803a;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 800;
+}
+
+.it-notes p {
+    font-size: 12px;
+    color: #5c5333;
+    line-height: 1.5;
+}
+
+/* Footer */
+.it-footer {
+    text-align: center;
+    padding: 14px 40px;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    color: #9ca3af;
+    font-size: 11.5px;
+    font-style: italic;
+    border-radius: 0 0 8px 8px;
+}

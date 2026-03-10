@@ -1,0 +1,329 @@
+/* Invoices Page Layout (Teal & Slate System) */
+.inv-container {
+    padding: 0;
+    max-width: 100%;
+    margin: 0;
+    font-family: var(--font-family);
+    animation: fadeIn var(--transition-normal);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.inv-main-layout {
+    display: flex;
+    gap: var(--space-xl);
+    align-items: flex-start;
+}
+
+.inv-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.inv-aside {
+    width: 320px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+@media (max-width: 1200px) {
+    .inv-main-layout {
+        flex-direction: column;
+    }
+
+    .inv-aside {
+        width: 100%;
+    }
+}
+
+/* Header & Actions */
+.inv-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-xl);
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    padding-bottom: var(--space-lg);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.inv-title {
+    font-family: var(--font-heading);
+    font-size: var(--font-2xl);
+    font-weight: 800;
+    color: var(--accent-secondary);
+    line-height: 1.2;
+}
+
+.inv-subtitle {
+    font-size: var(--font-sm);
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.inv-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.inv-search {
+    display: flex;
+    align-items: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    height: 44px;
+    padding: 0 1rem;
+    box-shadow: var(--shadow-sm);
+    min-width: 280px;
+    transition: all var(--transition-fast);
+}
+
+.inv-search:focus-within {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1);
+}
+
+.inv-search input {
+    border: none;
+    background: transparent;
+    outline: none;
+    padding-left: 0.75rem;
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+    width: 100%;
+}
+
+/* Table Card */
+.inv-table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.inv-table-wrapper {
+    overflow-x: auto;
+}
+
+.inv-table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.inv-table th {
+    background: var(--bg-tertiary);
+    padding: 1rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.inv-table td {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--bg-tertiary);
+    vertical-align: middle;
+}
+
+.inv-table tbody tr {
+    transition: background-color 0.15s;
+    cursor: pointer;
+}
+
+.inv-table tbody tr:hover {
+    background-color: var(--bg-hover);
+}
+
+/* Cell Styles */
+.inv-number {
+    font-weight: 600;
+    color: var(--accent-primary);
+    font-size: var(--font-sm);
+}
+
+.inv-client {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--font-sm);
+}
+
+/* Status Badges */
+.inv-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.inv-badge-paid {
+    background-color: var(--success-bg);
+    color: var(--success);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.inv-badge-pending {
+    background-color: var(--warning-bg);
+    color: var(--warning);
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.inv-badge-overdue {
+    background-color: var(--danger-bg);
+    color: var(--danger);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Aside Stats Card */
+.inv-stats-card {
+    background: var(--accent-gradient);
+    color: #ffffff;
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+.inv-stats-bg-icon {
+    position: absolute;
+    right: -1rem;
+    bottom: -1rem;
+    color: rgba(255, 255, 255, 0.1);
+}
+
+.inv-stats-bg-icon svg {
+    width: 140px;
+    height: 140px;
+}
+
+.inv-stats-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+}
+
+.inv-stats-value {
+    font-family: var(--font-heading);
+    font-size: 2.25rem;
+    font-weight: 800;
+}
+
+/* Aside Info Card */
+.inv-aside-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+}
+
+.inv-create-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    height: 44px;
+    padding: 0 1.5rem;
+    background: var(--accent-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.inv-create-btn:hover {
+    background: var(--accent-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.inv-alert-overdue {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    background-color: var(--danger-bg);
+    border: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+.inv-alert-overdue svg {
+    color: var(--danger);
+    flex-shrink: 0;
+}
+
+.inv-alert-title {
+    font-size: var(--font-sm);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.inv-alert-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    line-height: 1.4;
+}
+
+/* Table Action Buttons */
+.inv-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.inv-action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+}
+
+.inv-status-btn {
+    color: var(--success);
+}
+
+.inv-status-btn:hover {
+    background: var(--success-bg);
+}
+
+.inv-delete-btn {
+    color: var(--danger);
+}
+
+.inv-delete-btn:hover {
+    background: var(--danger-bg);
+    color: #dc2626;
+}
