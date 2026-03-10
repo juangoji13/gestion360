@@ -10,7 +10,7 @@ export default function DashboardStatsCards({ stats, clientCount }) {
                 <div className="stat-label">Ventas ({stats.rangeLabel})</div>
             </div>
             <div className="stat-card stat-card--indigo">
-                <div className="stat-value">{formatCurrency(stats.netProfit)}</div>
+                <div className="stat-value">{formatCurrency(Math.min(stats.netProfit ?? 0, stats.totalRevenue ?? 0))}</div>
                 <div className="stat-label">Ganancia Neta</div>
             </div>
             <div className="stat-card stat-card--blue">

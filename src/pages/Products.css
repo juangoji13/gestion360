@@ -116,6 +116,41 @@
     flex-direction: column;
 }
 
+/* Action buttons in table rows */
+.prod-action-btns {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.prod-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: none;
+}
+
+.prod-action-btn:hover {
+    transform: scale(1.1);
+    filter: brightness(0.9);
+}
+
+.prod-action-btn.edit {
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+}
+
+.prod-action-btn.delete {
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--danger);
+}
+
 
 /* ===== INVERSIÓN: tarjeta principal de inventario ===== */
 .prod-stats-card {

@@ -117,8 +117,8 @@ export default function ProductFormModal({
                         <button type="button" className="btn btn-secondary" onClick={onClose}>
                             Cancelar
                         </button>
-                        <button type="submit" className="prod-create-btn" disabled={saving}>
-                            {saving ? <div className="spinner" style={{ borderColor: '#fff', borderTopColor: 'transparent' }}></div> : (editing ? 'Guardar Cambios' : 'Crear Producto')}
+                        <button type="submit" className="btn-premium-primary" style={{ display: 'flex', width: '100%', justifyContent: 'center' }} disabled={saving}>
+                            {saving ? <div className="spinner" style={{ borderColor: '#fff', borderTopColor: 'transparent', width: '18px', height: '18px' }}></div> : (editing ? 'Guardar Cambios' : 'Crear Producto')}
                         </button>
                     </div>
                 </form>

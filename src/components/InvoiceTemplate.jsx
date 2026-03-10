@@ -22,7 +22,7 @@ export default function InvoiceTemplate({ business, client, invoiceNumber, invoi
 
     const handleDownload = async () => {
         const dataUrl = await generateImage()
-        if (!dataUrl) { alert('Error al generar la imagen'); return }
+        if (!dataUrl) { console.error('No se pudo generar la imagen de la factura'); return }
         const link = document.createElement('a')
         link.download = `${invoiceNumber || 'factura'}.png`
         link.href = dataUrl

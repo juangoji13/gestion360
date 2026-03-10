@@ -57,9 +57,7 @@ export function useSettings(business, updateBusiness) {
             setForm(f => ({ ...f, logo_url: publicUrl }))
             toast.success('Logo cargado. Guarda los cambios para aplicarlo.')
         } catch (err) {
-            toast.error('No se pudo subir la imagen. Introduce la URL manualmente.')
-            const newUrl = window.prompt('Introduce la URL del logo:', form.logo_url)
-            if (newUrl !== null) setForm(f => ({ ...f, logo_url: newUrl }))
+            toast.error('No se pudo subir el logo. Introduce la URL directamente en el campo.')
         } finally {
             setUploadingLogo(false)
         }
