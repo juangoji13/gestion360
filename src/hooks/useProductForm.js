@@ -14,12 +14,13 @@ export function useProductForm(businessId, onSuccess) {
         sale_price: '',
         stock: '',
         unit: 'und',
-        sku: ''
+        sku: '',
+        track_stock: true
     })
 
     const openCreate = () => {
         setEditing(null)
-        setForm({ name: '', description: '', base_price: '', sale_price: '', stock: '', unit: 'und', sku: '' })
+        setForm({ name: '', description: '', base_price: '', sale_price: '', stock: '', unit: 'und', sku: '', track_stock: true })
         setShowModal(true)
     }
 
@@ -33,6 +34,7 @@ export function useProductForm(businessId, onSuccess) {
             stock: product.stock?.toString() || '',
             unit: product.unit || '',
             sku: product.sku || '',
+            track_stock: product.track_stock !== undefined ? product.track_stock : true,
         })
         setShowModal(true)
     }

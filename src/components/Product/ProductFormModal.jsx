@@ -112,6 +112,25 @@ export default function ProductFormModal({
                                 <option value="cm">Centímetros</option>
                             </datalist>
                         </div>
+
+                        <div className="form-group" style={{ marginTop: '15px', padding: '10px', backgroundColor: 'rgba(37, 99, 235, 0.05)', borderRadius: '12px', border: '1px border rgba(37, 99, 235, 0.1)' }}>
+                            <label className="checkbox-container" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={form.track_stock}
+                                    onChange={e => setFieldValue('track_stock', e.target.checked)}
+                                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                />
+                                <span className="checkbox-label" style={{ marginLeft: '12px', fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                                    📦 Controlar Inventario
+                                </span>
+                            </label>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '30px', marginTop: '4px', lineHeight: '1.4' }}>
+                                {form.track_stock 
+                                    ? 'Las ventas restarán stock automáticamente del catálogo.' 
+                                    : 'Ideal para servicios. Permite vender sin stock y el saldo nunca será negativo.'}
+                            </p>
+                        </div>
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn btn-secondary" onClick={onClose}>

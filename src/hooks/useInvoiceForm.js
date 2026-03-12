@@ -194,7 +194,7 @@ export function useInvoiceForm(business, invoiceId = null) {
         for (const item of items) {
             if (!item.product_id) continue
             const product = products.find(p => p.id === item.product_id)
-            if (product && product.stock > 0 && (parseFloat(item.quantity) || 0) > product.stock) {
+            if (product && product.track_stock && (parseFloat(item.quantity) || 0) > product.stock) {
                 throw new Error(`"${product.name}" solo tiene ${product.stock} unidades en stock`)
             }
         }

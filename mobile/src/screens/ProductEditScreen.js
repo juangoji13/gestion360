@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
     StyleSheet, Text, View, ScrollView, TouchableOpacity, 
     TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, 
-    Platform, Dimensions 
+    Platform, Dimensions, Switch 
 } from 'react-native';
 import { 
     ChevronLeft, Save, Package, Tag, DollarSign, 
@@ -27,7 +27,8 @@ export default function ProductEditScreen({ navigation, route }) {
         base_price: '',
         sale_price: '',
         stock: '',
-        unit: 'und'
+        unit: 'und',
+        track_stock: true
     });
 
     useEffect(() => {
@@ -39,7 +40,8 @@ export default function ProductEditScreen({ navigation, route }) {
                 base_price: product.base_price?.toString() || '',
                 sale_price: product.sale_price?.toString() || '',
                 stock: product.stock?.toString() || '',
-                unit: product.unit || 'und'
+                unit: product.unit || 'und',
+                track_stock: product.track_stock !== undefined ? product.track_stock : true
             });
         }
     }, [product]);
@@ -217,6 +219,37 @@ export default function ProductEditScreen({ navigation, route }) {
                             ))}
                         </ScrollView>
                     </View>
+
+                    {/* Row 6: Stock Tracking Toggle */}
+                    <View style={styles.stockTrackingCard}>
+                        <View style={styles.stockTrackingInfo}>
+                            <View style={[styles.iconBox, { backgroundColor: formData.track_stock ? COLORS.primary + '20' : 'rgba(255,255,255,0.05)' }]}>
+                                <LayoutGrid size={18} color={formData.track_stock ? COLORS.primary : COLORS.textSecondary} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.stockTrackingTitle}>Controlar Inventario</Text>
+                                <Text style={styles.stockTrackingDesc}>
+                                    {formData.track_stock 
+                                        ? 'Las ventas restarán stock automáticamente.' 
+                                        : 'Servicios o productos sin control de stock.'}
+                                </Text>
+                            </View>
+                        </View>
+                        <Switch
+                            value={formData.track_stock}
+                            onValueChange={(v) => setFormData({...formData, track_stock: v})}
+                            trackColor={{ false: 'rgba(255,255,255,0.1)', true: COLORS.primary + '40' }}
+                            thumbColor={formData.track_stock ? COLORS.primary : '#94a3b8'}
+                            ios_backgroundColor="rgba(255,255,255,0.1)"
+                        />
+                    </View>
+
+                    {!formData.track_stock && (
+                        <View style={styles.noStockAlert}>
+                            <Info size={16} color={COLORS.primary} style={{ marginRight: 8 }} />
+                            <Text style={styles.noStockAlertText}>Este producto nunca se irá a negativo aunque no tenga existencias.</Text>
+                        </View>
+                    )}
 
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -400,5 +433,49 @@ const styles = StyleSheet.create({
     },
     activeChipText: {
         color: COLORS.primary,
+    },
+    stockTrackingCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: 'rgba(255,255,255,0.03)',
+        borderRadius: 20,
+        padding: 16,
+        paddingRight: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.08)',
+        marginTop: 8,
+    },
+    stockTrackingInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        marginRight: 10,
+    },
+    stockTrackingTitle: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '700',
+    },
+    stockTrackingDesc: {
+        color: COLORS.textSecondary,
+        fontSize: 12,
+        marginTop: 2,
+    },
+    noStockAlert: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.primary + '10',
+        padding: 12,
+        borderRadius: 12,
+        marginTop: 12,
+        borderWidth: 1,
+        borderColor: COLORS.primary + '20',
+    },
+    noStockAlertText: {
+        color: COLORS.primary,
+        fontSize: 12,
+        fontWeight: '600',
+        flex: 1,
     }
 });
