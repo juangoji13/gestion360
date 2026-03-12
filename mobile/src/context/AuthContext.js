@@ -165,9 +165,9 @@ export function AuthProvider({ children }) {
     });
 
     const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-        iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',
-        androidClientId: 'YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com',
-        webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
+        webClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
+        iosClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com', // Usar el mismo para compatibilidad inicial
+        androidClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
     });
 
     useEffect(() => {
