@@ -5,6 +5,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { makeRedirectUri } from 'expo-auth-session';
+import * as Google from 'expo-auth-session/providers/google';
+import * as Crypto from 'expo-crypto';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -162,58 +164,45 @@ export function AuthProvider({ children }) {
         path: 'auth'
     });
 
+    const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+        iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',
+        androidClientId: 'YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com',
+        webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
+    });
+
+    useEffect(() => {
+        if (response?.type === 'success') {
+            const { id_token } = response.params;
+            handleGoogleSignInWithIdToken(id_token);
+        }
+    }, [response]);
+
+    const handleGoogleSignInWithIdToken = async (idToken) => {
+        try {
+            setLoading(true);
+            const { data, error } = await supabase.auth.signInWithIdToken({
+                provider: 'google',
+                token: idToken,
+            });
+            if (error) throw error;
+            if (data.user) {
+                setUser(data.user);
+                fetchBusiness(data.user.id);
+            }
+        } catch (error) {
+            console.error('Error signing in with Google ID Token:', error);
+            Alert.alert('Error', error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const signInWithGoogle = async () => {
-        // Generar URI de redirección robusta según investigación del usuario
-        const dynamicRedirectUrl = makeRedirectUri({
-            scheme: 'gestion360',
-            path: 'auth',
-        });
-        
-        console.log('--- ADVANCED SIGN IN WITH GOOGLE ---');
-        console.log('Final Redirect URI:', dynamicRedirectUrl);
-        console.log('---------------------------');
-
-        const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: dynamicRedirectUrl,
-                skipBrowserRedirect: true,
-                queryParams: {
-                    access_type: 'offline',
-                    prompt: 'select_account',
-                },
-            },
-        });
-
-        if (error) throw error;
-        if (!data?.url) throw new Error('No se pudo generar la URL de autenticación de Google');
-
-        // Abrir el navegador para el flujo de OAuth
-        console.log('Opening Auth Session with:', data.url);
-        const res = await WebBrowser.openAuthSessionAsync(data.url, dynamicRedirectUrl);
-
-        if (res.type === 'success' && res.url) {
-            // Supabase puede devolver tokens en el hash (#) o en query params (?)
-            const parsed = Linking.parse(res.url);
-            const params = { ...parsed.queryParams };
-
-            // Extraer del fragmento hash si es necesario
-            if (res.url.includes('#')) {
-                const hash = res.url.split('#')[1];
-                hash.split('&').forEach(part => {
-                    const [key, value] = part.split('=');
-                    if (key) params[key] = value;
-                });
-            }
-
-            if (params.access_token) {
-                const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-                    access_token: params.access_token,
-                    refresh_token: params.refresh_token,
-                });
-                if (sessionError) throw sessionError;
-                return sessionData;
-            }
+        try {
+            await promptAsync();
+        } catch (error) {
+            console.error('Error in Google Auth Prompt:', error);
+            throw error;
         }
     };
 
