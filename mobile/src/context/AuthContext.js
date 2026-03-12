@@ -31,22 +31,24 @@ export function AuthProvider({ children }) {
         // 1. Escuchar URLs entrantes (Deep Linking) para capturar tokens de auth
         const handleDeepLink = async (url) => {
             if (!url) return;
+            console.log('Incoming Deep Link:', url);
             
-            // Supabase devuelve tokens en el hash (#)
-            const parts = url.split('#');
-            if (parts.length < 2) return;
-            
-            const hash = parts[1];
-            const params = {};
-            hash.split('&').forEach(part => {
-                const [key, value] = part.split('=');
-                if (key) params[key] = value;
-            });
+            const parsed = Linking.parse(url);
+            const params = { ...parsed.queryParams };
 
-            if (params.access_token) {
+            // Supabase puede enviar tokens en el hash (#) o en query params (?)
+            if (url.includes('#')) {
+                const hash = url.split('#')[1];
+                hash.split('&').forEach(part => {
+                    const [key, value] = part.split('=');
+                    if (key) params[key] = value;
+                });
+            }
+
+            if (params.access_token || params.refresh_token) {
                 setLoading(true);
                 const { data, error } = await supabase.auth.setSession({
-                    access_token: params.access_token,
+                    access_token: params.access_token || params.token, // Admitir 'token' si viene así
                     refresh_token: params.refresh_token,
                 });
                 
@@ -109,9 +111,9 @@ export function AuthProvider({ children }) {
         return data;
     };
 
+    const redirectUrl = Linking.createURL('auth');
+
     const signInWithGoogle = async () => {
-        // Usar el esquema personalizado para evitar problemas con IPs dinámicas
-        const redirectUrl = 'gestion360://auth';
 
         console.log('--- SIGN IN WITH GOOGLE ---');
         console.log('Redirect URI:', redirectUrl);
@@ -157,7 +159,6 @@ export function AuthProvider({ children }) {
         }
     };
 
-    const redirectUrl = 'gestion360://auth';
 
     const signUp = async (email, password) => {
         const { data, error } = await supabase.auth.signUp({ 
