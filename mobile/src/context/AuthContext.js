@@ -111,10 +111,12 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    const redirectUrl = Linking.createURL('auth');
+    const redirectUrl = makeRedirectUri({
+        scheme: 'gestion360',
+        path: 'auth',
+    });
 
     const signInWithGoogle = async () => {
-
         console.log('--- SIGN IN WITH GOOGLE ---');
         console.log('Redirect URI:', redirectUrl);
         console.log('---------------------------');
@@ -165,7 +167,8 @@ export function AuthProvider({ children }) {
             email, 
             password,
             options: {
-                emailRedirectTo: redirectUrl
+                // Redirigir al login para forzar una entrada limpia tras confirmación
+                emailRedirectTo: Linking.createURL('login')
             }
         });
         if (error) throw error;
@@ -177,7 +180,12 @@ export function AuthProvider({ children }) {
 
         const { data, error } = await supabase
             .from('businesses')
-            .insert([{ ...businessData, user_id: user.id }])
+            .insert([{ 
+                ...businessData, 
+                user_id: user.id,
+                // Asegurar que settings tenga valores por defecto si no vienen
+                settings: businessData.settings || { theme: 'dark', tax_rate: 0.19 }
+            }])
             .select()
             .single();
 

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert, Image } from 'react-native';
+import * as Linking from 'expo-linking';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Mail, Lock, UserPlus, ArrowLeft } from 'lucide-react-native';
 import { FontAwesome } from '@expo/vector-icons';
@@ -30,16 +31,25 @@ export default function RegisterScreen() {
 
         try {
             setLoading(true);
-            await signUp(email, password);
-            // La redirección ocurrirá automáticamente por AuthContext si el registro loguea al usuario
-            // En Supabase suele requerir confirmación de email, pero el cliente móvil a veces loguea directamente
+            const { data, error } = await signUp(email, password);
+            
+            if (error) throw error;
+
+            // Supabase devuelve el usuario si ya existe pero oculta este hecho por seguridad en el cliente
+            // Si el objeto data tiene user pero session es null, es probable que necesite confirmación
+            // Si el error de Supabase indica "User already registered", lo capturamos
+            
             Alert.alert(
-                '¡Casi listo!', 
-                'Te hemos enviado un correo de confirmación. Al hacer clic en el enlace, serás redirigido automáticamente a la App para configurar tu empresa.',
+                '¡Casi listo!',
+                'Te hemos enviado un correo de confirmación. \n\nPor favor, revisa tu bandeja de entrada (y spam) para activar tu cuenta antes de ingresar.',
                 [{ text: 'Entendido', onPress: () => navigation.navigate('Login') }]
             );
         } catch (error) {
-            Alert.alert('Error', error.message);
+            let message = error.message;
+            if (message.includes('already registered')) {
+                message = 'Este correo electrónico ya está registrado. Por favor, intenta iniciar sesión.';
+            }
+            Alert.alert('Error', message);
         } finally {
             setLoading(false);
         }

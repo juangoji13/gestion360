@@ -7,20 +7,24 @@ import { useAuth } from '../context/AuthContext';
 
 export default function CreateBusinessScreen() {
     const [name, setName] = useState('');
+    const [nit, setNit] = useState('');
+    const [phone, setPhone] = useState('');
     const [currency, setCurrency] = useState('COP');
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(false);
     const { createBusiness } = useAuth();
 
     const handleCreate = async () => {
-        if (!name) {
-            return Alert.alert('Error', 'El nombre del negocio es obligatorio');
+        if (!name || !nit) {
+            return Alert.alert('Error', 'El nombre y el NIT/RUT son obligatorios');
         }
 
         try {
             setLoading(true);
             await createBusiness({
                 name,
+                nit,
+                phone,
                 currency,
                 address,
                 settings: {
@@ -62,6 +66,29 @@ export default function CreateBusinessScreen() {
                         </View>
 
                         <View style={styles.inputContainer}>
+                            <MapPin color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="NIT / RUT"
+                                placeholderTextColor={COLORS.textSecondary}
+                                value={nit}
+                                onChangeText={setNit}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <DollarSign color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Teléfono de contacto"
+                                placeholderTextColor={COLORS.textSecondary}
+                                value={phone}
+                                onChangeText={setPhone}
+                                keyboardType="phone-pad"
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
                             <DollarSign color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
                             <TextInput
                                 style={styles.input}
@@ -76,7 +103,7 @@ export default function CreateBusinessScreen() {
                             <MapPin color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Dirección (opcional)"
+                                placeholder="Dirección física"
                                 placeholderTextColor={COLORS.textSecondary}
                                 value={address}
                                 onChangeText={setAddress}
@@ -92,7 +119,7 @@ export default function CreateBusinessScreen() {
                                 <ActivityIndicator color={COLORS.text} />
                             ) : (
                                 <View style={styles.buttonInner}>
-                                    <Text style={styles.buttonText}>Comenzar a Facturar</Text>
+                                    <Text style={styles.buttonText}>Finalizar Configuración</Text>
                                     <ArrowRight color={COLORS.text} size={20} />
                                 </View>
                             )}
