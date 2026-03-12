@@ -72,9 +72,54 @@ export function AuthProvider({ children }) {
         });
 
         // 2. Escuchar cambios de estado (Login manual / Sign Out)
-        const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (session?.user) {
                 setUser(session.user);
+                
+                // Verificar si hay datos de empresa pendientes (para Google Auth)
+                if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+                    // Primero intentamos cargar la empresa existente
+                    const { data: existingBusiness } = await supabase
+                        .from('businesses')
+                        .select('*')
+                        .eq('user_id', session.user.id)
+                        .maybeSingle();
+
+                    if (!existingBusiness) {
+                        try {
+                            const pendingData = await AsyncStorage.getItem('pending_business_data');
+                            if (pendingData) {
+                                const businessData = JSON.parse(pendingData);
+                                console.log('Creating pending business for Google user:', session.user.id);
+                                
+                                const { data: newBusiness, error: createError } = await supabase
+                                    .from('businesses')
+                                    .insert([{ 
+                                        ...businessData, 
+                                        user_id: session.user.id,
+                                        settings: { theme: 'dark', tax_rate: 0.19 }
+                                    }])
+                                    .select()
+                                    .single();
+
+                                if (!createError && newBusiness) {
+                                    setBusiness(newBusiness);
+                                    await AsyncStorage.removeItem('pending_business_data');
+                                    console.log('Business successfully created and storage cleared');
+                                    return; // Ya tenemos la empresa, no hace falta fetchBusiness
+                                } else {
+                                    console.error('Error creating business in onAuthStateChange:', createError);
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error processing pending business data:', e);
+                        }
+                    } else {
+                        setBusiness(existingBusiness);
+                        return; // Ya tenemos la empresa
+                    }
+                }
+
                 fetchBusiness(session.user.id);
             } else {
                 setUser(null);
@@ -111,10 +156,7 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    const redirectUrl = makeRedirectUri({
-        scheme: 'gestion360',
-        path: 'auth',
-    });
+    const redirectUrl = Linking.createURL('auth');
 
     const signInWithGoogle = async () => {
         console.log('--- SIGN IN WITH GOOGLE ---');
@@ -134,8 +176,10 @@ export function AuthProvider({ children }) {
         });
 
         if (error) throw error;
+        if (!data?.url) throw new Error('No se pudo generar la URL de autenticación de Google');
 
         // Abrir el navegador para el flujo de OAuth
+        console.log('Opening Auth Session with:', data.url);
         const res = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
         if (res.type === 'success' && res.url) {
@@ -162,12 +206,22 @@ export function AuthProvider({ children }) {
     };
 
 
-    const signUp = async (email, password) => {
+    const signUp = async (email, password, businessData = null) => {
         const { data, error } = await supabase.auth.signUp({ 
             email, 
             password,
             options: {
-                // Redirigir al login para forzar una entrada limpia tras confirmación
+                // Pasamos los datos de la empresa como metadatos para el trigger de la DB
+                data: businessData ? {
+                    business_name: businessData.name,
+                    business_nit: businessData.nit,
+                    business_phone: businessData.phone,
+                    business_email: businessData.email,
+                    business_website: businessData.website,
+                    business_currency: businessData.currency,
+                    business_address: businessData.address,
+                } : {},
+                // Redirigir a una pantalla de éxito neutral o login
                 emailRedirectTo: Linking.createURL('login')
             }
         });

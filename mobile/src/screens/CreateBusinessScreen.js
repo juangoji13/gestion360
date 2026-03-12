@@ -1,18 +1,30 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Briefcase, MapPin, DollarSign, ArrowRight } from 'lucide-react-native';
+import { Briefcase, MapPin, DollarSign, ArrowRight, ArrowLeft, LogOut, Mail, Globe } from 'lucide-react-native';
 import { COLORS, SIZES } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
 export default function CreateBusinessScreen() {
+    const navigation = useNavigation();
     const [name, setName] = useState('');
     const [nit, setNit] = useState('');
     const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState('');
+    const [website, setWebsite] = useState('');
     const [currency, setCurrency] = useState('COP');
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(false);
-    const { createBusiness } = useAuth();
+    const { createBusiness, signOut } = useAuth();
+
+    const handleLogout = async () => {
+        try {
+            await signOut();
+        } catch (error) {
+            Alert.alert('Error', 'No se pudo cerrar la sesión');
+        }
+    };
 
     const handleCreate = async () => {
         if (!name || !nit) {
@@ -25,6 +37,8 @@ export default function CreateBusinessScreen() {
                 name,
                 nit,
                 phone,
+                email,
+                website,
                 currency,
                 address,
                 settings: {
@@ -46,6 +60,10 @@ export default function CreateBusinessScreen() {
             style={styles.container}
         >
             <LinearGradient colors={[COLORS.background, '#0A2E28']} style={styles.gradient}>
+                <TouchableOpacity style={styles.backButton} onPress={handleLogout}>
+                    <LogOut color={COLORS.text} size={24} />
+                </TouchableOpacity>
+
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                     <View style={styles.header}>
                         <Briefcase color={COLORS.primary} size={60} strokeWidth={1.5} style={{ marginBottom: 15 }} />
@@ -69,7 +87,7 @@ export default function CreateBusinessScreen() {
                             <MapPin color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
                             <TextInput
                                 style={styles.input}
-                                placeholder="NIT / RUT"
+                                placeholder="NIT / RUT (Identificación fiscal)"
                                 placeholderTextColor={COLORS.textSecondary}
                                 value={nit}
                                 onChangeText={setNit}
@@ -85,6 +103,32 @@ export default function CreateBusinessScreen() {
                                 value={phone}
                                 onChangeText={setPhone}
                                 keyboardType="phone-pad"
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Mail color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Correo electrónico de la empresa"
+                                placeholderTextColor={COLORS.textSecondary}
+                                value={email}
+                                onChangeText={setEmail}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Globe color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Sitio Web (Opcional)"
+                                placeholderTextColor={COLORS.textSecondary}
+                                value={website}
+                                onChangeText={setWebsite}
+                                keyboardType="url"
+                                autoCapitalize="none"
                             />
                         </View>
 
@@ -142,6 +186,20 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         padding: 30,
         justifyContent: 'center',
+    },
+    backButton: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        width: 45,
+        height: 45,
+        borderRadius: 22.5,
+        backgroundColor: COLORS.glass,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
+        borderWidth: 1,
+        borderColor: COLORS.border,
     },
     header: {
         alignItems: 'center',

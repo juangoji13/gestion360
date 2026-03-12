@@ -107,10 +107,10 @@ export default function DashboardScreen() {
                     </View>
                 )}
                 <View style={styles.kpiGrid}>
-                    <KPICard title="Ingresos Totales" value={`$${totalIncome.toLocaleString()}`} icon={DollarSign} color={COLORS.primary} />
-                    <KPICard title="Ganancia Neta" value={`$${netProfit.toLocaleString()}`} icon={TrendingUp} color={COLORS.secondary} />
-                    <KPICard title="Facturas Pendientes" value={pendingInvoices.toString()} icon={Clock} color={COLORS.accent} />
-                    <KPICard title="Facturas Pagadas" value={paidInvoices.toString()} icon={CheckCircle} color={COLORS.success} />
+                    <KPICard title="Ingresos Totales" value={`$${(totalIncome || 0).toLocaleString()}`} icon={DollarSign} color={COLORS.primary} />
+                    <KPICard title="Ganancia Neta" value={`$${(netProfit || 0).toLocaleString()}`} icon={TrendingUp} color={COLORS.secondary} />
+                    <KPICard title="Facturas Pendientes" value={(pendingInvoices || 0).toString()} icon={Clock} color={COLORS.accent} />
+                    <KPICard title="Facturas Pagadas" value={(paidInvoices || 0).toString()} icon={CheckCircle} color={COLORS.success} />
                 </View>
                 <View style={styles.chartGlassCard}>
                     <View style={styles.chartHeader}>

@@ -11,6 +11,7 @@ import { ROUTES } from './config/routes'
 const BusinessSetup = lazy(() => import('./pages/BusinessSetup'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
+const ConfirmSuccess = lazy(() => import('./pages/ConfirmSuccess'))
 
 function LoadingScreen() {
   return (
@@ -43,6 +44,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
         <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
+        <Route path="/confirmed" element={<ConfirmSuccess />} />
         <Route
           element={
             <ProtectedRoute>
