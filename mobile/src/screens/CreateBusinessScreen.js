@@ -42,16 +42,11 @@ export default function CreateBusinessScreen() {
             style={styles.container}
         >
             <LinearGradient colors={[COLORS.background, '#0A2E28']} style={styles.gradient}>
-                <ScrollView contentContainerStyle={styles.scrollContent}>
+                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                     <View style={styles.header}>
-                        <View style={styles.logoContainer}>
-                            <Image
-                                source={require('../../assets/logo.png')}
-                                style={styles.logo}
-                                resizeMode="contain"
-                            />
-                        </View>
-                        <Text style={styles.subtitle}>Casi terminamos. Cuéntanos sobre tu empresa.</Text>
+                        <Briefcase color={COLORS.primary} size={60} strokeWidth={1.5} style={{ marginBottom: 15 }} />
+                        <Text style={styles.title}>Crea tu Empresa</Text>
+                        <Text style={styles.subtitle}>Configura los datos básicos de tu negocio para comenzar a facturar profesionalmente.</Text>
                     </View>
 
                     <View style={styles.form}>

@@ -28,8 +28,49 @@ export function AuthProvider({ children }) {
             }
         });
 
-        // Escuchar cambios de estado
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        // 1. Escuchar URLs entrantes (Deep Linking) para capturar tokens de auth
+        const handleDeepLink = async (url) => {
+            if (!url) return;
+            
+            // Supabase devuelve tokens en el hash (#)
+            const parts = url.split('#');
+            if (parts.length < 2) return;
+            
+            const hash = parts[1];
+            const params = {};
+            hash.split('&').forEach(part => {
+                const [key, value] = part.split('=');
+                if (key) params[key] = value;
+            });
+
+            if (params.access_token) {
+                setLoading(true);
+                const { data, error } = await supabase.auth.setSession({
+                    access_token: params.access_token,
+                    refresh_token: params.refresh_token,
+                });
+                
+                if (!error && data.user) {
+                    setUser(data.user);
+                    fetchBusiness(data.user.id);
+                } else {
+                    setLoading(false);
+                }
+            }
+        };
+
+        // Escuchar cuando la app ya está abierta
+        const subscriptionLinking = Linking.addEventListener('url', (event) => {
+            handleDeepLink(event.url);
+        });
+
+        // Verificar si se abrió la app mediante un link inicial (cuando estaba cerrada)
+        Linking.getInitialURL().then(url => {
+            if (url) handleDeepLink(url);
+        });
+
+        // 2. Escuchar cambios de estado (Login manual / Sign Out)
+        const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             if (session?.user) {
                 setUser(session.user);
                 fetchBusiness(session.user.id);
@@ -40,7 +81,10 @@ export function AuthProvider({ children }) {
             }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            subscriptionLinking.remove();
+            authSub.unsubscribe();
+        };
     }, []);
 
     const fetchBusiness = async (userId) => {
