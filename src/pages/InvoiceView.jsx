@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { invoiceService } from '../services/invoiceService'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Pencil } from 'lucide-react'
 import ConfirmModal from '../components/common/ConfirmModal'
 import InvoiceTemplate from '../components/Invoice/InvoiceTemplate'
 
@@ -73,6 +73,12 @@ export default function InvoiceView() {
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <Link
+                        to={`/invoices/edit/${id}`}
+                        className="btn btn-secondary"
+                    >
+                        <Pencil size={16} style={{ marginBottom: '-2px' }} /> Editar
+                    </Link>
                     <button
                         onClick={() => setConfirmDelete(true)}
                         className="btn btn-secondary"

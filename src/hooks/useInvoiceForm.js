@@ -6,7 +6,7 @@ import { invoiceService } from '../services/invoiceService'
 import { useToast } from '../context/ToastContext'
 import { FinanceUtils } from '../utils/FinanceUtils'
 
-export function useInvoiceForm(business) {
+export function useInvoiceForm(business, invoiceId = null) {
     const toast = useToast()
     const navigate = useNavigate()
 
@@ -41,19 +41,40 @@ export function useInvoiceForm(business) {
 
     const loadInitialData = async () => {
         try {
-            const [cl, pr, num] = await Promise.all([
+            const [cl, pr, nextNum] = await Promise.all([
                 clientService.getAll(business.id, { pageSize: 1000 }),
                 productService.getAll(business.id, { pageSize: 1000 }),
-                invoiceService.getNextNumber(business.id),
+                !invoiceId ? invoiceService.getNextNumber(business.id) : Promise.resolve(null),
             ])
             setClients(cl.data || [])
             setProducts(pr.data || [])
-            setInvoiceNumber(num)
-            if (business?.default_tax_rate !== undefined) {
-                setTaxRate(business.default_tax_rate)
+
+            if (invoiceId) {
+                const inv = await invoiceService.getById(invoiceId)
+                setSelectedClient(inv.client_id)
+                setInvoiceNumber(inv.invoice_number)
+                setInvoiceDate(inv.date)
+                setNotes(inv.notes || '')
+                setTaxRate(inv.tax_rate)
+                setShowTax(inv.tax_rate > 0)
+                setDiscountAmount(inv.discount_amount)
+                setShowDiscount(inv.discount_amount > 0)
+                
+                setItems(inv.invoice_items.map(item => ({
+                    ...item,
+                    product_name: item.product?.name || item.product_name,
+                    quantity: item.quantity,
+                    unit_price: item.unit_price,
+                    total: item.total
+                })))
+            } else {
+                setInvoiceNumber(nextNum)
+                if (business?.default_tax_rate !== undefined) {
+                    setTaxRate(business.default_tax_rate)
+                }
             }
         } catch (err) {
-            toast.error('Error al cargar datos iniciales')
+            toast.error('Error al cargar datos')
         } finally {
             setLoading(false)
         }
@@ -105,9 +126,9 @@ export function useInvoiceForm(business) {
     // --- AUTO-SAVE LOGIC ---
     const DRAFT_KEY = business ? `invoice_draft_${business.id}` : null
 
-    // Load draft
+    // Load draft (only if NOT editing)
     useEffect(() => {
-        if (!DRAFT_KEY || !business) return
+        if (!DRAFT_KEY || !business || invoiceId) return
 
         const savedDraft = localStorage.getItem(DRAFT_KEY)
         if (savedDraft) {
@@ -127,9 +148,9 @@ export function useInvoiceForm(business) {
         }
     }, [DRAFT_KEY])
 
-    // Save draft
+    // Save draft (only if NOT editing)
     useEffect(() => {
-        if (!DRAFT_KEY) return
+        if (!DRAFT_KEY || invoiceId) return
 
         const draft = {
             selectedClient,
@@ -209,12 +230,17 @@ export function useInvoiceForm(business) {
                 }
             })
 
-            const created = await invoiceService.create(invoice, invoiceItems)
+            let result
+            if (invoiceId) {
+                result = await invoiceService.update(invoiceId, invoice, invoiceItems)
+            } else {
+                result = await invoiceService.create(invoice, invoiceItems)
+            }
 
             // Clear draft on success
-            if (DRAFT_KEY) localStorage.removeItem(DRAFT_KEY)
+            if (DRAFT_KEY && !invoiceId) localStorage.removeItem(DRAFT_KEY)
 
-            return created
+            return result
         } finally {
             setSaving(false)
         }
@@ -235,6 +261,7 @@ export function useInvoiceForm(business) {
         totals,
         saveInvoice,
         clearDraft,
-        hasDraft: !!(DRAFT_KEY && localStorage.getItem(DRAFT_KEY))
+        isEditing: !!invoiceId,
+        hasDraft: !!(DRAFT_KEY && !invoiceId && localStorage.getItem(DRAFT_KEY))
     }
 }

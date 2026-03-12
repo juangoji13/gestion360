@@ -59,6 +59,36 @@ export const invoiceService = {
         return data
     },
 
+    async update(id, invoice, items) {
+        // 1. Actualizar la factura
+        const { error: updateError } = await supabase
+            .from('invoices')
+            .update(invoice)
+            .eq('id', id)
+
+        if (updateError) throw updateError
+
+        // 2. Eliminar ítems antiguos
+        // Nota: En una implementación más compleja manejaríamos el stock aquí.
+        // Pero para seguir la lógica del móvil (donde se asume que si se edita se ajustan los items),
+        // eliminamos y volvemos a insertar.
+        const { error: deleteError } = await supabase
+            .from('invoice_items')
+            .delete()
+            .eq('invoice_id', id)
+
+        if (deleteError) throw deleteError
+
+        // 3. Insertar nuevos ítems
+        const { error: insertError } = await supabase
+            .from('invoice_items')
+            .insert(items.map(item => ({ ...item, invoice_id: id })))
+
+        if (insertError) throw insertError
+
+        return { id }
+    },
+
     async updateStatus(id, status) {
         const { data, error } = await supabase
             .from('invoices')

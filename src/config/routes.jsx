@@ -51,6 +51,12 @@ export const ROUTES = {
         icon: <PlusCircle size={20} />,
         showInSidebar: true
     },
+    EDIT_INVOICE: {
+        path: '/invoices/edit/:id',
+        element: <CreateInvoice />,
+        label: 'Editar Factura',
+        showInSidebar: false
+    },
     INVOICE_VIEW: {
         path: '/invoices/:id',
         element: <InvoiceView />,

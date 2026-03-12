@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { useInvoiceForm } from '../hooks/useInvoiceForm'
@@ -12,6 +12,7 @@ import InvoiceNotes from '../components/Invoice/InvoiceNotes'
 import './CreateInvoice.css'
 
 export default function CreateInvoice() {
+    const { id } = useParams()
     const { business } = useAuth()
     const toast = useToast()
     const [showPreview, setShowPreview] = useState(false)
@@ -31,14 +32,15 @@ export default function CreateInvoice() {
         totals,
         saveInvoice,
         clearDraft,
+        isEditing,
         hasDraft
-    } = useInvoiceForm(business)
+    } = useInvoiceForm(business, id)
 
     const handleSave = async () => {
         try {
-            const created = await saveInvoice()
-            toast.success('Factura creada exitosamente')
-            window.location.href = `/invoices/${created.id}`
+            const result = await saveInvoice()
+            toast.success(isEditing ? 'Factura actualizada exitosamente' : 'Factura creada exitosamente')
+            window.location.href = `/invoices/${result.id}`
         } catch (err) {
             toast.error(err.message || 'Error al guardar factura')
         }
@@ -105,8 +107,10 @@ export default function CreateInvoice() {
 
             <div className="cinv-header">
                 <div>
-                    <h1 className="cinv-title">Crear Factura</h1>
-                    <p className="cinv-subtitle">Complete los campos para generar un nuevo comprobante</p>
+                    <h1 className="cinv-title">{isEditing ? 'Editar Factura' : 'Crear Factura'}</h1>
+                    <p className="cinv-subtitle">
+                        {isEditing ? `Modificando la factura ${invoiceNumber}` : 'Complete los campos para generar un nuevo comprobante'}
+                    </p>
                 </div>
                 {hasDraft && (
                     <button
