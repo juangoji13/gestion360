@@ -89,6 +89,28 @@ export function useInvoiceForm(business, invoiceId = null) {
         if (field === 'product_id' && value) {
             const product = products.find(p => p.id === value)
             if (product) {
+                // Verificar si el producto ya existe en OTRA fila
+                const existingIndex = items.findIndex((it, i) => it.product_id === value && i !== index);
+                
+                if (existingIndex !== -1) {
+                    // Si existe, sumamos la cantidad a la fila existente y eliminamos la actual
+                    const updatedItems = [...items];
+                    const currentQty = parseFloat(updatedItems[index].quantity) || 1;
+                    const existingQty = parseFloat(updatedItems[existingIndex].quantity) || 0;
+                    
+                    updatedItems[existingIndex] = {
+                        ...updatedItems[existingIndex],
+                        quantity: existingQty + currentQty,
+                        total: (existingQty + currentQty) * (parseFloat(updatedItems[existingIndex].unit_price) || 0)
+                    };
+                    
+                    // Eliminamos la fila actual
+                    const finalItems = updatedItems.filter((_, i) => i !== index);
+                    setItems(finalItems);
+                    toast.success(`"${product.name}" ya estaba en la lista, se ha sumado la cantidad.`);
+                    return; // Salimos temprano
+                }
+
                 newItems[index] = {
                     ...newItems[index],
                     product_id: value,
