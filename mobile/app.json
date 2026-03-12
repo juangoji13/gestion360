@@ -4,6 +4,9 @@
     "slug": "mobile",
     "scheme": "gestion360",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
