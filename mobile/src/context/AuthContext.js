@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Alert } from 'react-native';
 import { supabase } from '../services/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
@@ -168,8 +169,12 @@ export function AuthProvider({ children }) {
         console.log('Generated Redirect URI:', dynamicRedirectUrl);
         console.log('---------------------------');
 
-        // Opcional: Mostrar al usuario para depuración en caso de fallo
-        // Alert.alert('Redirect URI', dynamicRedirectUrl);
+        // Mostrar al usuario para depuración (CRÍTICO para configurar Supabase)
+        Alert.alert(
+            'Configuración de Supabase',
+            `Copia este link y añádelo a "Redirect URLs" en tu panel de Supabase:\n\n${dynamicRedirectUrl}`,
+            [{ text: 'COPIADO / ENTENDIDO', style: 'default' }]
+        );
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
