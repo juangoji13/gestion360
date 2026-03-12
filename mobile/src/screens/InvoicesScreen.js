@@ -60,9 +60,6 @@ export default function InvoicesScreen() {
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Facturas</Text>
-                <TouchableOpacity style={styles.searchButton}>
-                    <Search color={COLORS.text} size={24} />
-                </TouchableOpacity>
             </View>
 
             <View style={styles.searchBar}>

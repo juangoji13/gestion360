@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { User, Bell, Plus, TrendingUp, DollarSign, Clock, CheckCircle, AlertCircle, LogOut, FileText, LayoutGrid, Receipt, Users, Settings2, PlusSquare, UserPlus } from 'lucide-react-native';
+import { LineChart } from 'react-native-chart-kit';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useStats } from '../hooks/useStats';
 import { useInvoices } from '../hooks/useInvoices';
@@ -37,7 +38,7 @@ export default function DashboardScreen() {
     const navigation = useNavigation();
     const { signOut, user, business } = useAuth();
     const [range, setRange] = React.useState('7d');
-    const { totalIncome, netProfit, pendingInvoices, paidInvoices, loading, error, refresh } = useStats();
+    const { totalIncome, netProfit, pendingInvoices, paidInvoices, chartData, loading, error, refresh } = useStats();
     const { invoices, loading: loadingInvoices, refresh: refreshInvoices } = useInvoices();
 
     useFocusEffect(
@@ -125,13 +126,35 @@ export default function DashboardScreen() {
                             </View>
                         </View>
                     </View>
-                    <View style={styles.vignetteChart}>
-                        <LinearGradient colors={[COLORS.primary + '15', 'transparent']} style={styles.areaGradient} />
-                        <View style={styles.xAxis}>
-                            {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
-                                <Text key={i} style={styles.xLabel}>{d}</Text>
-                            ))}
-                        </View>
+                    <View style={styles.chartContainer}>
+                        {loading ? (
+                            <ActivityIndicator size="small" color={COLORS.primary} />
+                        ) : (
+                            <LineChart
+                                data={chartData}
+                                width={width - 84}
+                                height={180}
+                                chartConfig={{
+                                    backgroundColor: 'transparent',
+                                    backgroundGradientFrom: 'transparent',
+                                    backgroundGradientTo: 'transparent',
+                                    decimalPlaces: 0,
+                                    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                    labelColor: (opacity = 1) => `rgba(148, 163, 184, ${opacity})`,
+                                    style: { borderRadius: 16 },
+                                    propsForDots: { r: "4", strokeWidth: "2", stroke: COLORS.background },
+                                    propsForBackgroundLines: { strokeDasharray: "", stroke: "rgba(255,255,255,0.05)" }
+                                }}
+                                bezier
+                                style={{ marginVertical: 8, borderRadius: 16, marginLeft: -12 }}
+                                withInnerLines={true}
+                                withOuterLines={false}
+                                withVerticalLines={false}
+                                withHorizontalLines={true}
+                                withShadow={true}
+                                withDots={true}
+                            />
+                        )}
                     </View>
                 </View>
                 <View style={styles.quickActionsRow}>
@@ -139,7 +162,7 @@ export default function DashboardScreen() {
                         <PlusSquare color={COLORS.background} size={32} />
                         <Text style={styles.bigActionTextPrimary}>Nueva Factura</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.bigActionBtnGlass} onPress={() => navigation.navigate('Clients')}>
+                    <TouchableOpacity style={styles.bigActionBtnGlass} onPress={() => navigation.navigate('ClientEdit')}>
                         <UserPlus color={COLORS.secondary} size={32} />
                         <Text style={styles.bigActionTextGlass}>Nuevo Cliente</Text>
                     </TouchableOpacity>
@@ -147,7 +170,7 @@ export default function DashboardScreen() {
                 <View style={styles.recentPanel}>
                     <View style={styles.panelHeader}>
                         <Text style={styles.panelTitle}>Actividad Reciente</Text>
-                        <TouchableOpacity onPress={() => navigation.navigate('Invoices')}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Facturas')}>
                             <Text style={styles.viewAllText}>VER TODO</Text>
                         </TouchableOpacity>
                     </View>
@@ -158,7 +181,7 @@ export default function DashboardScreen() {
                             <Text style={styles.emptyActivity}>No hay actividad reciente</Text>
                         ) : (
                             recentInvoices.map((inv) => (
-                                <RecentItem key={inv.id} item={inv} onPress={() => navigation.navigate('Invoices')} />
+                                <RecentItem key={inv.id} item={inv} onPress={() => navigation.navigate('Facturas')} />
                             ))
                         )}
                     </View>
@@ -420,15 +443,11 @@ const styles = StyleSheet.create({
         fontWeight: '800',
         letterSpacing: 1,
     },
-    vignetteChart: {
-        height: 160,
+    chartContainer: {
+        height: 180,
         width: '100%',
-        justifyContent: 'flex-end',
-        position: 'relative',
-    },
-    areaGradient: {
-        ...StyleSheet.absoluteFillObject,
-        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     xAxis: {
         flexDirection: 'row',

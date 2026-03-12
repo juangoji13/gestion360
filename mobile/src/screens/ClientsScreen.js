@@ -52,9 +52,6 @@ export default function ClientsScreen() {
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Clientes</Text>
-                <TouchableOpacity style={styles.searchButton}>
-                    <Search color={COLORS.text} size={24} />
-                </TouchableOpacity>
             </View>
 
             <View style={styles.searchBar}>
