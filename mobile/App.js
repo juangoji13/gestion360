@@ -16,6 +16,7 @@ export default function App() {
         Login: 'login',
         Register: 'register',
         MainTabs: 'main',
+        Login: 'auth', // Capturar la ruta de retorno de auth
       },
     },
   };

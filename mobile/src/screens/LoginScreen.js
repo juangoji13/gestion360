@@ -130,21 +130,21 @@ export default function LoginScreen() {
                     </View>
 
                     <TouchableOpacity
-                        style={styles.googleButton}
+                        style={[styles.googleButton, { backgroundColor: COLORS.text, borderColor: COLORS.text }]}
                         onPress={handleGoogleLogin}
                         disabled={loading}
                     >
-                        <FontAwesome name="google" size={20} color={COLORS.text} />
-                        <Text style={styles.googleButtonText}>Continuar con Google</Text>
+                        <FontAwesome name="google" size={20} color={COLORS.background} />
+                        <Text style={[styles.googleButtonText, { color: COLORS.background, fontWeight: 'bold' }]}>Continuar con Google</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.googleButton, { marginTop: 12, borderColor: COLORS.primary }]}
+                        style={[styles.googleButton, { marginTop: 12 }]}
                         onPress={handleOTPLogin}
                         disabled={loading}
                     >
-                        <Mail color={COLORS.primary} size={20} />
-                        <Text style={[styles.googleButtonText, { color: COLORS.primary }]}>Login con Enlace (Email)</Text>
+                        <Mail color={COLORS.textSecondary} size={20} />
+                        <Text style={styles.googleButtonText}>Entrar con Enlace (Email)</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.forgotPassword}>
