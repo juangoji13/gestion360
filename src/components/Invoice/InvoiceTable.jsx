@@ -66,9 +66,11 @@ export default function InvoiceTable({ invoices, onStatusChange, onDelete, onAdd
                                         <Link to={`/invoices/${inv.id}`} className="inv-action-btn" title="Ver">
                                             <Eye size={18} />
                                         </Link>
-                                        <Link to={`/invoices/edit/${inv.id}`} className="inv-action-btn" title="Editar" style={{ color: 'var(--accent-primary)' }}>
-                                            <Pencil size={18} />
-                                        </Link>
+                                        {inv.status !== 'paid' && (
+                                            <Link to={`/invoices/edit/${inv.id}`} className="inv-action-btn" title="Editar" style={{ color: 'var(--accent-primary)' }}>
+                                                <Pencil size={18} />
+                                            </Link>
+                                        )}
                                         {inv.status !== 'paid' && (
                                             <button
                                                 onClick={() => onAddPayment(inv)}
