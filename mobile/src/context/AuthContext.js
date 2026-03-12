@@ -166,7 +166,7 @@ export function AuthProvider({ children }) {
 
     const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
         webClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
-        iosClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com', // Por ahora usamos el web para iOS hasta tener el suyo
+        iosClientId: '755009452836-ocjdclpimd2b457103n36hlvu8uf7pti.apps.googleusercontent.com',
         androidClientId: '755009452836-i44i9i1eigp4salaeh087hauhl4dj6be.apps.googleusercontent.com',
     });
 
