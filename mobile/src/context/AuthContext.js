@@ -113,8 +113,16 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const redirectUrl = 'gestion360://auth';
+
     const signUp = async (email, password) => {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({ 
+            email, 
+            password,
+            options: {
+                emailRedirectTo: redirectUrl
+            }
+        });
         if (error) throw error;
         return data;
     };

@@ -33,8 +33,11 @@ export default function RegisterScreen() {
             await signUp(email, password);
             // La redirección ocurrirá automáticamente por AuthContext si el registro loguea al usuario
             // En Supabase suele requerir confirmación de email, pero el cliente móvil a veces loguea directamente
-            Alert.alert('Éxito', 'Cuenta creada. Por favor verifica tu email si es necesario e inicia sesión.');
-            navigation.navigate('Login');
+            Alert.alert(
+                '¡Casi listo!', 
+                'Te hemos enviado un correo de confirmación. Al hacer clic en el enlace, serás redirigido automáticamente a la App para configurar tu empresa.',
+                [{ text: 'Entendido', onPress: () => navigation.navigate('Login') }]
+            );
         } catch (error) {
             Alert.alert('Error', error.message);
         } finally {
