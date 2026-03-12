@@ -163,14 +163,14 @@ export function AuthProvider({ children }) {
     });
 
     const signInWithGoogle = async () => {
+        // Generar URI de redirección robusta según investigación del usuario
         const dynamicRedirectUrl = makeRedirectUri({
             scheme: 'gestion360',
             path: 'auth',
-            preferMetro: true,
         });
         
-        console.log('--- SIGN IN WITH GOOGLE ---');
-        console.log('Dynamic Redirect URI:', dynamicRedirectUrl);
+        console.log('--- ADVANCED SIGN IN WITH GOOGLE ---');
+        console.log('Final Redirect URI:', dynamicRedirectUrl);
         console.log('---------------------------');
 
         const { data, error } = await supabase.auth.signInWithOAuth({

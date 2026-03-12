@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Gestión360",
-    "slug": "mobile",
+    "slug": "Gestion360",
     "scheme": "gestion360",
     "version": "1.0.0",
     "runtimeVersion": {
@@ -16,9 +16,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.juangoji13.gestion360"
     },
     "android": {
+      "package": "com.juangoji13.gestion360",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -35,11 +37,11 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "5068feb0-f55f-453a-9005-64d62ca68f68"
+        "projectId": "bb1c8aaf-77d4-41bc-9c69-1b2ef6757057"
       }
     },
     "updates": {
-      "url": "https://u.expo.dev/5068feb0-f55f-453a-9005-64d62ca68f68"
+      "url": "https://u.expo.dev/bb1c8aaf-77d4-41bc-9c69-1b2ef6757057"
     }
   }
 }
