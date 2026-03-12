@@ -162,14 +162,19 @@ export function AuthProvider({ children }) {
     });
 
     const signInWithGoogle = async () => {
+        const dynamicRedirectUrl = Linking.createURL('auth');
+        
         console.log('--- SIGN IN WITH GOOGLE ---');
-        console.log('Redirect URI:', redirectUrl);
+        console.log('Generated Redirect URI:', dynamicRedirectUrl);
         console.log('---------------------------');
+
+        // Opcional: Mostrar al usuario para depuración en caso de fallo
+        // Alert.alert('Redirect URI', dynamicRedirectUrl);
 
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: redirectUrl,
+                redirectTo: dynamicRedirectUrl,
                 skipBrowserRedirect: true,
                 queryParams: {
                     access_type: 'offline',
@@ -183,7 +188,7 @@ export function AuthProvider({ children }) {
 
         // Abrir el navegador para el flujo de OAuth
         console.log('Opening Auth Session with:', data.url);
-        const res = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+        const res = await WebBrowser.openAuthSessionAsync(data.url, dynamicRedirectUrl);
 
         if (res.type === 'success' && res.url) {
             // Supabase puede devolver tokens en el hash (#) o en query params (?)
