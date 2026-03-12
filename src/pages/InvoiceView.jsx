@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { invoiceService } from '../services/invoiceService'
-import { Trash2, Pencil, Share2, ArrowLeft } from 'lucide-react'
+import { Trash2, Pencil, Share2, ArrowLeft, FileText } from 'lucide-react'
 import ConfirmModal from '../components/common/ConfirmModal'
 import InvoiceTemplate from '../components/Invoice/InvoiceTemplate'
 import './InvoiceView.css'
@@ -71,11 +71,6 @@ export default function InvoiceView() {
                         </Link>
                         <h1>Factura {invoice.invoice_number}</h1>
                     </div>
-                    <div className="status-badge">
-                        <span className={`badge ${isPaid ? 'badge-success' : 'badge-warning'}`} style={{ padding: '6px 14px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', borderRadius: '20px' }}>
-                            {isPaid ? 'Pagada' : 'Pendiente'}
-                        </span>
-                    </div>
                 </div>
 
                 <div className="header-actions">
@@ -89,17 +84,25 @@ export default function InvoiceView() {
                         </Link>
                     )}
                     
-                    {isPaid && (
-                        <button 
-                            className="btn-premium btn-premium-primary"
-                            onClick={() => {
-                                const templateBtn = document.getElementById('btn-share-template');
-                                if (templateBtn) templateBtn.click();
-                            }}
-                        >
-                            <Share2 size={18} /> Compartir
-                        </button>
-                    )}
+                    <button 
+                        className="btn-premium btn-premium-secondary"
+                        onClick={() => {
+                            const pdfBtn = document.getElementById('btn-pdf-template');
+                            if (pdfBtn) pdfBtn.click();
+                        }}
+                    >
+                        <FileText size={18} /> PDF
+                    </button>
+
+                    <button 
+                        className="btn-premium btn-premium-primary"
+                        onClick={() => {
+                            const shareBtn = document.getElementById('btn-share-template');
+                            if (shareBtn) shareBtn.click();
+                        }}
+                    >
+                        <Share2 size={18} /> {isPaid ? 'Compartir' : 'Enviar'}
+                    </button>
 
                     <button
                         onClick={() => setConfirmDelete(true)}

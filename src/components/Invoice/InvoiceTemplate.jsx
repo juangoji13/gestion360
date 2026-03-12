@@ -164,26 +164,8 @@ export default function InvoiceTemplate({
 
     return (
         <div>
-            {/* Template Actions (Solo visibles si no es pagada o queremos forzar controles) */}
-            <div className="it-actions" style={{ display: isPaid ? 'none' : 'flex' }}>
-                <button className="btn btn-secondary" onClick={generatePDF} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <FileText size={16} /> Descargar PDF
-                </button>
-                <button
-                    className="btn"
-                    onClick={handleWhatsApp}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '9px 16px', background: '#25D366', color: 'white',
-                        border: 'none', borderRadius: 8, fontSize: '0.875rem',
-                        fontWeight: 700, cursor: 'pointer'
-                    }}
-                >
-                    <Send size={16} /> Enviar WhatsApp
-                </button>
-            </div>
-
-            {/* Hidden Share Trigger for InvoiceView */}
+            {/* Hidden Share Triggers for InvoiceView */}
+            <button id="btn-pdf-template" style={{ display: 'none' }} onClick={generatePDF} />
             <button id="btn-share-template" style={{ display: 'none' }} onClick={handleWhatsApp} />
 
             <div className="invoice-template-wrapper">
