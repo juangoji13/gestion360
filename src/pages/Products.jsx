@@ -67,10 +67,23 @@ export default function Products() {
     }
 
     // Calculate metrics for the widget
-    const stats = {
-        total_investment: allProductsMetrics.reduce((sum, p) => sum + (p.base_price || 0) * (p.stock || 0), 0),
-        total_potential_value: allProductsMetrics.reduce((sum, p) => sum + (p.sale_price || 0) * (p.stock || 0), 0),
-    }
+    // Calculate metrics including reserved units for flexible products
+    const stats = allProductsMetrics.reduce((acc, p) => {
+        const physicalStock = parseFloat(p.stock) || 0;
+        
+        // Buscamos unidades reservadas en topProducts (calculado por useProducts)
+        const reservedItem = topProducts.find(tp => tp.id === p.id);
+        const reservedQty = p.track_stock ? 0 : (reservedItem?.quantity || 0);
+        
+        const effectiveQty = physicalStock + reservedQty;
+        const cost = parseFloat(p.base_price) || 0;
+        const price = parseFloat(p.sale_price) || 0;
+        
+        acc.total_investment += (cost * effectiveQty);
+        acc.total_potential_value += (price * effectiveQty);
+        return acc;
+    }, { total_investment: 0, total_potential_value: 0 });
+
     stats.total_margin = stats.total_potential_value - stats.total_investment
     stats.profit_margin = stats.total_potential_value > 0 ? (stats.total_margin / stats.total_potential_value) * 100 : 0
 

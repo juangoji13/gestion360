@@ -74,6 +74,7 @@ export default function NewInvoiceScreen() {
                 product_id: product.id,
                 name: product.name,
                 price: product.sale_price,
+                purchase_price: product.base_price || 0,
                 quantity: 1,
                 total: product.sale_price,
                 sku: product.sku || 'N/A'
@@ -145,6 +146,7 @@ export default function NewInvoiceScreen() {
                 product_id: it.product_id,
                 quantity: it.quantity,
                 unit_price: it.price,
+                purchase_price: it.purchase_price || 0,
                 total: it.price * it.quantity
             }));
 

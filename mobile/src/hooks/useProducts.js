@@ -83,9 +83,29 @@ export function useProducts() {
         if (business?.id) fetchProducts();
     }, [business?.id]);
 
-    const lowStockCount = products.filter(p => (parseFloat(p.stock) || 0) <= 5).length;
-    const totalInvestment = products.reduce((sum, p) => sum + ((parseFloat(p.base_price) || 0) * (parseFloat(p.stock) || 0)), 0);
-    const totalSalesValue = products.reduce((sum, p) => sum + ((parseFloat(p.sale_price) || 0) * (parseFloat(p.stock) || 0)), 0);
+    const lowStockCount = products.filter(p => p.track_stock && (parseFloat(p.stock) || 0) <= 5).length;
+    
+    // Calcular métricas considerando unidades reservadas para productos sin stock
+    const metrics = products.reduce((acc, p) => {
+        const physicalStock = parseFloat(p.stock) || 0;
+        
+        // Buscamos cuántas unidades están reservadas para este producto
+        // topProducts ya tiene el conteo de quantity de los invoice_items recientes
+        // Nota: Para mayor precisión en una app real, traeríamos todos los items de facturas pendientes
+        const reservedItem = topProducts.find(tp => tp.name === p.name);
+        const reservedQty = p.track_stock ? 0 : (reservedItem?.quantity || 0);
+        
+        const effectiveQty = physicalStock + reservedQty;
+        const cost = parseFloat(p.base_price) || 0;
+        const price = parseFloat(p.sale_price) || 0;
+        
+        acc.investment += (cost * effectiveQty);
+        acc.salesValue += (price * effectiveQty);
+        return acc;
+    }, { investment: 0, salesValue: 0 });
+
+    const totalInvestment = metrics.investment;
+    const totalSalesValue = metrics.salesValue;
     const totalProfit = totalSalesValue - totalInvestment;
     const marginPercent = totalSalesValue > 0 ? (totalProfit / totalSalesValue) * 100 : 0;
 
