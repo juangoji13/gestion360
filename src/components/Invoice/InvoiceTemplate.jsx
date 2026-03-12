@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { toPng } from 'html-to-image'
-import { formatCurrency, formatDate } from '../utils/formatters'
+import { formatCurrency, formatDate } from '../../utils/formatters'
 import './InvoiceTemplate.css'
 
 export default function InvoiceTemplate({ business, client, invoiceNumber, invoiceDate, items, subtotal, taxRate, taxAmount, discountAmount, total, notes, onImageGenerated, dueDate }) {

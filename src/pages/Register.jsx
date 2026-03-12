@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { validatePassword, checkRateLimit } from '../utils/security'
 import './Auth.css'
 
 export default function Register() {
@@ -22,13 +23,22 @@ export default function Register() {
 
         setError('')
 
+        // Rate limiting: max 3 registros por 10 minutos
+        const rl = checkRateLimit('register', 3, 600000)
+        if (!rl.allowed) {
+            setError('Demasiados intentos. Espera unos minutos.')
+            return
+        }
+
         if (password !== confirmPassword) {
             setError('Las contraseñas no coinciden')
             return
         }
 
-        if (password.length < 6) {
-            setError('La contraseña debe tener al menos 6 caracteres')
+        // Validación de contraseña fuerte
+        const pwValidation = validatePassword(password)
+        if (!pwValidation.valid) {
+            setError(pwValidation.errors.join('. '))
             return
         }
 

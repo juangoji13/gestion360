@@ -49,7 +49,9 @@ export function AuthProvider({ children }) {
                 // No business found — user needs to complete setup form
                 setBusiness(null)
             } else if (error) {
-                console.error('Error fetching business:', error)
+                if (import.meta.env.DEV) {
+                    console.error('Error fetching business:', error)
+                }
             } else {
                 setBusiness(data)
             }

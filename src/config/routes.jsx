@@ -13,6 +13,7 @@ const CreateInvoice = lazy(() => import('../pages/CreateInvoice'))
 const InvoiceView = lazy(() => import('../pages/InvoiceView'))
 const SettingsPage = lazy(() => import('../pages/Settings'))
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard'))
+const PrivacyPolicy = lazy(() => import('../pages/PrivacyPolicy'))
 
 export const ROUTES = {
     DASHBOARD: {
@@ -70,6 +71,12 @@ export const ROUTES = {
         icon: <Shield size={20} />,
         showInSidebar: true,
         isAdmin: true
+    },
+    PRIVACY: {
+        path: '/privacy',
+        element: <PrivacyPolicy />,
+        label: 'Privacidad',
+        showInSidebar: false
     }
 }
 

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { supabase } from '../lib/supabase'
+import { checkRateLimit, resetRateLimit } from '../utils/security'
 import './Login.css'
 
 export default function Login() {
@@ -19,9 +20,19 @@ export default function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+
+        // Rate limiting: max 5 intentos por minuto
+        const rl = checkRateLimit('login', 5, 60000)
+        if (!rl.allowed) {
+            const secs = Math.ceil(rl.remainingMs / 1000)
+            toast.error(`Demasiados intentos. Espera ${secs} segundos.`)
+            return
+        }
+
         setLoading(true)
         try {
             await signIn(email, password, rememberMe)
+            resetRateLimit('login')
             navigate('/')
         } catch (err) {
             toast.error(err.message || 'Error al iniciar sesión')
@@ -42,6 +53,15 @@ export default function Login() {
     const handleForgotPassword = async (e) => {
         e.preventDefault()
         if (!forgotEmail) { toast.error('Ingresa tu correo'); return }
+
+        // Rate limiting para reset de contraseña: max 3 por 5 minutos
+        const rl = checkRateLimit('forgot-password', 3, 300000)
+        if (!rl.allowed) {
+            const mins = Math.ceil(rl.remainingMs / 60000)
+            toast.error(`Espera ${mins} minuto(s) antes de volver a intentarlo.`)
+            return
+        }
+
         setForgotLoading(true)
         try {
             const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { sanitizeSearch } from '../utils/security'
 
 export const invoiceService = {
     async getAll(businessId, { page = 1, pageSize = 10, status = 'all', search = '' } = {}) {
@@ -16,11 +17,8 @@ export const invoiceService = {
         }
 
         if (search) {
-            // Buscamos coincidencia en invoice_number o en el nombre del cliente
-            // Nota: Para búsquedas complejas en relaciones (client.name) con Supabase
-            // a veces es mejor usar RPC o filtros específicos si la tabla es muy grande.
-            // Por ahora usamos una búsqueda simple en invoice_number.
-            query = query.ilike('invoice_number', `%${search}%`)
+            const safe = sanitizeSearch(search)
+            if (safe) query = query.ilike('invoice_number', `%${safe}%`)
         }
 
         const from = (page - 1) * pageSize

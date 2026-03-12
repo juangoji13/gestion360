@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { sanitizeSearch } from '../utils/security'
 
 export const clientService = {
     async getAll(businessId, { page = 1, pageSize = 10, search = '' } = {}) {
@@ -8,7 +9,8 @@ export const clientService = {
             .eq('business_id', businessId)
 
         if (search) {
-            query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,tax_id.ilike.%${search}%`)
+            const safe = sanitizeSearch(search)
+            if (safe) query = query.or(`name.ilike.%${safe}%,email.ilike.%${safe}%,tax_id.ilike.%${safe}%`)
         }
 
         const from = (page - 1) * pageSize

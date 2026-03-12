@@ -2,9 +2,9 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
-import ProtectedRoute from './components/ProtectedRoute'
-import Layout from './components/Layout'
-import ErrorBoundary from './components/ErrorBoundary'
+import ProtectedRoute from './components/layout/ProtectedRoute'
+import Layout from './components/layout/Layout'
+import ErrorBoundary from './components/layout/ErrorBoundary'
 import { ROUTES } from './config/routes'
 
 // Solo mantenemos los componentes de configuración inicial aquí

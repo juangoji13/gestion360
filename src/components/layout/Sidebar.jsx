@@ -1,11 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import { useState } from 'react'
 import {
     LayoutDashboard, Users, Package, FileText, PlusCircle, Settings,
     Shield, LogOut, ChevronLeft, ChevronRight, X
 } from 'lucide-react'
-import { getSidebarItems } from '../config/routes'
+import { getSidebarItems } from '../../config/routes'
 import './Sidebar.css'
 
 

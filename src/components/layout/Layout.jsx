@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import Sidebar from './Sidebar'
-import { getPageTitleByPath } from '../config/routes'
+import { getPageTitleByPath } from '../../config/routes'
 import './Layout.css'
 
 export default function Layout() {

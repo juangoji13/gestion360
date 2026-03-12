@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { invoiceService } from '../services/invoiceService'
 import { Trash2 } from 'lucide-react'
-import ConfirmModal from '../components/ConfirmModal'
-import InvoiceTemplate from '../components/InvoiceTemplate'
+import ConfirmModal from '../components/common/ConfirmModal'
+import InvoiceTemplate from '../components/Invoice/InvoiceTemplate'
 
 export default function InvoiceView() {
     const { id } = useParams()
