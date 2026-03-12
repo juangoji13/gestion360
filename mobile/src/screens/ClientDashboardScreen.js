@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, RefreshControl } from 'react-native';
-import { ChevronLeft, TrendingUp, DollarSign, PieChart, Clock, ShoppingBag, ArrowUpRight, MessageCircle, Phone, MapPin, FileText } from 'lucide-react-native';
+import { 
+    ChevronLeft, TrendingUp, DollarSign, PieChart, Clock, 
+    ShoppingBag, ArrowUpRight, MessageCircle, Phone, MapPin, 
+    FileText, UserRoundPen, Edit 
+} from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SIZES } from '../constants/theme';
 import { useInvoices } from '../hooks/useInvoices';
-import { supabase } from '../services/supabase';
+import { useClients } from '../hooks/useClients';
 import { ReportService } from '../services/ReportService';
 import { useAuth } from '../context/AuthContext';
 
@@ -19,6 +23,7 @@ const PREMIUM_COLORS = {
     slate400: '#94a3b8',
     slate500: '#64748b',
     warningYellow: '#eab308',
+    slate300: '#cbd5e1',
 };
 
 const KPICard = ({ title, value, subtext, icon: Icon, color, trend }) => (
@@ -41,10 +46,15 @@ const KPICard = ({ title, value, subtext, icon: Icon, color, trend }) => (
 );
 
 export default function ClientDashboardScreen({ route, navigation }) {
-    const { client } = route.params;
+    const { client: initialClient } = route.params;
     const { business } = useAuth();
     const { invoices, loading, fetchInvoices } = useInvoices();
+    const { clients } = useClients();
     const [isGenerating, setIsGenerating] = useState(false);
+    
+    // Obtener el cliente actualizado de la lista global
+    const client = clients.find(c => c.id === initialClient.id) || initialClient;
+
     const [stats, setStats] = useState({
         totalSales: 0,
         netProfit: 0,
@@ -55,20 +65,30 @@ export default function ClientDashboardScreen({ route, navigation }) {
 
     useEffect(() => {
         calculateStats();
-    }, [invoices]);
+    }, [invoices, client]);
 
     const calculateStats = async () => {
         const clientInvoices = invoices.filter(inv => inv.client_id === client.id);
         const totalSales = clientInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
         
-        // Simulación de utilidad basada en un margen promedio (ya que el móvil puede no tener costos directos por item en el frontend aún)
-        // En una app real, traeríamos esto del backend sumando (precio_venta - costo)
-        const netProfit = totalSales * 0.25; // Asumiendo margen del 25% para el mockup
-        const margin = totalSales > 0 ? (netProfit / totalSales) * 100 : 0;
+        // Calcular utilidad real sumando todos los items
+        let totalProfit = 0;
+        clientInvoices.forEach(inv => {
+            if (inv.invoice_items) {
+                inv.invoice_items.forEach(item => {
+                    const price = parseFloat(item.unit_price) || 0;
+                    const cost = parseFloat(item.purchase_price) || 0;
+                    const qty = parseFloat(item.quantity) || 0;
+                    totalProfit += (price - cost) * qty;
+                });
+            }
+        });
+
+        const margin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
 
         setStats({
             totalSales,
-            netProfit,
+            netProfit: totalProfit,
             margin,
             pendingBalance: client.balance || 0,
             invoiceCount: clientInvoices.length
@@ -99,19 +119,22 @@ export default function ClientDashboardScreen({ route, navigation }) {
                     </View>
                     <View style={{ flex: 1 }}>
                         <Text style={styles.clientName} numberOfLines={1}>{client.name}</Text>
-                        <Text style={styles.clientDoc}>{client.document_id || 'ID no registrado'}</Text>
+                        <Text style={styles.clientDoc}>{client.tax_id || 'ID no registrado'}</Text>
                     </View>
                 </View>
                 <View style={styles.headerActions}>
+                    <TouchableOpacity 
+                        style={styles.actionBtnHeader}
+                        onPress={() => navigation.navigate('ClientEdit', { client })}
+                    >
+                        <Edit color={PREMIUM_COLORS.slate300} size={20} />
+                    </TouchableOpacity>
                     <TouchableOpacity 
                         style={[styles.actionBtnHeader, { backgroundColor: 'rgba(37, 99, 235, 0.15)' }]}
                         onPress={handleGeneratePDF}
                         disabled={isGenerating}
                     >
                         {isGenerating ? <ActivityIndicator size="small" color={PREMIUM_COLORS.electricBlue} /> : <FileText color={PREMIUM_COLORS.electricBlue} size={20} />}
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.actionBtnHeader}>
-                        <MessageCircle color={PREMIUM_COLORS.emeraldPremium} size={20} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -141,7 +164,6 @@ export default function ClientDashboardScreen({ route, navigation }) {
                             subtext={`${stats.invoiceCount} Facturas`}
                             icon={ShoppingBag}
                             color={PREMIUM_COLORS.electricBlue}
-                            trend="+12%"
                         />
                         <KPICard 
                             title="Margen Promedio" 
@@ -155,7 +177,7 @@ export default function ClientDashboardScreen({ route, navigation }) {
                         <KPICard 
                             title="Utilidad Neta" 
                             value={`$${stats.netProfit.toLocaleString()}`}
-                            subtext="Estimada (25%)"
+                            subtext="Basado en costos"
                             icon={TrendingUp}
                             color={PREMIUM_COLORS.emeraldPremium}
                         />
@@ -172,7 +194,7 @@ export default function ClientDashboardScreen({ route, navigation }) {
                 {/* Recent Activity Section */}
                 <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>Actividad Reciente</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('Facturas')}>
+                    <TouchableOpacity onPress={() => navigation.navigate('MainTabs', { screen: 'Facturas' })}>
                         <Text style={styles.seeAllText}>Ver todas</Text>
                     </TouchableOpacity>
                 </View>

@@ -53,7 +53,7 @@ export default function ClientFormModal({
                             </div>
                         </div>
                         <div className="form-group">
-                            <label className="form-label">NIT / Documento</label>
+                            <label className="form-label">NIT / Documento (Opcional)</label>
                             <input
                                 className="form-input"
                                 value={form.tax_id}

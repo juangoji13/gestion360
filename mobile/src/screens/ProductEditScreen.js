@@ -15,6 +15,30 @@ import { COLORS, SIZES } from '../constants/theme';
 
 const { height } = Dimensions.get('window');
 
+const round2 = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
+
+const GlassInput = ({ label, value, onChangeText, icon: Icon, keyboardType = 'default', multiline = false, placeholder, prefix, suffix, colSpan = 12 }) => (
+    <View style={[styles.inputGroup, { width: `${(colSpan / 12) * 100}%` }]}>
+        <Text style={styles.label}>{label} {label.includes('*') ? '' : ''}</Text>
+        <View style={[styles.inputContainer, multiline && styles.inputMultiline]}>
+            <View style={styles.iconBox}>
+                <Icon size={18} color={COLORS.textSecondary} strokeWidth={1.5} />
+            </View>
+            {prefix && <Text style={styles.prefixText}>{prefix}</Text>}
+            <TextInput
+                style={[styles.input, multiline && { height: 80, paddingTop: 12 }]}
+                value={value}
+                onChangeText={onChangeText}
+                placeholder={placeholder}
+                placeholderTextColor={COLORS.textSecondary + '80'}
+                keyboardType={keyboardType}
+                multiline={multiline}
+                selectionColor={COLORS.primary}
+            />
+        </View>
+    </View>
+);
+
 export default function ProductEditScreen({ navigation, route }) {
     const { product } = route.params || {};
     const isEditing = !!product;
@@ -53,9 +77,9 @@ export default function ProductEditScreen({ navigation, route }) {
 
         const payload = {
             ...formData,
-            base_price: parseFloat(formData.base_price) || 0,
-            sale_price: parseFloat(formData.sale_price) || 0,
-            stock: parseFloat(formData.stock) || 0
+            base_price: round2(parseFloat(formData.base_price) || 0),
+            sale_price: round2(parseFloat(formData.sale_price) || 0),
+            stock: round2(parseFloat(formData.stock) || 0)
         };
 
         try {
@@ -74,28 +98,6 @@ export default function ProductEditScreen({ navigation, route }) {
             Alert.alert('Error', error.message);
         }
     };
-
-    const GlassInput = ({ label, value, onChangeText, icon: Icon, keyboardType = 'default', multiline = false, placeholder, prefix, suffix, colSpan = 12 }) => (
-        <View style={[styles.inputGroup, { width: `${(colSpan / 12) * 100}%` }]}>
-            <Text style={styles.label}>{label} {label.includes('*') ? '' : ''}</Text>
-            <View style={[styles.inputContainer, multiline && styles.inputMultiline]}>
-                <View style={styles.iconBox}>
-                    <Icon size={18} color={COLORS.textSecondary} strokeWidth={1.5} />
-                </View>
-                {prefix && <Text style={styles.prefixText}>{prefix}</Text>}
-                <TextInput
-                    style={[styles.input, multiline && { height: 80, paddingTop: 12 }]}
-                    value={value}
-                    onChangeText={onChangeText}
-                    placeholder={placeholder}
-                    placeholderTextColor={COLORS.textSecondary + '80'}
-                    keyboardType={keyboardType}
-                    multiline={multiline}
-                    selectionColor={COLORS.primary}
-                />
-            </View>
-        </View>
-    );
 
     return (
         <View style={styles.container}>

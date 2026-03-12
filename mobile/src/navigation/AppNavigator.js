@@ -14,6 +14,7 @@ import RegisterScreen from '../screens/RegisterScreen';
 import CreateBusinessScreen from '../screens/CreateBusinessScreen';
 import ProductEditScreen from '../screens/ProductEditScreen';
 import ClientDashboardScreen from '../screens/ClientDashboardScreen';
+import ClientEditScreen from '../screens/ClientEditScreen';
 
 import { COLORS } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
@@ -109,6 +110,11 @@ export default function AppNavigator() {
                     <Stack.Screen
                         name="ClientDashboard"
                         component={ClientDashboardScreen}
+                    />
+                    <Stack.Screen
+                        name="ClientEdit"
+                        component={ClientEditScreen}
+                        options={{ presentation: 'modal' }}
                     />
                 </>
             )}

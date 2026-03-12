@@ -25,9 +25,16 @@ export const productService = {
     },
 
     async create(product) {
+        const sanitized = Object.fromEntries(
+            Object.entries(product).map(([key, value]) => [
+                key,
+                typeof value === 'string' && value.trim() === '' ? null : value
+            ])
+        )
+
         const { data, error } = await supabase
             .from('products')
-            .insert([product])
+            .insert([sanitized])
             .select()
             .single()
         if (error) throw error
@@ -35,9 +42,16 @@ export const productService = {
     },
 
     async update(id, updates) {
+        const sanitized = Object.fromEntries(
+            Object.entries(updates).map(([key, value]) => [
+                key,
+                typeof value === 'string' && value.trim() === '' ? null : value
+            ])
+        )
+
         const { data, error } = await supabase
             .from('products')
-            .update(updates)
+            .update(sanitized)
             .eq('id', id)
             .select()
             .single()

@@ -46,12 +46,15 @@ export function useProductForm(businessId, onSuccess) {
     const handleSubmit = async (e) => {
         if (e) e.preventDefault()
         setSaving(true)
+        
+        const round2 = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
+
         try {
             const data = {
                 ...form,
-                base_price: parseFloat(form.base_price) || 0,
-                sale_price: parseFloat(form.sale_price) || 0,
-                stock: parseInt(form.stock) || 0,
+                base_price: round2(parseFloat(form.base_price) || 0),
+                sale_price: round2(parseFloat(form.sale_price) || 0),
+                stock: round2(parseFloat(form.stock) || 0),
                 unit: form.unit || ''
             }
 

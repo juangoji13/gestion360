@@ -44,7 +44,7 @@ export default function ClientsScreen() {
 
     const filteredClients = clients.filter(c =>
         c.name?.toLowerCase().includes(search.toLowerCase()) ||
-        c.document_id?.toLowerCase().includes(search.toLowerCase())
+        c.tax_id?.toLowerCase().includes(search.toLowerCase())
     );
 
     const totalPortfolio = clients.reduce((sum, c) => sum + (c.balance || 0), 0);
@@ -110,7 +110,10 @@ export default function ClientsScreen() {
                 )}
             </ScrollView>
 
-            <TouchableOpacity style={styles.fab}>
+            <TouchableOpacity 
+                style={styles.fab}
+                onPress={() => navigation.navigate('ClientEdit')}
+            >
                 <Plus color={COLORS.text} size={30} />
             </TouchableOpacity>
         </View>

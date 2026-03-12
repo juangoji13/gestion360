@@ -24,6 +24,65 @@ const PREMIUM_COLORS = {
     warningYellow: '#eab308',
 };
 
+// Utility for financial rounding
+const round2 = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
+
+const InvoiceItem = ({ item, index, onUpdateQuantity, onUpdatePrice, onDelete }) => (
+    <View style={styles.itemWrapper}>
+        <View style={styles.itemGlassCard}>
+            <View style={styles.itemHeader}>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.itemNameText}>{item.name}</Text>
+                    <Text style={styles.itemSkuText}>Ref: {item.sku}</Text>
+                </View>
+                <TouchableOpacity 
+                    style={styles.deleteIconButton} 
+                    onPress={() => onDelete(index)}
+                >
+                    <Trash2 color="#ef4444" size={18} />
+                </TouchableOpacity>
+            </View>
+            <View style={styles.itemFooter}>
+                <View style={styles.footerInputs}>
+                    <View>
+                        <Text style={styles.miniLabel}>Cant.</Text>
+                        <View style={styles.miniQtyContainer}>
+                            <TouchableOpacity style={styles.qtyBtn} onPress={() => onUpdateQuantity(index, -1)}>
+                                <Minus color={PREMIUM_COLORS.slate500} size={14} />
+                            </TouchableOpacity>
+                            <TextInput
+                                style={styles.miniInput}
+                                value={item.quantity.toString()}
+                                onChangeText={(t) => onUpdateQuantity(index, t)}
+                                keyboardType="numeric"
+                            />
+                            <TouchableOpacity style={styles.qtyBtn} onPress={() => onUpdateQuantity(index, 1)}>
+                                <Plus color={PREMIUM_COLORS.electricBlue} size={14} />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                    <View>
+                        <Text style={styles.miniLabel}>P. Unit</Text>
+                        <View style={styles.miniPriceContainer}>
+                            <Text style={styles.miniCurrency}>$</Text>
+                            <TextInput
+                                style={styles.miniInputP}
+                                value={item.price.toString()}
+                                onChangeText={(t) => onUpdatePrice(index, t)}
+                                keyboardType="numeric"
+                            />
+                        </View>
+                    </View>
+                </View>
+                <View style={styles.itemTotalBox}>
+                    <Text style={styles.miniLabel}>Subtotal</Text>
+                    <Text style={styles.itemTotalText}>${round2(item.price * item.quantity).toLocaleString()}</Text>
+                </View>
+            </View>
+        </View>
+    </View>
+);
+
 export default function NewInvoiceScreen() {
     const navigation = useNavigation();
     const route = useRoute();
@@ -59,11 +118,11 @@ export default function NewInvoiceScreen() {
         }
     }, [invoices, editingInvoice]);
 
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const discount = applyDiscount ? parseFloat(discountValue) || 0 : 0;
-    const subtotalAfterDiscount = Math.max(0, subtotal - discount);
-    const iva = applyIVA ? subtotalAfterDiscount * 0.19 : 0;
-    const total = subtotalAfterDiscount + iva;
+    const subtotal = round2(items.reduce((sum, item) => sum + (item.price * item.quantity), 0));
+    const discount = applyDiscount ? round2(parseFloat(discountValue) || 0) : 0;
+    const subtotalAfterDiscount = Math.max(0, round2(subtotal - discount));
+    const iva = applyIVA ? round2(subtotalAfterDiscount * 0.19) : 0;
+    const total = round2(subtotalAfterDiscount + iva);
 
     const handleAddItem = (product) => {
         const existing = items.find(it => it.product_id === product.id);
@@ -267,59 +326,14 @@ export default function NewInvoiceScreen() {
                         </View>
                     ) : (
                         items.map((item, index) => (
-                            <View key={index} style={styles.itemWrapper}>
-                                <View style={styles.itemGlassCard}>
-                                    <View style={styles.itemHeader}>
-                                        <View style={{ flex: 1 }}>
-                                            <Text style={styles.itemNameText}>{item.name}</Text>
-                                            <Text style={styles.itemSkuText}>Ref: {item.sku}</Text>
-                                        </View>
-                                        <TouchableOpacity 
-                                            style={styles.deleteIconButton} 
-                                            onPress={() => setItems(items.filter((_, i) => i !== index))}
-                                        >
-                                            <Trash2 color="#ef4444" size={18} />
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={styles.itemFooter}>
-                                        <View style={styles.footerInputs}>
-                                            <View>
-                                                <Text style={styles.miniLabel}>Cant.</Text>
-                                                <View style={styles.miniQtyContainer}>
-                                                    <TouchableOpacity style={styles.qtyBtn} onPress={() => updateItemQuantity(index, -1)}>
-                                                        <Minus color={PREMIUM_COLORS.slate500} size={14} />
-                                                    </TouchableOpacity>
-                                                    <TextInput
-                                                        style={styles.miniInput}
-                                                        value={item.quantity.toString()}
-                                                        onChangeText={(t) => updateItemQuantity(index, t)}
-                                                        keyboardType="numeric"
-                                                    />
-                                                    <TouchableOpacity style={styles.qtyBtn} onPress={() => updateItemQuantity(index, 1)}>
-                                                        <Plus color={PREMIUM_COLORS.electricBlue} size={14} />
-                                                    </TouchableOpacity>
-                                                </View>
-                                            </View>
-                                            <View>
-                                                <Text style={styles.miniLabel}>P. Unit</Text>
-                                                <View style={styles.miniPriceContainer}>
-                                                    <Text style={styles.miniCurrency}>$</Text>
-                                                    <TextInput
-                                                        style={styles.miniInputP}
-                                                        value={item.price.toString()}
-                                                        onChangeText={(t) => updateItemPrice(index, t)}
-                                                        keyboardType="numeric"
-                                                    />
-                                                </View>
-                                            </View>
-                                        </View>
-                                        <View style={styles.itemTotalBox}>
-                                            <Text style={styles.miniLabel}>Subtotal</Text>
-                                            <Text style={styles.itemTotalText}>${(item.price * item.quantity).toLocaleString()}</Text>
-                                        </View>
-                                    </View>
-                                </View>
-                            </View>
+                            <InvoiceItem 
+                                key={index} 
+                                item={item} 
+                                index={index} 
+                                onUpdateQuantity={updateItemQuantity} 
+                                onUpdatePrice={updateItemPrice} 
+                                onDelete={(idx) => setItems(items.filter((_, i) => i !== idx))}
+                            />
                         ))
                     )}
                 </View>

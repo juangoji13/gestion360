@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 
+const round2 = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
+
 export function useProducts() {
     const { business } = useAuth();
     const [products, setProducts] = useState([]);
@@ -52,18 +54,34 @@ export function useProducts() {
     }
 
     async function createProduct(productData) {
+        // Sanitize: convert empty strings to null for optional fields (like SKU)
+        const sanitizedData = Object.fromEntries(
+            Object.entries(productData).map(([key, value]) => [
+                key, 
+                typeof value === 'string' && value.trim() === '' ? null : value
+            ])
+        );
+
         const { data, error } = await supabase
             .from('products')
-            .insert([{ ...productData, business_id: business.id }])
+            .insert([{ ...sanitizedData, business_id: business.id }])
             .select();
         if (!error) fetchProducts();
         return { data, error };
     }
 
     async function updateProduct(id, productData) {
+        // Sanitize: convert empty strings to null for optional fields (like SKU)
+        const sanitizedData = Object.fromEntries(
+            Object.entries(productData).map(([key, value]) => [
+                key, 
+                typeof value === 'string' && value.trim() === '' ? null : value
+            ])
+        );
+
         const { data, error } = await supabase
             .from('products')
-            .update(productData)
+            .update(sanitizedData)
             .eq('id', id)
             .select();
         if (!error) fetchProducts();
@@ -104,10 +122,10 @@ export function useProducts() {
         return acc;
     }, { investment: 0, salesValue: 0 });
 
-    const totalInvestment = metrics.investment;
-    const totalSalesValue = metrics.salesValue;
-    const totalProfit = totalSalesValue - totalInvestment;
-    const marginPercent = totalSalesValue > 0 ? (totalProfit / totalSalesValue) * 100 : 0;
+    const totalInvestment = round2(metrics.investment);
+    const totalSalesValue = round2(metrics.salesValue);
+    const totalProfit = round2(totalSalesValue - totalInvestment);
+    const marginPercent = totalSalesValue > 0 ? round2((totalProfit / totalSalesValue) * 100) : 0;
 
     return { 
         products, 

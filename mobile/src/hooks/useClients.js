@@ -59,5 +59,52 @@ export function useClients() {
         if (business?.id) fetchClients();
     }, [business?.id]);
 
-    return { clients, loading, error, refresh: fetchClients };
+    async function createClient(clientData) {
+        try {
+            // Sanitize: convert empty strings to null for optional fields
+            const sanitizedData = Object.fromEntries(
+                Object.entries(clientData).map(([key, value]) => [
+                    key, 
+                    typeof value === 'string' && value.trim() === '' ? null : value
+                ])
+            );
+
+            const { data, error: createError } = await supabase
+                .from('clients')
+                .insert([{ ...sanitizedData, business_id: business?.id }])
+                .select();
+
+            if (createError) throw createError;
+            await fetchClients();
+            return { data: data[0], error: null };
+        } catch (err) {
+            return { data: null, error: err.message };
+        }
+    }
+
+    async function updateClient(id, clientData) {
+        try {
+            // Sanitize: convert empty strings to null for optional fields
+            const sanitizedData = Object.fromEntries(
+                Object.entries(clientData).map(([key, value]) => [
+                    key, 
+                    typeof value === 'string' && value.trim() === '' ? null : value
+                ])
+            );
+
+            const { data, error: updateError } = await supabase
+                .from('clients')
+                .update(sanitizedData)
+                .eq('id', id)
+                .select();
+
+            if (updateError) throw updateError;
+            await fetchClients();
+            return { data: data[0], error: null };
+        } catch (err) {
+            return { data: null, error: err.message };
+        }
+    }
+
+    return { clients, loading, error, refresh: fetchClients, updateClient, createClient };
 }
