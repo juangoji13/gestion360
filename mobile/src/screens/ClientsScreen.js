@@ -24,8 +24,8 @@ const ClientCard = ({ client, onPress }) => {
                 </View>
             </View>
             <View style={styles.cardRight}>
-                <Text style={[styles.balance, { color: balance <= 0 ? COLORS.success : COLORS.danger }]}>
-                    ${balance.toLocaleString()}
+                <Text style={[styles.balance, { color: (balance || 0) <= 0 ? COLORS.success : COLORS.danger }]}>
+                    ${(balance || 0).toLocaleString()}
                 </Text>
                 <Text style={styles.lastSale}>{lastSale ? `Ult: ${new Date(lastSale).toLocaleDateString()}` : 'Sin ventas'}</Text>
             </View>
@@ -74,7 +74,7 @@ export default function ClientsScreen() {
                 <View style={styles.statItem}>
                     <Text style={styles.statLabel}>Cartera Total</Text>
                     <Text style={[styles.statValue, { color: COLORS.danger }]}>
-                        ${totalPortfolio.toLocaleString()}
+                        ${(totalPortfolio || 0).toLocaleString()}
                     </Text>
                 </View>
             </View>

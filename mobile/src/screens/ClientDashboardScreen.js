@@ -160,14 +160,14 @@ export default function ClientDashboardScreen({ route, navigation }) {
                     <View style={styles.kpiCol}>
                         <KPICard 
                             title="Total Facturado" 
-                            value={`$${stats.totalSales.toLocaleString()}`}
+                            value={`$${(stats.totalSales || 0).toLocaleString()}`}
                             subtext={`${stats.invoiceCount} Facturas`}
                             icon={ShoppingBag}
                             color={PREMIUM_COLORS.electricBlue}
                         />
                         <KPICard 
                             title="Margen Promedio" 
-                            value={`${stats.margin.toFixed(1)}%`}
+                            value={`${(stats.margin || 0).toFixed(1)}%`}
                             subtext="Rendimiento neto"
                             icon={PieChart}
                             color={PREMIUM_COLORS.warningYellow}
@@ -176,14 +176,14 @@ export default function ClientDashboardScreen({ route, navigation }) {
                     <View style={styles.kpiCol}>
                         <KPICard 
                             title="Utilidad Neta" 
-                            value={`$${stats.netProfit.toLocaleString()}`}
+                            value={`$${(stats.netProfit || 0).toLocaleString()}`}
                             subtext="Basado en costos"
                             icon={TrendingUp}
                             color={PREMIUM_COLORS.emeraldPremium}
                         />
                         <KPICard 
                             title="Saldo Pendiente" 
-                            value={`$${stats.pendingBalance.toLocaleString()}`}
+                            value={`$${(stats.pendingBalance || 0).toLocaleString()}`}
                             subtext="Por cobrar"
                             icon={Clock}
                             color="#ef4444"
@@ -216,7 +216,7 @@ export default function ClientDashboardScreen({ route, navigation }) {
                                 <Text style={styles.activityDate}>{new Date(inv.created_at).toLocaleDateString()}</Text>
                             </View>
                             <View style={styles.activityRight}>
-                                <Text style={styles.activityAmount}>${inv.total.toLocaleString()}</Text>
+                                <Text style={styles.activityAmount}>${(inv.total || 0).toLocaleString()}</Text>
                                 <Text style={[styles.activityStatus, { color: inv.status === 'paid' ? PREMIUM_COLORS.emeraldPremium : PREMIUM_COLORS.warningYellow }]}>
                                     {inv.status === 'paid' ? 'Pagada' : 'Pendiente'}
                                 </Text>

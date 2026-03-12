@@ -15,7 +15,7 @@ export function useInvoices() {
                 .from('invoices')
                 .select(`
                     *,
-                    client:clients(name),
+                    client:clients(*),
                     invoice_items(*)
                 `)
                 .eq('business_id', business?.id)
@@ -105,6 +105,7 @@ export function useInvoices() {
             if (error) throw error;
             return data.map(item => ({
                 ...item,
+                price: item.unit_price, // Alias for compatibility with NewInvoiceScreen
                 name: item.products?.name || 'Producto eliminado',
                 sku: item.products?.sku || 'N/A'
             }));

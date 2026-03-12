@@ -111,11 +111,11 @@ const ProductCard = ({ product, onEdit, onDelete }) => {
             <View style={styles.priceGrid}>
                 <View style={styles.priceItem}>
                     <Text style={styles.miniLabel}>Costo Base</Text>
-                    <Text style={styles.basePriceText}>${basePrice.toLocaleString()}</Text>
+                    <Text style={styles.basePriceText}>${(basePrice || 0).toLocaleString()}</Text>
                 </View>
                 <View style={[styles.priceItem, styles.salePriceItem]}>
                     <Text style={[styles.miniLabel, { color: COLORS.primary + 'CC' }]}>Precio Venta</Text>
-                    <Text style={styles.salePriceText}>${salePrice.toLocaleString()}</Text>
+                    <Text style={styles.salePriceText}>${(salePrice || 0).toLocaleString()}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -231,7 +231,7 @@ export default function InventoryScreen({ navigation }) {
                     <View style={styles.fullWidthKPI}>
                         <KPICard 
                             title="Inversión en Inventario" 
-                            value={`$${totalInvestment.toLocaleString()}`} 
+                            value={`$${(totalInvestment || 0).toLocaleString()}`} 
                             icon={Package} 
                             color={COLORS.primary} 
                             style={{ width: '100%' }}
@@ -239,16 +239,16 @@ export default function InventoryScreen({ navigation }) {
                     </View>
                     <KPICard 
                         title="Venta Estimada" 
-                        value={`$${totalSalesValue.toLocaleString()}`} 
+                        value={`$${(totalSalesValue || 0).toLocaleString()}`} 
                         icon={TrendingUp} 
                         color={COLORS.secondary} 
                     />
                     <KPICard 
                         title="Margen Promedio" 
-                        value={`${marginPercent.toFixed(1)}%`} 
+                        value={`${(marginPercent || 0).toFixed(1)}%`} 
                         icon={BarChart3} 
                         color={COLORS.success}
-                        subtitle={`$${totalProfit.toLocaleString()} utilidad`}
+                        subtitle={`$${(totalProfit || 0).toLocaleString()} utilidad`}
                     />
                 </View>
 
@@ -322,9 +322,9 @@ export default function InventoryScreen({ navigation }) {
                                     </View>
                                     <View style={{ flex: 1 }}>
                                         <Text style={styles.topProductName}>{item.name}</Text>
-                                        <Text style={styles.topProductStats}>{item.quantity} unidades vendidas</Text>
+                                        <Text style={styles.topProductStats}>{item.quantity || 0} unidades vendidas</Text>
                                     </View>
-                                    <Text style={styles.topProductValue}>${item.total.toLocaleString()}</Text>
+                                    <Text style={styles.topProductValue}>${(item.total || 0).toLocaleString()}</Text>
                                 </View>
                             ))}
                         </View>

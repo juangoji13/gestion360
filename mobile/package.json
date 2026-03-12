@@ -24,6 +24,7 @@
     "expo-print": "^55.0.8",
     "expo-sharing": "^55.0.11",
     "expo-status-bar": "~3.0.9",
+    "expo-updates": "~29.0.16",
     "expo-web-browser": "~15.0.10",
     "lucide-react-native": "^0.577.0",
     "react": "^19.1.0",

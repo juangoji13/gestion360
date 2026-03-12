@@ -220,7 +220,7 @@ export default function InvoiceDetailScreen() {
                                     <tr>
                                         <td>${it.name}</td>
                                         <td class="text-center">${it.quantity}</td>
-                                        <td class="text-right">$ ${(it.quantity * (it.price || it.unit_price || 0)).toLocaleString()}</td>
+                                        <td class="text-right">$ ${(Number(it.quantity || 0) * (Number(it.price || 0) || Number(it.unit_price || 0))).toLocaleString()}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -229,23 +229,23 @@ export default function InvoiceDetailScreen() {
                         <div class="summary-container">
                             <div class="summary-row">
                                 <span>Subtotal</span>
-                                <span>$ ${Number(invoice.subtotal || 0).toLocaleString()}</span>
+                                <span>$ ${(Number(invoice.subtotal) || 0).toLocaleString()}</span>
                             </div>
                             ${invoice.discount_amount > 0 ? `
                                 <div class="summary-row" style="color: #10b981;">
                                     <span>Descuento</span>
-                                    <span>-$ ${Number(invoice.discount_amount).toLocaleString()}</span>
+                                    <span>-$ ${(Number(invoice.discount_amount) || 0).toLocaleString()}</span>
                                 </div>
                             ` : ''}
                             ${invoice.tax_amount > 0 ? `
                                 <div class="summary-row">
                                     <span>IVA (19%)</span>
-                                    <span>$ ${Number(invoice.tax_amount).toLocaleString()}</span>
+                                    <span>$ ${(Number(invoice.tax_amount) || 0).toLocaleString()}</span>
                                 </div>
                             ` : ''}
                             <div class="summary-row total-row">
                                 <span>TOTAL</span>
-                                <span>$ ${Number(invoice.total || 0).toLocaleString()}</span>
+                                <span>$ ${(Number(invoice.total) || 0).toLocaleString()}</span>
                             </div>
                         </div>
 
@@ -289,11 +289,19 @@ export default function InvoiceDetailScreen() {
                 <View style={styles.actionNav}>
                     {invoice.status !== 'paid' && (
                         <>
-                            <TouchableOpacity style={styles.navItem} onPress={handleEdit}>
+                            <TouchableOpacity 
+                                style={[styles.navItem, isLoadingItems && { opacity: 0.5 }]} 
+                                onPress={handleEdit}
+                                disabled={isLoadingItems}
+                            >
                                 <View style={styles.navIconBox}>
-                                    <Edit2 color={PREMIUM_COLORS.slate400} size={20} />
+                                    {isLoadingItems ? (
+                                        <ActivityIndicator size="small" color={PREMIUM_COLORS.slate400} />
+                                    ) : (
+                                        <Edit2 color={PREMIUM_COLORS.slate400} size={20} />
+                                    )}
                                 </View>
-                                <Text style={styles.navLabel}>Editar</Text>
+                                <Text style={styles.navLabel}>{isLoadingItems ? 'Cargando...' : 'Editar'}</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity style={styles.navItem} onPress={() => setPaymentModalVisible(true)}>
@@ -349,7 +357,7 @@ export default function InvoiceDetailScreen() {
                                 <Text style={styles.docLabel}>FACTURA DE VENTA </Text>
                                 <Text style={styles.docNumberSmall}>#{invoice.invoice_number}</Text>
                                 <Text style={styles.docDateSmall}>
-                                - {new Date(invoice.created_at).toLocaleDateString('es-ES', { month: 'short', day: '2-digit', year: 'numeric' })}
+                                 - {new Date(invoice.created_at).toLocaleDateString()}
                                 </Text>
                             </View>
                         </View>
@@ -375,7 +383,7 @@ export default function InvoiceDetailScreen() {
                             <View key={index} style={styles.tableRow}>
                                 <Text style={[styles.itemName, { flex: 7 }]}>{item.name}</Text>
                                 <Text style={[styles.itemQty, { flex: 2, textAlign: 'center' }]}>{item.quantity}</Text>
-                                <Text style={[styles.itemTotal, { flex: 3, textAlign: 'right' }]}>$ {(item.quantity * (item.price || item.unit_price || 0)).toLocaleString()}</Text>
+                                <Text style={[styles.itemTotal, { flex: 3, textAlign: 'right' }]}>$ ${(Number(item.quantity || 0) * (Number(item.price || 0) || Number(item.unit_price || 0))).toLocaleString()}</Text>
                             </View>
                         ))}
                         {/* Summary of Quantities */}
@@ -389,18 +397,18 @@ export default function InvoiceDetailScreen() {
                     <View style={styles.summaryContainer}>
                         <View style={styles.summaryItem}>
                             <Text style={styles.summaryLabel}>Subtotal:</Text>
-                            <Text style={styles.summaryValue}>$ {Number(invoice.subtotal || 0).toLocaleString()}</Text>
+                            <Text style={styles.summaryValue}>$ ${(Number(invoice.subtotal) || 0).toLocaleString()}</Text>
                         </View>
                         {invoice.discount_amount > 0 && (
                             <View style={styles.summaryItem}>
                                 <Text style={[styles.summaryLabel, { color: PREMIUM_COLORS.emeraldPremium }]}>Descuento:</Text>
-                                <Text style={[styles.summaryValue, { color: PREMIUM_COLORS.emeraldPremium }]}>-$ {Number(invoice.discount_amount).toLocaleString()}</Text>
+                                <Text style={[styles.summaryValue, { color: PREMIUM_COLORS.emeraldPremium }]}>-$ ${(Number(invoice.discount_amount) || 0).toLocaleString()}</Text>
                             </View>
                         )}
                         {invoice.tax_amount > 0 && (
                             <View style={styles.summaryItem}>
                                 <Text style={styles.summaryLabel}>IVA (19%):</Text>
-                                <Text style={styles.summaryValue}>$ {Number(invoice.tax_amount).toLocaleString()}</Text>
+                                <Text style={styles.summaryValue}>$ ${(Number(invoice.tax_amount) || 0).toLocaleString()}</Text>
                             </View>
                         )}
                         <View style={styles.totalBlock}>
@@ -429,11 +437,16 @@ export default function InvoiceDetailScreen() {
                 <View style={[styles.actionRow, invoice.status === 'paid' && { justifyContent: 'center' }]}>
                     {invoice.status !== 'paid' && (
                         <TouchableOpacity 
-                            style={styles.editBtn} 
+                            style={[styles.editBtn, isLoadingItems && { opacity: 0.5 }]} 
                             onPress={handleEdit}
+                            disabled={isLoadingItems}
                         >
-                            <Edit2 color={PREMIUM_COLORS.electricBlue} size={20} />
-                            <Text style={styles.editBtnText}>Editar</Text>
+                            {isLoadingItems ? (
+                                <ActivityIndicator size="small" color={PREMIUM_COLORS.electricBlue} />
+                            ) : (
+                                <Edit2 color={PREMIUM_COLORS.electricBlue} size={20} />
+                            )}
+                            <Text style={styles.editBtnText}>{isLoadingItems ? 'Cargando...' : 'Editar'}</Text>
                         </TouchableOpacity>
                     )}
                     <TouchableOpacity 
@@ -449,8 +462,8 @@ export default function InvoiceDetailScreen() {
                                 <ActivityIndicator color="#fff" size="small" />
                             ) : (
                                 <>
-                                    <Send color="#fff" size={20} />
-                                    <Text style={styles.sendBtnText}>Emitir</Text>
+                                    <Share2 color="#fff" size={20} />
+                                    <Text style={styles.sendBtnText}>Compartir PDF</Text>
                                 </>
                             )}
                         </LinearGradient>

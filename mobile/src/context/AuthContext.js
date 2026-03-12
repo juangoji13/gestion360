@@ -156,7 +156,10 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    const redirectUrl = Linking.createURL('auth');
+    const redirectUrl = makeRedirectUri({
+        scheme: 'gestion360',
+        path: 'auth'
+    });
 
     const signInWithGoogle = async () => {
         console.log('--- SIGN IN WITH GOOGLE ---');
@@ -183,16 +186,18 @@ export function AuthProvider({ children }) {
         const res = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
         if (res.type === 'success' && res.url) {
-            // Extraer hash fragment de la URL (Supabase devuelve tokens en el hash)
-            const urlParts = res.url.split('#');
-            const hash = urlParts.length > 1 ? urlParts[1] : '';
+            // Supabase puede devolver tokens en el hash (#) o en query params (?)
+            const parsed = Linking.parse(res.url);
+            const params = { ...parsed.queryParams };
 
-            // Parsear el hash manualmente o usando Linking
-            const params = {};
-            hash.split('&').forEach(part => {
-                const [key, value] = part.split('=');
-                if (key) params[key] = value;
-            });
+            // Extraer del fragmento hash si es necesario
+            if (res.url.includes('#')) {
+                const hash = res.url.split('#')[1];
+                hash.split('&').forEach(part => {
+                    const [key, value] = part.split('=');
+                    if (key) params[key] = value;
+                });
+            }
 
             if (params.access_token) {
                 const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
@@ -222,7 +227,10 @@ export function AuthProvider({ children }) {
                     business_address: businessData.address,
                 } : {},
                 // Redirigir a una pantalla de éxito neutral o login
-                emailRedirectTo: Linking.createURL('login')
+                emailRedirectTo: makeRedirectUri({
+                    scheme: 'gestion360',
+                    path: 'login'
+                })
             }
         });
         if (error) throw error;

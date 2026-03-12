@@ -91,7 +91,7 @@ export default function InvoicesScreen() {
                 </View>
                 <View>
                     <Text style={styles.summaryLabel}>Pendiente por cobrar</Text>
-                    <Text style={styles.summaryValue}>${totalPending.toLocaleString()}</Text>
+                    <Text style={styles.summaryValue}>${(totalPending || 0).toLocaleString()}</Text>
                 </View>
             </View>
 

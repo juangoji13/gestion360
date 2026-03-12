@@ -32,6 +32,14 @@
     "plugins": [
       "expo-font",
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5068feb0-f55f-453a-9005-64d62ca68f68"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5068feb0-f55f-453a-9005-64d62ca68f68"
+    }
   }
 }

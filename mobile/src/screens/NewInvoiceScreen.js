@@ -25,7 +25,12 @@ const PREMIUM_COLORS = {
 };
 
 // Utility for financial rounding
-const round2 = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
+const EPSILON = Number.EPSILON || 2.220446049250313e-16;
+const round2 = (val) => {
+    const num = parseFloat(val);
+    if (isNaN(num)) return 0;
+    return Math.round((num + EPSILON) * 100) / 100;
+};
 
 const InvoiceItem = ({ item, index, onUpdateQuantity, onUpdatePrice, onDelete }) => (
     <View style={styles.itemWrapper}>
@@ -52,7 +57,7 @@ const InvoiceItem = ({ item, index, onUpdateQuantity, onUpdatePrice, onDelete })
                             </TouchableOpacity>
                             <TextInput
                                 style={styles.miniInput}
-                                value={item.quantity.toString()}
+                                value={(item.quantity ?? 0).toString()}
                                 onChangeText={(t) => onUpdateQuantity(index, t)}
                                 keyboardType="numeric"
                             />
@@ -67,7 +72,7 @@ const InvoiceItem = ({ item, index, onUpdateQuantity, onUpdatePrice, onDelete })
                             <Text style={styles.miniCurrency}>$</Text>
                             <TextInput
                                 style={styles.miniInputP}
-                                value={item.price.toString()}
+                                value={(item.price ?? 0).toString()}
                                 onChangeText={(t) => onUpdatePrice(index, t)}
                                 keyboardType="numeric"
                             />
@@ -76,7 +81,7 @@ const InvoiceItem = ({ item, index, onUpdateQuantity, onUpdatePrice, onDelete })
                 </View>
                 <View style={styles.itemTotalBox}>
                     <Text style={styles.miniLabel}>Subtotal</Text>
-                    <Text style={styles.itemTotalText}>${round2(item.price * item.quantity).toLocaleString()}</Text>
+                    <Text style={styles.itemTotalText}>${round2((item.price ?? 0) * (item.quantity ?? 0)).toLocaleString()}</Text>
                 </View>
             </View>
         </View>
@@ -108,7 +113,7 @@ export default function NewInvoiceScreen() {
     useEffect(() => {
         if (!editingInvoice) {
             if (invoices.length > 0) {
-                const lastNum = invoices[0].invoice_number;
+                const lastNum = invoices[0].invoice_number || '';
                 const match = lastNum.match(/(\d+)/);
                 const nextVal = match ? parseInt(match[0]) + 1 : invoices.length + 1;
                 setInvoiceNumber(`FAC-${String(nextVal).padStart(4, '0')}`);
@@ -118,7 +123,7 @@ export default function NewInvoiceScreen() {
         }
     }, [invoices, editingInvoice]);
 
-    const subtotal = round2(items.reduce((sum, item) => sum + (item.price * item.quantity), 0));
+    const subtotal = round2(items.reduce((sum, item) => sum + ((parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 0)), 0));
     const discount = applyDiscount ? round2(parseFloat(discountValue) || 0) : 0;
     const subtotalAfterDiscount = Math.max(0, round2(subtotal - discount));
     const iva = applyIVA ? round2(subtotalAfterDiscount * 0.19) : 0;
@@ -256,7 +261,7 @@ export default function NewInvoiceScreen() {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBtn}>
                     <X color="#94a3b8" size={22} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Nueva Factura</Text>
+                <Text style={styles.headerTitle}>{editingInvoice ? 'Editar Factura' : 'Nueva Factura'}</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -279,7 +284,7 @@ export default function NewInvoiceScreen() {
                                 {selectedClient?.balance !== undefined && (
                                     <View style={styles.balanceRow}>
                                         <View style={styles.dot} />
-                                        <Text style={styles.balanceText}>Pendiente: <Text style={styles.balanceValue}>${selectedClient.balance.toLocaleString()}</Text></Text>
+                                        <Text style={styles.balanceText}>Pendiente: <Text style={styles.balanceValue}>${(selectedClient.balance || 0).toLocaleString()}</Text></Text>
                                     </View>
                                 )}
                             </View>
@@ -305,7 +310,7 @@ export default function NewInvoiceScreen() {
                         <Text style={styles.sectionLabel}>Fecha Emisión</Text>
                         <View style={styles.glassCardSmall}>
                             <Calendar color={PREMIUM_COLORS.electricBlue} size={18} />
-                            <Text style={styles.dateText}>{new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</Text>
+                            <Text style={styles.dateText}>{new Date().toLocaleDateString()}</Text>
                         </View>
                     </View>
                 </View>
@@ -384,17 +389,17 @@ export default function NewInvoiceScreen() {
                 <View style={styles.summaryGlassCard}>
                     <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>Subtotal</Text>
-                        <Text style={styles.summaryValue}>${subtotal.toLocaleString()}</Text>
+                        <Text style={styles.summaryValue}>${(subtotal || 0).toLocaleString()}</Text>
                     </View>
                     {applyDiscount && (
                         <View style={styles.summaryRow}>
                             <Text style={[styles.summaryLabel, { color: PREMIUM_COLORS.emeraldPremium }]}>Descuento</Text>
-                            <Text style={[styles.summaryValue, { color: PREMIUM_COLORS.emeraldPremium }]}>-${discount.toLocaleString()}</Text>
+                            <Text style={[styles.summaryValue, { color: PREMIUM_COLORS.emeraldPremium }]}>-${(discount || 0).toLocaleString()}</Text>
                         </View>
                     )}
                     <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>Impuestos (IVA 19%)</Text>
-                        <Text style={styles.summaryValue}>${iva.toLocaleString()}</Text>
+                        <Text style={styles.summaryValue}>${(iva || 0).toLocaleString()}</Text>
                     </View>
                     <View style={styles.hDivider} />
                     <View style={styles.totalBlock}>
@@ -402,7 +407,7 @@ export default function NewInvoiceScreen() {
                             <Text style={styles.totalMeta}>Total a Pagar</Text>
                             <Text style={styles.totalCurrency}>COP</Text>
                         </View>
-                        <Text style={styles.grandTotalText}>$ {total.toLocaleString()}</Text>
+                        <Text style={styles.grandTotalText}>$ {(total || 0).toLocaleString()}</Text>
                     </View>
                 </View>
 
@@ -451,7 +456,7 @@ export default function NewInvoiceScreen() {
                             ) : (
                                 <>
                                     <Sparkles color="#fff" size={18} />
-                                    <Text style={styles.submitBtnText}>Guardar</Text>
+                                    <Text style={styles.submitBtnText}>{editingInvoice ? 'Actualizar' : 'Guardar'}</Text>
                                 </>
                             )}
                         </LinearGradient>
@@ -539,7 +544,7 @@ export default function NewInvoiceScreen() {
                                         </View>
                                         <View>
                                             <Text style={styles.modalItemText}>{item.name}</Text>
-                                            <Text style={styles.modalItemSub}>Stock: {item.stock} | ${item.sale_price.toLocaleString()}</Text>
+                                            <Text style={styles.modalItemSub}>Stock: {item.stock} | ${(item.sale_price || 0).toLocaleString()}</Text>
                                         </View>
                                     </View>
                                     <Plus color={PREMIUM_COLORS.electricBlue} size={20} />

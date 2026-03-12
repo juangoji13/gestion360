@@ -15,7 +15,13 @@ import { COLORS, SIZES } from '../constants/theme';
 
 const { height } = Dimensions.get('window');
 
-const round2 = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
+// Utility for financial rounding
+const EPSILON = Number.EPSILON || 2.220446049250313e-16;
+const round2 = (val) => {
+    const num = parseFloat(val);
+    if (isNaN(num)) return 0;
+    return Math.round((num + EPSILON) * 100) / 100;
+};
 
 const GlassInput = ({ label, value, onChangeText, icon: Icon, keyboardType = 'default', multiline = false, placeholder, prefix, suffix, colSpan = 12 }) => (
     <View style={[styles.inputGroup, { width: `${(colSpan / 12) * 100}%` }]}>
