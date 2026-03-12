@@ -12,7 +12,7 @@ export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const { signIn, signInWithGoogle } = useAuth();
+    const { signIn, signInWithGoogle, signInWithOtp } = useAuth();
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -36,6 +36,27 @@ export default function LoginScreen() {
             await signInWithGoogle();
         } catch (error) {
             Alert.alert('Error con Google', error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOTPLogin = async () => {
+        if (!email) {
+            Alert.alert('Email Requerido', 'Por favor ingresa tu correo electrónico para enviarte el enlace de acceso.');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await signInWithOtp(email);
+            Alert.alert(
+                'Enlace Enviado 📧',
+                'Hemos enviado un enlace de acceso a tu correo. Ábrelo desde tu celular para entrar automáticamente.',
+                [{ text: 'ENTENDIDO' }]
+            );
+        } catch (error) {
+            Alert.alert('Error', error.message);
         } finally {
             setLoading(false);
         }
@@ -115,6 +136,15 @@ export default function LoginScreen() {
                     >
                         <FontAwesome name="google" size={20} color={COLORS.text} />
                         <Text style={styles.googleButtonText}>Continuar con Google</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.googleButton, { marginTop: 12, borderColor: COLORS.primary }]}
+                        onPress={handleOTPLogin}
+                        disabled={loading}
+                    >
+                        <Mail color={COLORS.primary} size={20} />
+                        <Text style={[styles.googleButtonText, { color: COLORS.primary }]}>Login con Enlace (Email)</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.forgotPassword}>
