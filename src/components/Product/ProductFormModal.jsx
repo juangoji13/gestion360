@@ -125,10 +125,10 @@ export default function ProductFormModal({
                                     📦 Controlar Inventario
                                 </span>
                             </label>
-                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '30px', marginTop: '4px', lineHeight: '1.4' }}>
+                            <p style={{ fontSize: '12px', color: form.track_stock ? 'var(--text-muted)' : 'var(--accent-primary)', marginLeft: '30px', marginTop: '4px', lineHeight: '1.4', fontWeight: form.track_stock ? '400' : '700' }}>
                                 {form.track_stock 
                                     ? 'Las ventas restarán stock automáticamente del catálogo.' 
-                                    : 'Ideal para servicios. Permite vender sin stock y el saldo nunca será negativo.'}
+                                    : 'Estado: Flexible. Ideal para servicios, permite vender sin stock y nunca se va a negativo.'}
                             </p>
                         </div>
                     </div>

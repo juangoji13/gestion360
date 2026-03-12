@@ -228,10 +228,10 @@ export default function ProductEditScreen({ navigation, route }) {
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.stockTrackingTitle}>Controlar Inventario</Text>
-                                <Text style={styles.stockTrackingDesc}>
+                                <Text style={[styles.stockTrackingDesc, !formData.track_stock && { color: COLORS.primary, fontWeight: 'bold' }]}>
                                     {formData.track_stock 
                                         ? 'Las ventas restarán stock automáticamente.' 
-                                        : 'Servicios o productos sin control de stock.'}
+                                        : 'Estado: Flexible (Sin límite de venta)'}
                                 </Text>
                             </View>
                         </View>

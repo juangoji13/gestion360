@@ -43,10 +43,17 @@ export default function ProductTable({ products, onOpenEdit, onDelete }) {
                                     </span>
                                 </td>
                                 <td>
-                                    <div className={`pill-indicator ${product.stock <= 0 ? 'pill-indicator--danger' : product.stock < 5 ? 'pill-indicator--warning' : 'pill-indicator--success'}`}>
-                                        <span className="dot"></span>
-                                        {product.stock <= 0 ? 'Sin stock' : product.stock < 5 ? `Bajo Stock (${product.stock})` : `DISPONIBLE (${product.stock} ${product.unit || 'KG'})`}
-                                    </div>
+                                    {product.track_stock === false ? (
+                                        <div className="pill-indicator pill-indicator--success" style={{ background: 'rgba(37, 99, 235, 0.12)', color: 'var(--accent-primary)', borderColor: 'rgba(37, 99, 235, 0.2)' }}>
+                                            <span className="dot" style={{ backgroundColor: 'var(--accent-primary)' }}></span>
+                                            FLEXIBLE (Sin límite)
+                                        </div>
+                                    ) : (
+                                        <div className={`pill-indicator ${product.stock <= 0 ? 'pill-indicator--danger' : product.stock < 5 ? 'pill-indicator--warning' : 'pill-indicator--success'}`}>
+                                            <span className="dot"></span>
+                                            {product.stock <= 0 ? 'Sin stock' : product.stock < 5 ? `Bajo Stock (${product.stock})` : `DISPONIBLE (${product.stock} ${product.unit || 'KG'})`}
+                                        </div>
+                                    )}
                                 </td>
                                 <td className="prod-price-cell base">
                                     {formatCurrency(product.base_price)}

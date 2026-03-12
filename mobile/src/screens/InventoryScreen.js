@@ -34,7 +34,8 @@ const KPICard = ({ title, value, icon: Icon, color, growth, subtitle, style }) =
 
 const ProductCard = ({ product, onEdit, onDelete }) => {
     const stockVal = parseFloat(product.stock) || 0;
-    const isAvailable = stockVal > 0;
+    const isAvailable = stockVal > 0 || product.track_stock === false;
+    const isFlexible = product.track_stock === false;
     const basePrice = parseFloat(product.base_price) || 0;
     const salePrice = parseFloat(product.sale_price) || 0;
 
@@ -47,6 +48,11 @@ const ProductCard = ({ product, onEdit, onDelete }) => {
                         <View style={styles.skuBadge}>
                             <Text style={styles.skuText}>SKU: {product.sku || 'S/N'}</Text>
                         </View>
+                        {isFlexible && (
+                            <View style={[styles.skuBadge, { backgroundColor: COLORS.primary + '20', borderColor: COLORS.primary + '40' }]}>
+                                <Text style={[styles.skuText, { color: COLORS.primary, fontWeight: '900' }]}>FLEXIBLE</Text>
+                            </View>
+                        )}
                     </View>
                     <Text style={styles.descriptionText} numberOfLines={1}>
                         {product.description || 'Sin descripción del producto'}
@@ -68,14 +74,19 @@ const ProductCard = ({ product, onEdit, onDelete }) => {
                     <View style={styles.stockStatusContainer}>
                         <View style={[
                             styles.statusBadge, 
-                            { backgroundColor: isAvailable ? COLORS.primary + '15' : COLORS.danger + '15',
-                              borderColor: isAvailable ? COLORS.primary + '33' : COLORS.danger + '33' }
+                            { backgroundColor: isFlexible ? COLORS.primary + '15' : (isAvailable ? COLORS.primary + '15' : COLORS.danger + '15'),
+                              borderColor: isFlexible ? COLORS.primary + '33' : (isAvailable ? COLORS.primary + '33' : COLORS.danger + '33') }
                         ]}>
-                            <Text style={[styles.statusText, { color: isAvailable ? COLORS.primary : COLORS.danger }]}>
-                                {isAvailable ? 'DISPONIBLE' : 'AGOTADO'}
+                            <Text style={[styles.statusText, { color: isFlexible ? COLORS.primary : (isAvailable ? COLORS.primary : COLORS.danger) }]}>
+                                {isFlexible ? 'FLEXIBLE' : (isAvailable ? 'DISPONIBLE' : 'AGOTADO')}
                             </Text>
                         </View>
-                        <Text style={styles.stockQty}>{stockVal} {product.unit || 'und'}</Text>
+                        {!isFlexible && (
+                            <Text style={styles.stockQty}>{stockVal} {product.unit || 'und'}</Text>
+                        )}
+                        {isFlexible && (
+                            <Text style={[styles.stockQty, { color: COLORS.primary + 'BB', fontSize: 12 }]}>Sin límite</Text>
+                        )}
                     </View>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
