@@ -287,26 +287,30 @@ export default function InvoiceDetailScreen() {
                 </TouchableOpacity>
                 
                 <View style={styles.actionNav}>
-                    <TouchableOpacity style={styles.navItem} onPress={handleEdit}>
-                        <View style={styles.navIconBox}>
-                            <Edit2 color={PREMIUM_COLORS.slate400} size={20} />
-                        </View>
-                        <Text style={styles.navLabel}>Editar</Text>
-                    </TouchableOpacity>
+                    {invoice.status !== 'paid' && (
+                        <>
+                            <TouchableOpacity style={styles.navItem} onPress={handleEdit}>
+                                <View style={styles.navIconBox}>
+                                    <Edit2 color={PREMIUM_COLORS.slate400} size={20} />
+                                </View>
+                                <Text style={styles.navLabel}>Editar</Text>
+                            </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.navItem} onPress={() => setPaymentModalVisible(true)}>
-                        <View style={styles.navIconBox}>
-                            <CreditCard color={PREMIUM_COLORS.emeraldPremium} size={20} />
-                        </View>
-                        <Text style={styles.navLabel}>Abonar</Text>
-                    </TouchableOpacity>
+                            <TouchableOpacity style={styles.navItem} onPress={() => setPaymentModalVisible(true)}>
+                                <View style={styles.navIconBox}>
+                                    <CreditCard color={PREMIUM_COLORS.emeraldPremium} size={20} />
+                                </View>
+                                <Text style={styles.navLabel}>Abonar</Text>
+                            </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.centerAction} onPress={() => handleUpdateStatus('paid')}>
-                        <View style={styles.centerIconBox}>
-                            <DollarSign color="#fff" size={24} />
-                        </View>
-                        <Text style={[styles.navLabel, { color: PREMIUM_COLORS.electricBlue, fontWeight: '800' }]}>Pagar</Text>
-                    </TouchableOpacity>
+                            <TouchableOpacity style={styles.centerAction} onPress={() => handleUpdateStatus('paid')}>
+                                <View style={styles.centerIconBox}>
+                                    <DollarSign color="#fff" size={24} />
+                                </View>
+                                <Text style={[styles.navLabel, { color: PREMIUM_COLORS.electricBlue, fontWeight: '800' }]}>Pagar</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
 
                     <TouchableOpacity style={styles.navItem} onPress={handleShare}>
                         <View style={styles.navIconBox}>
@@ -422,17 +426,19 @@ export default function InvoiceDetailScreen() {
             {/* Bottom Floating Actions */}
             <View style={styles.bottomBar}>
                 <BlurBackground />
-                <View style={styles.actionRow}>
+                <View style={[styles.actionRow, invoice.status === 'paid' && { justifyContent: 'center' }]}>
+                    {invoice.status !== 'paid' && (
+                        <TouchableOpacity 
+                            style={styles.editBtn} 
+                            onPress={handleEdit}
+                        >
+                            <Edit2 color={PREMIUM_COLORS.electricBlue} size={20} />
+                            <Text style={styles.editBtnText}>Editar</Text>
+                        </TouchableOpacity>
+                    )}
                     <TouchableOpacity 
-                        style={styles.editBtn} 
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Edit2 color={PREMIUM_COLORS.electricBlue} size={20} />
-                        <Text style={styles.editBtnText}>Editar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                        style={[styles.sendBtn, isSaving && { opacity: 0.7 }]}
-                        onPress={handleEmit}
+                        style={[styles.sendBtn, isSaving && { opacity: 0.7 }, invoice.status === 'paid' && { flex: 0, width: '100%' }]}
+                        onPress={handleShare}
                         disabled={isSaving}
                     >
                         <LinearGradient 
