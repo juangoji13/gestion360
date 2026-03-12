@@ -85,7 +85,15 @@ const ProductCard = ({ product, onEdit, onDelete }) => {
                             </Text>
                         </View>
                         {!isFlexible && (
-                            <Text style={styles.stockQty}>{stockVal} {product.unit || 'und'}</Text>
+                            <View style={styles.stockQtyRow}>
+                                <Text style={styles.stockQty}>{stockVal} {product.unit || 'und'}</Text>
+                                {product.reservedQty > 0 && (
+                                    <View style={styles.reservedBadge}>
+                                        <Clock color={COLORS.secondary} size={10} />
+                                        <Text style={styles.reservedText}>{product.reservedQty} reser.</Text>
+                                    </View>
+                                )}
+                            </View>
                         )}
                         {isFlexible && (
                             <Text style={[styles.stockQty, { color: COLORS.primary + 'BB', fontSize: 12 }]}>Sin límite</Text>
@@ -630,9 +638,30 @@ const styles = StyleSheet.create({
         fontSize: 9,
         fontWeight: 'bold',
     },
+    stockQtyRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
     stockQty: {
         color: '#fff',
         fontSize: 14,
+        fontWeight: 'bold',
+    },
+    reservedBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: COLORS.secondary + '20',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: COLORS.secondary + '33',
+    },
+    reservedText: {
+        color: COLORS.secondary,
+        fontSize: 9,
         fontWeight: 'bold',
     },
     unitBox: {

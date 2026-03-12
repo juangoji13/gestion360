@@ -22,28 +22,45 @@ export function useProducts() {
                 .order('name');
 
             if (fetchError) throw fetchError;
-            setProducts(data);
             
-            // Fetch Top Selling Products (simplified aggregation)
-            const { data: salesData, error: salesError } = await supabase
-                .from('invoice_items')
-                .select('product_name, quantity, total')
-                .limit(200); // Get recent items to approximate top sales
+            // Traer todas las facturas recientes para calcular ventas y reservas
+            const { data: invoicesData, error: invError } = await supabase
+                .from('invoices')
+                .select('status, invoice_items(*)')
+                .eq('business_id', business?.id);
 
-            if (!salesError && salesData) {
-                const aggregated = salesData.reduce((acc, item) => {
-                    const name = item.product_name;
-                    if (!acc[name]) acc[name] = { name, quantity: 0, total: 0 };
-                    acc[name].quantity += (parseFloat(item.quantity) || 0);
-                    acc[name].total += (parseFloat(item.total) || 0);
-                    return acc;
-                }, {});
-                
-                const top = Object.values(aggregated)
-                    .sort((a, b) => b.quantity - a.quantity)
-                    .slice(0, 5);
-                setTopProducts(top);
-            }
+            if (invError) throw invError;
+
+            // Procesar productos con sus métricas dinámicas
+            const processedProducts = data.map(p => {
+                let soldQty = 0;
+                let reservedQty = 0;
+
+                invoicesData?.forEach(inv => {
+                    inv.invoice_items?.forEach(it => {
+                        if (it.product_id === p.id || it.product_name === p.name) {
+                            const qty = parseFloat(it.quantity) || 0;
+                            if (inv.status === 'paid') {
+                                soldQty += qty;
+                            } else if (inv.status === 'pending' || inv.status === 'overdue') {
+                                reservedQty += qty;
+                            }
+                        }
+                    });
+                });
+
+                return { ...p, soldQty, reservedQty };
+            });
+
+            setProducts(processedProducts);
+            
+            // Calculate Top Selling Products from processed data
+            const top = [...processedProducts]
+                .sort((a, b) => b.soldQty - a.soldQty)
+                .slice(0, 5)
+                .map(p => ({ name: p.name, quantity: p.soldQty, total: p.soldQty * (parseFloat(p.sale_price) || 0) }));
+            
+            setTopProducts(top);
 
             setError(null);
         } catch (err) {
@@ -54,7 +71,6 @@ export function useProducts() {
     }
 
     async function createProduct(productData) {
-        // Sanitize: convert empty strings to null for optional fields (like SKU)
         const sanitizedData = Object.fromEntries(
             Object.entries(productData).map(([key, value]) => [
                 key, 
@@ -71,7 +87,6 @@ export function useProducts() {
     }
 
     async function updateProduct(id, productData) {
-        // Sanitize: convert empty strings to null for optional fields (like SKU)
         const sanitizedData = Object.fromEntries(
             Object.entries(productData).map(([key, value]) => [
                 key, 
@@ -103,22 +118,19 @@ export function useProducts() {
 
     const lowStockCount = products.filter(p => p.track_stock && (parseFloat(p.stock) || 0) <= 5).length;
     
-    // Calcular métricas considerando unidades reservadas para productos sin stock
+    // Métricas globales calculadas sobre los productos procesados
     const metrics = products.reduce((acc, p) => {
         const physicalStock = parseFloat(p.stock) || 0;
         
-        // Buscamos cuántas unidades están reservadas para este producto
-        // topProducts ya tiene el conteo de quantity de los invoice_items recientes
-        // Nota: Para mayor precisión en una app real, traeríamos todos los items de facturas pendientes
-        const reservedItem = topProducts.find(tp => tp.name === p.name);
-        const reservedQty = p.track_stock ? 0 : (reservedItem?.quantity || 0);
-        
-        const effectiveQty = physicalStock + reservedQty;
+        // El stock efectivo incluye lo físico + lo que está en transición para ítems flexibles
+        // Para ítems con stock trackeado, el stock físico es la verdad absoluta (ya debería descontarse al facturar si así se programa)
+        // Pero aquí, el usuario quiere ver cuántos tiene "comprometidos" (Reserved)
         const cost = parseFloat(p.base_price) || 0;
         const price = parseFloat(p.sale_price) || 0;
         
-        acc.investment += (cost * effectiveQty);
-        acc.salesValue += (price * effectiveQty);
+        // Inversión basada en stock físico disponible
+        acc.investment += (cost * physicalStock);
+        acc.salesValue += (price * physicalStock);
         return acc;
     }, { investment: 0, salesValue: 0 });
 
