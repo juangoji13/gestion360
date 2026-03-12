@@ -15,7 +15,8 @@ export function useInvoices() {
                 .from('invoices')
                 .select(`
                     *,
-                    client:clients(name)
+                    client:clients(name),
+                    invoice_items(*)
                 `)
                 .eq('business_id', business?.id)
                 .order('created_at', { ascending: false });

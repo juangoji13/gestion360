@@ -6,6 +6,9 @@ import {
     ArrowUpRight, Info, DollarSign, Clock, CheckCircle
 } from 'lucide-react-native';
 import { useProducts } from '../hooks/useProducts';
+import { useInvoices } from '../hooks/useInvoices';
+import { useAuth } from '../context/AuthContext';
+import { ReportService } from '../services/ReportService';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
@@ -116,6 +119,9 @@ export default function InventoryScreen({ navigation }) {
         products, loading, error, refresh, deleteProduct, topProducts,
         totalInvestment, totalSalesValue, marginPercent, totalProfit, lowStockCount
     } = useProducts();
+    const { invoices, refresh: refreshInvoices } = useInvoices();
+    const { business } = useAuth();
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const [search, setSearch] = useState('');
     
     // FAB Animation logic
@@ -138,6 +144,32 @@ export default function InventoryScreen({ navigation }) {
 
     const handleEdit = (product) => {
         navigation.navigate('ProductEdit', { product });
+    };
+
+    const handleGenerateReport = async () => {
+        try {
+            setIsGeneratingPDF(true);
+            // Si el refresco de facturas no ha traído los ítems (por caché), forzamos actualización
+            await refreshInvoices();
+            
+            // Definimos un periodo por defecto (ej. últimos 30 días) ya que el usuario no tiene selector aún
+            const now = new Date();
+            const lastMonth = new Date();
+            lastMonth.setDate(now.getDate() - 30);
+            
+            const period = {
+                from: lastMonth.toISOString().split('T')[0],
+                to: now.toISOString().split('T')[0]
+            };
+
+            const success = await ReportService.generateProductReport(business, products, invoices, period);
+            if (!success) Alert.alert('Error', 'No se pudo generar el reporte PDF');
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Error', 'Ocurrió un error al procesar el reporte');
+        } finally {
+            setIsGeneratingPDF(false);
+        }
     };
 
     const handleDelete = (product) => {
@@ -218,9 +250,19 @@ export default function InventoryScreen({ navigation }) {
                         <Plus color={COLORS.background} size={22} />
                         <Text style={styles.actionBtnTextSmall}>Añadir</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.actionBtnSmall, styles.actionBtnGlassSmall]}>
-                        <FileText color={COLORS.textSecondary} size={20} />
-                        <Text style={styles.actionBtnTextGlassSmall}>PDF</Text>
+                    <TouchableOpacity 
+                        style={[styles.actionBtnSmall, styles.actionBtnGlassSmall]}
+                        onPress={handleGenerateReport}
+                        disabled={isGeneratingPDF}
+                    >
+                        {isGeneratingPDF ? (
+                            <ActivityIndicator color={COLORS.primary} size="small" />
+                        ) : (
+                            <>
+                                <FileText color={COLORS.textSecondary} size={20} />
+                                <Text style={styles.actionBtnTextGlassSmall}>PDF</Text>
+                            </>
+                        )}
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.actionBtnSmall, styles.actionBtnGlassSmall]}>
                         <TrendingUp color={COLORS.textSecondary} size={20} />

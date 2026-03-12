@@ -143,7 +143,8 @@ export const ReportService = {
 
         // Análisis de ventas por producto
         const productStats = products.map(p => {
-            let totalQty = 0
+            let soldQty = 0
+            let reservedQty = 0
             let grossProfit = 0
 
             invoices.forEach(inv => {
@@ -151,7 +152,12 @@ export const ReportService = {
                 items.forEach(it => {
                     if (it.product_id === p.id) {
                         const qty = parseFloat(it.quantity) || 0
-                        totalQty += qty
+                        
+                        if (inv.status === 'paid') {
+                            soldQty += qty
+                        } else if (inv.status === 'pending' || inv.status === 'overdue') {
+                            reservedQty += qty
+                        }
 
                         const lineTotal = parseFloat(it.total) || 0
                         const baseCost = (parseFloat(p.base_price) || 0) * qty
@@ -170,14 +176,15 @@ export const ReportService = {
                 p.stock || 0,
                 formatCurrency(basePrice),
                 formatCurrency(salePrice),
-                totalQty,
+                soldQty,
+                reservedQty,
                 formatCurrency(grossProfit)
             ]
         })
 
         autoTable(doc, {
             startY: 50,
-            head: [['Nombre Artículo', 'SKU', 'Stock', 'Precio Base', 'Precio Venta', 'Ud. Vendidas', 'Ganancia Bruta']],
+            head: [['Nombre Artículo', 'SKU', 'Stock', 'Precio Base', 'Precio Venta', 'Ud. Vend.', 'Ud. Reser.', 'Ganancia Bruta']],
             body: productStats,
             headStyles: { fillColor: [26, 86, 219], textColor: [255, 255, 255] },
             styles: { fontSize: 8 },
