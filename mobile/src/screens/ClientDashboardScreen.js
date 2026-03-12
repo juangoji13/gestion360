@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, RefreshControl } from 'react-native';
-import { ChevronLeft, TrendingUp, DollarSign, PieChart, Clock, ShoppingBag, ArrowUpRight, MessageCircle, Phone, MapPin } from 'lucide-react-native';
+import { ChevronLeft, TrendingUp, DollarSign, PieChart, Clock, ShoppingBag, ArrowUpRight, MessageCircle, Phone, MapPin, FileText } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SIZES } from '../constants/theme';
 import { useInvoices } from '../hooks/useInvoices';
 import { supabase } from '../services/supabase';
+import { ReportService } from '../services/ReportService';
+import { useAuth } from '../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
@@ -40,7 +42,9 @@ const KPICard = ({ title, value, subtext, icon: Icon, color, trend }) => (
 
 export default function ClientDashboardScreen({ route, navigation }) {
     const { client } = route.params;
+    const { business } = useAuth();
     const { invoices, loading, fetchInvoices } = useInvoices();
+    const [isGenerating, setIsGenerating] = useState(false);
     const [stats, setStats] = useState({
         totalSales: 0,
         netProfit: 0,
@@ -75,6 +79,12 @@ export default function ClientDashboardScreen({ route, navigation }) {
         fetchInvoices();
     };
 
+    const handleGeneratePDF = async () => {
+        setIsGenerating(true);
+        await ReportService.generateClientReport(business, client, invoices);
+        setIsGenerating(false);
+    };
+
     return (
         <View style={styles.container}>
             <LinearGradient colors={['rgba(37, 99, 235, 0.12)', 'transparent']} style={styles.bgGradient} />
@@ -87,14 +97,23 @@ export default function ClientDashboardScreen({ route, navigation }) {
                     <View style={styles.avatarLarge}>
                         <Text style={styles.avatarText}>{client.name.charAt(0)}</Text>
                     </View>
-                    <View>
-                        <Text style={styles.clientName}>{client.name}</Text>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.clientName} numberOfLines={1}>{client.name}</Text>
                         <Text style={styles.clientDoc}>{client.document_id || 'ID no registrado'}</Text>
                     </View>
                 </View>
-                <TouchableOpacity style={styles.actionBtn}>
-                    <MessageCircle color={PREMIUM_COLORS.emeraldPremium} size={22} />
-                </TouchableOpacity>
+                <View style={styles.headerActions}>
+                    <TouchableOpacity 
+                        style={[styles.actionBtnHeader, { backgroundColor: 'rgba(37, 99, 235, 0.15)' }]}
+                        onPress={handleGeneratePDF}
+                        disabled={isGenerating}
+                    >
+                        {isGenerating ? <ActivityIndicator size="small" color={PREMIUM_COLORS.electricBlue} /> : <FileText color={PREMIUM_COLORS.electricBlue} size={20} />}
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionBtnHeader}>
+                        <MessageCircle color={PREMIUM_COLORS.emeraldPremium} size={20} />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <ScrollView 
@@ -248,9 +267,13 @@ const styles = StyleSheet.create({
         color: PREMIUM_COLORS.slate500,
         fontSize: 12,
     },
-    actionBtn: {
-        width: 40,
-        height: 40,
+    headerActions: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    actionBtnHeader: {
+        width: 38,
+        height: 38,
         borderRadius: 12,
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
         alignItems: 'center',

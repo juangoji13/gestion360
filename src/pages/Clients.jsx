@@ -13,6 +13,7 @@ import ClientFormModal from '../components/Client/ClientFormModal'
 import ClientDetailModal from '../components/Client/ClientDetailModal'
 import ClientStatsWidget from '../components/Client/ClientStatsWidget'
 import PaymentModal from '../components/Invoice/PaymentModal'
+import { ReportService } from '../services/ReportService'
 import './Clients.css'
 
 export default function Clients() {
@@ -93,6 +94,10 @@ export default function Clients() {
         }
     }
 
+    const handleDownloadPDF = (client) => {
+        ReportService.generateClientReport(business, client, invoices)
+    }
+
     if (isInitialLoad && loading) {
         return (
             <div className="loading-screen">
@@ -136,6 +141,7 @@ export default function Clients() {
                             clients={clients}
                             onOpenView={setViewClient}
                             onOpenEdit={openEdit}
+                            onDownloadPDF={handleDownloadPDF}
                             onDelete={handleDelete}
                         />
 

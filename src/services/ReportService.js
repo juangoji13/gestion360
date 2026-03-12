@@ -197,5 +197,93 @@ export const ReportService = {
         doc.text('Control de Inventario y Desempeño Comercial. Prohibida su reproducción sin autorización.', 14, finalY)
 
         doc.save(`Reporte_Articulos_${new Date().toISOString().split('T')[0]}.pdf`)
+    },
+
+    generateClientReport(business, client, invoices) {
+        const doc = new jsPDF()
+        const pageWidth = doc.internal.pageSize.getWidth()
+
+        // Encabezado
+        doc.setFontSize(22)
+        doc.setTextColor(26, 86, 219)
+        doc.text('Estado de Cuenta de Cliente', 14, 22)
+
+        doc.setFontSize(11)
+        doc.setTextColor(60)
+        doc.text(business?.name || 'Mi Negocio', 14, 30)
+        doc.text(`Fecha de emisión: ${formatDate(new Date())}`, 14, 35)
+
+        // Perfil del Cliente
+        doc.setDrawColor(226, 232, 240)
+        doc.line(14, 45, pageWidth - 14, 45)
+
+        doc.setFontSize(12)
+        doc.setTextColor(30)
+        doc.text('INFORMACIÓN DEL CLIENTE', 14, 55)
+        
+        doc.setFontSize(10)
+        doc.setTextColor(60)
+        doc.text(`Nombre: ${client.name}`, 14, 65)
+        doc.text(`Identificación: ${client.document_id || 'N/A'}`, 14, 71)
+        doc.text(`Teléfono: ${client.phone || 'N/A'}`, 14, 77)
+        doc.text(`Dirección: ${client.address || 'N/A'}`, 14, 83)
+
+        // Resumen Financiero
+        const clientInvoices = invoices.filter(inv => inv.client_id === client.id)
+        const totalInvoiced = clientInvoices.reduce((sum, inv) => sum + (parseFloat(inv.total) || 0), 0)
+        const totalPaid = clientInvoices.reduce((sum, inv) => {
+            const total = parseFloat(inv.total) || 0
+            const paid = parseFloat(inv.amount_paid) || 0
+            return sum + (inv.status === 'paid' ? Math.max(total, paid) : paid)
+        }, 0)
+        const pendingBalance = Math.max(0, totalInvoiced - totalPaid)
+
+        doc.setFillColor(248, 250, 252)
+        doc.roundedRect(pageWidth - 80, 55, 66, 32, 2, 2, 'F')
+        
+        doc.setFontSize(9)
+        doc.setTextColor(100)
+        doc.text('RESUMEN DE CUENTA', pageWidth - 74, 63)
+        
+        doc.setFontSize(10)
+        doc.setTextColor(30)
+        doc.text(`Total Compras:`, pageWidth - 74, 72)
+        doc.text(`${formatCurrency(totalInvoiced)}`, pageWidth - 20, 72, { align: 'right' })
+        
+        doc.setTextColor(16, 185, 129) // Verde
+        doc.text(`Total Pagado:`, pageWidth - 74, 78)
+        doc.text(`${formatCurrency(totalPaid)}`, pageWidth - 20, 78, { align: 'right' })
+        
+        doc.setFontSize(11)
+        doc.setTextColor(220, 38, 38) // Rojo
+        doc.text(`Saldo Pendiente:`, pageWidth - 74, 85)
+        doc.text(`${formatCurrency(pendingBalance)}`, pageWidth - 20, 85, { align: 'right' })
+
+        // Tabla de Actividad
+        const tableBody = clientInvoices.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).map(inv => [
+            inv.invoice_number,
+            formatDate(inv.date || inv.created_at),
+            inv.status.toUpperCase(),
+            formatCurrency(inv.total),
+            formatCurrency(inv.status === 'paid' ? inv.total : (inv.amount_paid || 0)),
+            formatCurrency(Math.max(0, inv.total - (inv.status === 'paid' ? inv.total : (inv.amount_paid || 0))))
+        ])
+
+        autoTable(doc, {
+            startY: 95,
+            head: [['Nº Factura', 'Fecha', 'Estado', 'Monto Total', 'Monto Pagado', 'Pendiente']],
+            body: tableBody,
+            headStyles: { fillColor: [26, 86, 219], textColor: [255, 255, 255] },
+            alternateRowStyles: { fillColor: [250, 250, 250] },
+            styles: { fontSize: 8 },
+        })
+
+        // Pie de página
+        const finalY = doc.lastAutoTable.finalY + 15
+        doc.setFontSize(8)
+        doc.setTextColor(150)
+        doc.text('Historial Detallado de Cliente. Documento generado por Gestión360 ERP.', 14, finalY)
+
+        doc.save(`Estado_Cuenta_${client.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`)
     }
 }

@@ -1,7 +1,7 @@
 import React from 'react'
-import { Eye, Pencil, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Trash2, FileText } from 'lucide-react'
 
-export default function ClientTable({ clients, onOpenView, onOpenEdit, onDelete }) {
+export default function ClientTable({ clients, onOpenView, onOpenEdit, onDelete, onDownloadPDF }) {
     return (
         <div className="client-table-wrapper">
             <table className="client-table">
@@ -55,6 +55,13 @@ export default function ClientTable({ clients, onOpenView, onOpenEdit, onDelete 
                                 </td>
                                 <td>
                                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onDownloadPDF(client) }}
+                                            style={{ display: 'flex', alignItems: 'center', background: 'transparent', border: 'none', color: '#1a56db', cursor: 'pointer', padding: '2px' }}
+                                            title="Descargar Reporte PDF"
+                                        >
+                                            <FileText size={18} />
+                                        </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onOpenView(client) }}
                                             style={{ display: 'flex', alignItems: 'center', background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '2px' }}
