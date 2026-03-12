@@ -43,36 +43,32 @@ export function useStats() {
 
             if (rpcError) throw rpcError;
 
-            // 2. Fetch Time-Series Data (Invoices for the period)
-            const { data: invoices, error: invError } = await supabase
-                .from('invoices')
-                .select('total, profitability, created_at')
-                .eq('business_id', business.id)
-                .gte('created_at', startDate)
-                .order('created_at', { ascending: true });
+            // 2. Fetch Time-Series Data (Daily stats via RPC)
+            const { data: dailyStats, error: dailyError } = await supabase.rpc('get_dashboard_daily_stats', {
+                p_business_id: business.id,
+                p_start_date: startDate,
+                p_end_date: endDate
+            });
 
-            if (invError) throw invError;
+            if (dailyError) throw dailyError;
 
-            // 3. Process Chart Data (Simplificado para 7 días como ejemplo base)
-            const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            // 3. Process Chart Data
+            const daysMap = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            
+            // Generar los últimos 7 días con etiquetas y 0s por defecto
             const last7Days = Array.from({ length: 7 }, (_, i) => {
                 const d = new Date();
                 d.setDate(d.getDate() - (6 - i));
+                const dateStr = d.toISOString().split('T')[0];
+                
+                // Buscar si hay data para ese día en el resultado de la RPC
+                const dayData = dailyStats.find(s => s.date === dateStr);
+                
                 return {
-                    label: days[d.getDay()],
-                    dateStr: d.toISOString().split('T')[0],
-                    income: 0,
-                    profit: 0
+                    label: daysMap[d.getDay()],
+                    income: dayData ? parseFloat(dayData.income) : 0,
+                    profit: dayData ? parseFloat(dayData.profit) : 0
                 };
-            });
-
-            invoices.forEach(inv => {
-                const dateStr = inv.created_at.split('T')[0];
-                const dayMatch = last7Days.find(d => d.dateStr === dateStr);
-                if (dayMatch) {
-                    dayMatch.income += parseFloat(inv.total) || 0;
-                    dayMatch.profit += parseFloat(inv.profitability) || 0;
-                }
             });
 
             setStats({
