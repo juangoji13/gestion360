@@ -11,7 +11,7 @@ export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const { signIn, signInWithOtp } = useAuth();
+    const { signIn } = useAuth();
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -24,27 +24,6 @@ export default function LoginScreen() {
             await signIn(email, password);
         } catch (error) {
             Alert.alert('Error de acceso', error.message || 'Verifica tus credenciales');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleOTPLogin = async () => {
-        if (!email) {
-            Alert.alert('Email Requerido', 'Por favor ingresa tu correo electrónico para enviarte el enlace de acceso.');
-            return;
-        }
-
-        try {
-            setLoading(true);
-            await signInWithOtp(email);
-            Alert.alert(
-                '¡Revisa tu bandeja! 🚀',
-                'Te hemos enviado un "Enlace Mágico" a tu correo. Púlsalo para entrar a Gestión360 sin usar contraseña.',
-                [{ text: 'ENTENDIDO' }]
-            );
-        } catch (error) {
-            Alert.alert('Error', error.message);
         } finally {
             setLoading(false);
         }
