@@ -14,7 +14,7 @@ export default function Login() {
     const [showForgot, setShowForgot] = useState(false)
     const [forgotEmail, setForgotEmail] = useState('')
     const [forgotLoading, setForgotLoading] = useState(false)
-    const { signIn, signInWithGoogle } = useAuth()
+    const { signIn, signInWithGoogle, signInWithOtp, resetPassword } = useAuth()
     const navigate = useNavigate()
     const toast = useToast()
 
@@ -50,6 +50,24 @@ export default function Login() {
         }
     }
 
+    const handleMagicLink = async (e) => {
+        e.preventDefault()
+        if (!email) {
+            toast.error('Por favor, ingresa tu correo primero')
+            return
+        }
+
+        setLoading(true)
+        try {
+            await signInWithOtp(email)
+            toast.success('¡Revisa tu bandeja! 🚀 Te hemos enviado un enlace mágico.')
+        } catch (err) {
+            toast.error(err.message || 'Error al enviar el enlace mágico')
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const handleForgotPassword = async (e) => {
         e.preventDefault()
         if (!forgotEmail) { toast.error('Ingresa tu correo'); return }
@@ -64,10 +82,7 @@ export default function Login() {
 
         setForgotLoading(true)
         try {
-            const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-                redirectTo: `${window.location.origin}/reset-password`,
-            })
-            if (error) throw error
+            await resetPassword(forgotEmail)
             toast.success('Revisa tu correo para restablecer tu contraseña')
             setShowForgot(false)
         } catch (err) {
@@ -184,6 +199,32 @@ export default function Login() {
 
                             <button className="login-submit-btn" type="submit" disabled={loading}>
                                 {loading ? <div className="login-spinner" /> : 'Entrar al Sistema'}
+                            </button>
+
+                            <button 
+                                type="button" 
+                                onClick={handleMagicLink} 
+                                className="login-otp-btn"
+                                disabled={loading}
+                                style={{
+                                    width: '100%',
+                                    marginTop: '0.75rem',
+                                    padding: '0.75rem',
+                                    borderRadius: '12px',
+                                    border: '1px solid var(--border)',
+                                    background: 'var(--card)',
+                                    color: 'var(--text)',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '10px',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                Entrar con Enlace Mágico
                             </button>
 
                             <div className="login-divider">

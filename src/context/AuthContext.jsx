@@ -107,6 +107,23 @@ export function AuthProvider({ children }) {
         if (error) throw error
     }
 
+    const signInWithOtp = async (email) => {
+        const { error } = await supabase.auth.signInWithOtp({
+            email,
+            options: {
+                emailRedirectTo: window.location.origin,
+            },
+        })
+        if (error) throw error
+    }
+
+    const resetPassword = async (email) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/reset-password`,
+        })
+        if (error) throw error
+    }
+
     const signOut = async () => {
         const { error } = await supabase.auth.signOut()
         if (error) throw error
@@ -136,6 +153,8 @@ export function AuthProvider({ children }) {
         signUp,
         signIn,
         signInWithGoogle,
+        signInWithOtp,
+        resetPassword,
         signOut,
         updateBusiness,
         fetchBusiness,
