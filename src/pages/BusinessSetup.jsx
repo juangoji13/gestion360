@@ -19,6 +19,7 @@ export default function BusinessSetup() {
         address: '',
         phone: '',
         email: userEmail,
+        password: '', // Nueva contraseña para App móvil
     })
     const [logoFile, setLogoFile] = useState(null)
     const [logoPreview, setLogoPreview] = useState(null)
@@ -64,6 +65,17 @@ export default function BusinessSetup() {
 
         setLoading(true)
         try {
+            // 1. Si el usuario es de Google y puso una contraseña, actualizarla primero
+            if (form.password && form.password.length >= 6) {
+                const { error: pwdErr } = await supabase.auth.updateUser({
+                    password: form.password
+                })
+                if (pwdErr) throw pwdErr
+            } else if (user?.app_metadata?.provider === 'google' && !form.password) {
+                 // Si es google y no puso clave, dar error (opcional pero recomendado por el plan)
+                 throw new Error('Debes definir una contraseña para poder usar la App móvil.')
+            }
+
             let logoUrl = null
 
             // Upload logo if selected
@@ -225,6 +237,32 @@ export default function BusinessSetup() {
                             />
                         </div>
                     </div>
+
+                    {user?.app_metadata?.provider === 'google' && (
+                        <div className="setup-field" style={{ 
+                            backgroundColor: 'rgba(13, 148, 136, 0.05)', 
+                            padding: '1.5rem', 
+                            borderRadius: '12px',
+                            border: '1px dashed #0d9488',
+                            marginBottom: '1.5rem'
+                        }}>
+                            <label className="setup-label" style={{ color: '#0d9488', fontWeight: 'bold' }}>
+                                🔑 Contraseña para App Móvil <span className="setup-required">*</span>
+                            </label>
+                            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.75rem' }}>
+                                Como entraste con Google, necesitas crear una contraseña para poder iniciar sesión en tu celular.
+                            </p>
+                            <input
+                                type="password"
+                                className="setup-input"
+                                placeholder="Mínimo 6 caracteres"
+                                value={form.password}
+                                onChange={e => handleChange('password', e.target.value)}
+                                required
+                                minLength={6}
+                            />
+                        </div>
+                    )}
 
                     <button
                         type="submit"

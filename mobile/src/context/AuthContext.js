@@ -208,8 +208,11 @@ export function AuthProvider({ children }) {
     };
 
     const resetPassword = async (email) => {
+        const redirectUrl = Linking.createURL('login');
+        console.log('🔗 [Auth] Reset Password Redirect URL:', redirectUrl);
+
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: Linking.createURL('login'),
+            redirectTo: redirectUrl,
         });
         if (error) throw error;
     };
@@ -225,7 +228,6 @@ export function AuthProvider({ children }) {
         loading,
         signIn,
         signUp,
-        signInWithOtp,
         resetPassword,
         signOut,
         createBusiness,
