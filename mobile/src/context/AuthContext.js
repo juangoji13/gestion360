@@ -172,8 +172,14 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         if (response?.type === 'success') {
-            const { id_token } = response.params;
-            handleGoogleSignInWithIdToken(id_token);
+            const { id_token, params } = response;
+            // En flujo de proxy/Expo Go, el id_token puede venir en params
+            const token = id_token || params?.id_token;
+            if (token) {
+                handleGoogleSignInWithIdToken(token);
+            } else {
+                console.warn('Google sign-in success but no ID Token found in response');
+            }
         }
     }, [response]);
 
@@ -199,7 +205,15 @@ export function AuthProvider({ children }) {
 
     const signInWithGoogle = async () => {
         try {
-            await promptAsync();
+            // Generar redirectUri con useProxy para Expo Go
+            const redirectUri = makeRedirectUri({
+                useProxy: true,
+            });
+            
+            await promptAsync({
+                baseRevokeUrl: 'https://accounts.google.com/o/oauth2/revoke',
+                redirectUri,
+            });
         } catch (error) {
             console.error('Error in Google Auth Prompt:', error);
             throw error;
