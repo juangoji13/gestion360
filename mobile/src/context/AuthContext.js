@@ -159,17 +159,10 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    const redirectUrl = makeRedirectUri({
-        scheme: 'gestion360',
-        path: 'auth'
-    });
-
-    // Configuración optimizada para Expo Go: Usamos el Web Client ID para todas las plataformas
-    // ya que Expo Go no tiene el bundle identifier de nuestra app real.
+    // Configuración de Google Auth optimizada para Expo Go
     const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
         webClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
-        // En Expo Go, si incluimos ios/android client IDs, Google intentará verificar el paquete 
-        // de Expo Go y fallará. Usando solo webClientId forzamos el flujo de Proxy.
+        // Forzamos Web Client ID en todas las plataformas para Expo Go
         iosClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
         androidClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
     }, {
@@ -246,13 +239,11 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-
     const signUp = async (email, password, businessData = null) => {
         const { data, error } = await supabase.auth.signUp({ 
             email, 
             password,
             options: {
-                // Pasamos los datos de la empresa como metadatos para el trigger de la DB
                 data: businessData ? {
                     business_name: businessData.name,
                     business_nit: businessData.nit,
@@ -262,7 +253,6 @@ export function AuthProvider({ children }) {
                     business_currency: businessData.currency,
                     business_address: businessData.address,
                 } : {},
-                // Redirigir a una pantalla de éxito neutral o login
                 emailRedirectTo: makeRedirectUri({
                     scheme: 'gestion360',
                     path: 'login'
@@ -281,7 +271,6 @@ export function AuthProvider({ children }) {
             .insert([{ 
                 ...businessData, 
                 user_id: user.id,
-                // Asegurar que settings tenga valores por defecto si no vienen
                 settings: businessData.settings || { theme: 'dark', tax_rate: 0.19 }
             }])
             .select()
