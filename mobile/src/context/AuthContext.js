@@ -156,18 +156,6 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    const signInWithOtp = async (email) => {
-        const dynamicRedirectUrl = Linking.createURL('auth');
-        const { data, error } = await supabase.auth.signInWithOtp({
-            email,
-            options: {
-                emailRedirectTo: dynamicRedirectUrl,
-            },
-        });
-        if (error) throw error;
-        return data;
-    };
-
     const signUp = async (email, password, businessData = null) => {
         const { data, error } = await supabase.auth.signUp({ 
             email, 
