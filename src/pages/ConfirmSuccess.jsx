@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, ArrowRight, Smartphone, Globe, Rocket, ShieldCheck } from 'lucide-react';
 import './Auth.css';
 
 export default function ConfirmSuccess() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = "¡Cuenta Activada! | Gestión360 🚀";
+  }, []);
 
   return (
     <div className="auth-page">
