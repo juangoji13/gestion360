@@ -12,6 +12,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function RegisterScreen() {
     const navigation = useNavigation();
     
+    // Paso del formulario
+    const [step, setStep] = useState(1); // 1: Identidad, 2: Empresa
+    const authMethod = 'email'; // Forzado a email después de la limpieza
+
     // Credenciales
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
