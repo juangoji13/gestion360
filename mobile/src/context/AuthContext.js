@@ -156,20 +156,11 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    const signUp = async (email, password, businessData = null) => {
+    const signUp = async (email, password) => {
         const { data, error } = await supabase.auth.signUp({ 
             email, 
             password,
             options: {
-                data: businessData ? {
-                    business_name: businessData.name,
-                    business_nit: businessData.nit,
-                    business_phone: businessData.phone,
-                    business_email: businessData.email,
-                    business_website: businessData.website,
-                    business_currency: businessData.currency,
-                    business_address: businessData.address,
-                } : {},
                 emailRedirectTo: Linking.createURL('login')
             }
         });

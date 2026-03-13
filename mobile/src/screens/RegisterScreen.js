@@ -62,11 +62,15 @@ export default function RegisterScreen() {
             };
 
             if (authMethod === 'email') {
-                const { error } = await signUp(email, password, businessData);
+                // Guardamos los datos temporalmente en el celular
+                // Así, al confirmar el email y volver, la app los detectará automáticamente
+                await AsyncStorage.setItem('pending_business_data', JSON.stringify(businessData));
+                
+                const { error } = await signUp(email, password);
                 if (error) throw error;
                 Alert.alert(
-                    '¡Registro Iniciado!',
-                    'Te hemos enviado un correo de confirmación. \n\nAl activarlo, tu empresa quedará creada automáticamente y podrás iniciar sesión.',
+                    '¡Casi listo! 📧',
+                    'Te hemos enviado un correo de confirmación. \n\nAl activarlo, tu empresa se creará automáticamente y podrás empezar a facturar.',
                     [{ text: 'Entendido', onPress: () => navigation.navigate('Login') }]
                 );
             } else {
