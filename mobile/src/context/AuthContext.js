@@ -168,9 +168,11 @@ export function AuthProvider({ children }) {
         webClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
         iosClientId: '755009452836-ocjdclpimd2b457103n36hlvu8uf7pti.apps.googleusercontent.com',
         androidClientId: '755009452836-i44i9i1eigp4salaeh087hauhl4dj6be.apps.googleusercontent.com',
-    }, {
-        projectNameForProxy: '@juangoji13/Gestion360',
-        useProxy: true
+        redirectUri: makeRedirectUri({
+            useProxy: true,
+            // Asegurar que use el formato correcto de Expo Go
+            native: 'https://auth.expo.io/@juangoji13/Gestion360',
+        }),
     });
 
     useEffect(() => {
