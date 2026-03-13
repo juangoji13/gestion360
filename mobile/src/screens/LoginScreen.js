@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Image } from 'react-native';
-import { Mail, Lock, LogIn, ChevronRight, LayoutDashboard } from 'lucide-react-native';
+import { Mail, Lock, ChevronRight } from 'lucide-react-native';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
