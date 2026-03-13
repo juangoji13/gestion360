@@ -4,9 +4,6 @@ import { supabase } from '../services/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
-import { makeRedirectUri } from 'expo-auth-session';
-import * as Google from 'expo-auth-session/providers/google';
-import * as Crypto from 'expo-crypto';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -79,7 +76,7 @@ export function AuthProvider({ children }) {
             if (session?.user) {
                 setUser(session.user);
                 
-                // Verificar si hay datos de empresa pendientes (para Google Auth)
+                // Verificar si hay datos de empresa pendientes
                 if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
                     // Primero intentamos cargar la empresa existente
                     const { data: existingBusiness } = await supabase
@@ -93,7 +90,7 @@ export function AuthProvider({ children }) {
                             const pendingData = await AsyncStorage.getItem('pending_business_data');
                             if (pendingData) {
                                 const businessData = JSON.parse(pendingData);
-                                console.log('Creating pending business for Google user:', session.user.id);
+                                console.log('Creating pending business for user:', session.user.id);
                                 
                                 const { data: newBusiness, error: createError } = await supabase
                                     .from('businesses')
@@ -159,74 +156,6 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    // Configuración de Google Auth optimizada para Expo Go
-    const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-        webClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
-        // Forzamos Web Client ID en todas las plataformas para Expo Go
-        iosClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
-        androidClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
-    }, {
-        projectNameForProxy: 'Gestion360',
-        useProxy: true,
-    });
-
-    useEffect(() => {
-        if (response?.type === 'success') {
-            const { id_token, params } = response;
-            const token = id_token || params?.id_token;
-            console.log('--- GOOGLE AUTH SUCCESS ---');
-            console.log('Final Token Found:', token ? 'YES' : 'NO');
-            if (token) {
-                handleGoogleSignInWithIdToken(token);
-            }
-        } else if (response?.type === 'error') {
-            console.error('--- GOOGLE AUTH ERROR ---');
-            console.error('Error:', response.error);
-            console.error('Description:', response.params?.error_description);
-            console.log('-------------------------');
-        }
-    }, [response]);
-
-    const handleGoogleSignInWithIdToken = async (idToken) => {
-        try {
-            setLoading(true);
-            const { data, error } = await supabase.auth.signInWithIdToken({
-                provider: 'google',
-                token: idToken,
-            });
-            if (error) throw error;
-            if (data.user) {
-                setUser(data.user);
-                fetchBusiness(data.user.id);
-            }
-        } catch (error) {
-            console.error('Error signing in with Google ID Token:', error);
-            Alert.alert('Error', error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const signInWithGoogle = async () => {
-        try {
-            // URI de redirección autorizada en Google Cloud
-            const authProxyUri = 'https://auth.expo.io/@juangoji13/Gestion360';
-            
-            console.log('--- AUDITORÍA DE SOLICITUD ---');
-            console.log('Redirigiendo a:', authProxyUri);
-            console.log('Client ID:', '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com');
-            console.log('------------------------------');
-            
-            await promptAsync({
-                useProxy: true,
-                redirectUri: authProxyUri,
-            });
-        } catch (error) {
-            console.error('Error in Google Auth Prompt:', error);
-            throw error;
-        }
-    };
-
     const signInWithOtp = async (email) => {
         const dynamicRedirectUrl = Linking.createURL('auth');
         const { data, error } = await supabase.auth.signInWithOtp({
@@ -253,10 +182,7 @@ export function AuthProvider({ children }) {
                     business_currency: businessData.currency,
                     business_address: businessData.address,
                 } : {},
-                emailRedirectTo: makeRedirectUri({
-                    scheme: 'gestion360',
-                    path: 'login'
-                })
+                emailRedirectTo: Linking.createURL('login')
             }
         });
         if (error) throw error;
@@ -292,7 +218,6 @@ export function AuthProvider({ children }) {
         loading,
         signIn,
         signUp,
-        signInWithGoogle,
         signInWithOtp,
         signOut,
         createBusiness,

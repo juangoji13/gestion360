@@ -5,14 +5,13 @@ import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome } from '@expo/vector-icons';
 
 export default function LoginScreen() {
     const navigation = useNavigation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const { signIn, signInWithGoogle, signInWithOtp } = useAuth();
+    const { signIn, signInWithOtp } = useAuth();
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -25,17 +24,6 @@ export default function LoginScreen() {
             await signIn(email, password);
         } catch (error) {
             Alert.alert('Error de acceso', error.message || 'Verifica tus credenciales');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleGoogleLogin = async () => {
-        try {
-            setLoading(true);
-            await signInWithGoogle();
-        } catch (error) {
-            Alert.alert('Error con Google', error.message);
         } finally {
             setLoading(false);
         }
@@ -130,21 +118,12 @@ export default function LoginScreen() {
                     </View>
 
                     <TouchableOpacity
-                        style={[styles.googleButton, { backgroundColor: COLORS.text, borderColor: COLORS.text }]}
-                        onPress={handleGoogleLogin}
-                        disabled={loading}
-                    >
-                        <FontAwesome name="google" size={20} color={COLORS.background} />
-                        <Text style={[styles.googleButtonText, { color: COLORS.background, fontWeight: 'bold' }]}>Continuar con Google</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.googleButton, { marginTop: 12 }]}
+                        style={[styles.otpButton, { marginTop: 12 }]}
                         onPress={handleOTPLogin}
                         disabled={loading}
                     >
                         <Mail color={COLORS.textSecondary} size={20} />
-                        <Text style={styles.googleButtonText}>Entrar con Enlace (Email)</Text>
+                        <Text style={styles.otpButtonText}>Entrar con Enlace (Email)</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.forgotPassword}>
@@ -250,7 +229,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         fontSize: 14,
     },
-    googleButton: {
+    otpButton: {
         flexDirection: 'row',
         backgroundColor: 'transparent',
         height: 60,
@@ -261,7 +240,7 @@ const styles = StyleSheet.create({
         borderColor: COLORS.border,
         gap: 12,
     },
-    googleButtonText: {
+    otpButtonText: {
         color: COLORS.text,
         fontSize: 16,
         fontWeight: '500',
