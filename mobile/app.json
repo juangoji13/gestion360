@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Gestión360",
-    "slug": "Gestion360",
+    "slug": "mobile",
     "scheme": "gestion360",
     "version": "1.0.0",
     "runtimeVersion": {
@@ -37,11 +37,11 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "bb1c8aaf-77d4-41bc-9c69-1b2ef6757057"
+        "projectId": "9b72aff3-a615-4ce7-a88f-36b334d2bc14"
       }
     },
     "updates": {
-      "url": "https://u.expo.dev/bb1c8aaf-77d4-41bc-9c69-1b2ef6757057"
+      "url": "https://u.expo.dev/9b72aff3-a615-4ce7-a88f-36b334d2bc14"
     }
   }
 }

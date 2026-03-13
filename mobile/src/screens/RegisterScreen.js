@@ -12,16 +12,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function RegisterScreen() {
     const navigation = useNavigation();
     
-    // Paso del formulario
-    const [step, setStep] = useState(1); // 1: Identidad, 2: Empresa
-    const [authMethod, setAuthMethod] = useState('email'); // 'email' o 'google'
-
-    // Step 1: Credenciales
+    // Credenciales
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    // Step 2: Empresa
+    // Empresa
     const [businessName, setBusinessName] = useState('');
     const [businessNit, setBusinessNit] = useState('');
     const [businessPhone, setBusinessPhone] = useState('');
@@ -29,19 +25,17 @@ export default function RegisterScreen() {
     const [businessAddress, setBusinessAddress] = useState('');
 
     const [loading, setLoading] = useState(false);
-    const { signUp, signInWithGoogle, createBusiness } = useAuth();
+    const { signUp } = useAuth();
 
     const handleNextStep = () => {
-        if (authMethod === 'email') {
-            if (!email || !password || !confirmPassword) {
-                return Alert.alert('Error', 'Por favor completa todos los campos de acceso');
-            }
-            if (password !== confirmPassword) {
-                return Alert.alert('Error', 'Las contraseñas no coinciden');
-            }
-            if (password.length < 6) {
-                return Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
-            }
+        if (!email || !password || !confirmPassword) {
+            return Alert.alert('Error', 'Por favor completa todos los campos de acceso');
+        }
+        if (password !== confirmPassword) {
+            return Alert.alert('Error', 'Las contraseñas no coinciden');
+        }
+        if (password.length < 6) {
+            return Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
         }
         setStep(2);
     };
@@ -61,21 +55,14 @@ export default function RegisterScreen() {
                 address: businessAddress,
             };
 
-            if (authMethod === 'email') {
-                // Guardamos los datos temporalmente en el celular
-                // Así, al confirmar el email y volver, la app los detectará automáticamente
-                await AsyncStorage.setItem('pending_business_data', JSON.stringify(businessData));
-                
-                const { error } = await signUp(email, password);
-                if (error) throw error;
-                
-                navigation.navigate('ConfirmationSuccess', { email });
-            } else {
-                // Para Google, guardamos los datos temporalmente y disparamos el OAuth
-                // El AuthContext se encargará de crear la empresa al volver si detecta estos datos
-                await AsyncStorage.setItem('pending_business_data', JSON.stringify(businessData));
-                await signInWithGoogle();
-            }
+            // Guardamos los datos temporalmente en el celular
+            // Así, al confirmar el email y volver, la app los detectará automáticamente
+            await AsyncStorage.setItem('pending_business_data', JSON.stringify(businessData));
+            
+            const { error } = await signUp(email, password);
+            if (error) throw error;
+            
+            navigation.navigate('ConfirmationSuccess', { email });
         } catch (error) {
             let message = error.message;
             if (message.includes('already registered')) {
@@ -87,65 +74,44 @@ export default function RegisterScreen() {
         }
     };
 
-    const handleGoogleRegister = async () => {
-        try {
-            setLoading(true);
-            await signInWithGoogle();
-        } catch (error) {
-            Alert.alert('Error con Google', error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const renderStep1 = () => (
         <View style={styles.form}>
-            {authMethod === 'email' ? (
-                <>
-                    <View style={styles.inputContainer}>
-                        <Mail color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Correo electrónico"
-                            placeholderTextColor={COLORS.textSecondary}
-                            value={email}
-                            onChangeText={setEmail}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                        />
-                    </View>
+            <View style={styles.inputContainer}>
+                <Mail color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Correo electrónico"
+                    placeholderTextColor={COLORS.textSecondary}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                />
+            </View>
 
-                    <View style={styles.inputContainer}>
-                        <Lock color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Contraseña"
-                            placeholderTextColor={COLORS.textSecondary}
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                        />
-                    </View>
+            <View style={styles.inputContainer}>
+                <Lock color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Contraseña"
+                    placeholderTextColor={COLORS.textSecondary}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                />
+            </View>
 
-                    <View style={styles.inputContainer}>
-                        <Lock color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Confirmar contraseña"
-                            placeholderTextColor={COLORS.textSecondary}
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                            secureTextEntry
-                        />
-                    </View>
-                </>
-            ) : (
-                <View style={[styles.inputContainer, { paddingVertical: 20, justifyContent: 'center' }]}>
-                    <Text style={[styles.buttonText, { color: COLORS.text, textAlign: 'center' }]}>
-                        Te registrarás usando tu cuenta de Google
-                    </Text>
-                </View>
-            )}
+            <View style={styles.inputContainer}>
+                <Lock color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Confirmar contraseña"
+                    placeholderTextColor={COLORS.textSecondary}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                />
+            </View>
 
             <TouchableOpacity
                 style={styles.button}
@@ -156,30 +122,6 @@ export default function RegisterScreen() {
                     <ArrowRight color={COLORS.text} size={20} />
                 </View>
             </TouchableOpacity>
-
-            <View style={styles.dividerContainer}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>O</Text>
-                <View style={styles.dividerLine} />
-            </View>
-
-            {authMethod === 'email' ? (
-                <TouchableOpacity
-                    style={styles.googleButton}
-                    onPress={() => setAuthMethod('google')}
-                >
-                    <FontAwesome name="google" size={20} color={COLORS.text} />
-                    <Text style={styles.googleButtonText}>Registrarse con Google</Text>
-                </TouchableOpacity>
-            ) : (
-                <TouchableOpacity
-                    style={styles.googleButton}
-                    onPress={() => setAuthMethod('email')}
-                >
-                    <Mail color={COLORS.text} size={20} />
-                    <Text style={styles.googleButtonText}>Usar Correo Electrónico</Text>
-                </TouchableOpacity>
-            )}
         </View>
     );
 
@@ -240,9 +182,7 @@ export default function RegisterScreen() {
                 {loading ? (
                     <ActivityIndicator color={COLORS.text} />
                 ) : (
-                    <Text style={styles.buttonText}>
-                        {authMethod === 'email' ? 'Finalizar y Crear Cuenta' : 'Registrarse con Google y Empresa'}
-                    </Text>
+                    <Text style={styles.buttonText}>Finalizar y Crear Cuenta</Text>
                 )}
             </TouchableOpacity>
 
