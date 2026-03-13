@@ -146,6 +146,7 @@ export function AuthProvider({ children }) {
             
             if (businessError) {
                 console.error('Error in atomic business creation:', businessError);
+                throw new Error(`Error al crear la empresa: ${businessError.message}`);
             }
         }
 
