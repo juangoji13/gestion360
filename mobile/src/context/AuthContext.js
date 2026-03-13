@@ -168,11 +168,8 @@ export function AuthProvider({ children }) {
         webClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
         iosClientId: '755009452836-ocjdclpimd2b457103n36hlvu8uf7pti.apps.googleusercontent.com',
         androidClientId: '755009452836-i44i9i1eigp4salaeh087hauhl4dj6be.apps.googleusercontent.com',
-        redirectUri: makeRedirectUri({
-            useProxy: true,
-            // Asegurar que use el formato correcto de Expo Go
-            native: 'https://auth.expo.io/@juangoji13/Gestion360',
-        }),
+    }, {
+        useProxy: true
     });
 
     useEffect(() => {
@@ -217,10 +214,12 @@ export function AuthProvider({ children }) {
     const signInWithGoogle = async () => {
         try {
             console.log('--- DEBUG: AUTH REQUEST DETAILS ---');
-            console.log('Redirect URI:', request?.redirectUri);
+            console.log('Using implicit redirect URI from Expo Proxy');
             console.log('------------------------------------');
             
-            await promptAsync();
+            await promptAsync({
+                useProxy: true,
+            });
         } catch (error) {
             console.error('Error in Google Auth Prompt:', error);
             throw error;
