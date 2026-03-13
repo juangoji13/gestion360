@@ -168,19 +168,28 @@ export function AuthProvider({ children }) {
         webClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
         iosClientId: '755009452836-ocjdclpimd2b457103n36hlvu8uf7pti.apps.googleusercontent.com',
         androidClientId: '755009452836-i44i9i1eigp4salaeh087hauhl4dj6be.apps.googleusercontent.com',
+    }, {
+        projectNameForProxy: '@juangoji13/Gestion360',
+        useProxy: true
     });
 
     useEffect(() => {
+        console.log('--- GOOGLE AUTH RESPONSE DEBUG ---');
+        console.log('Response Type:', response?.type);
         if (response?.type === 'success') {
+            console.log('Response Params:', JSON.stringify(response.params, null, 2));
             const { id_token, params } = response;
-            // En flujo de proxy/Expo Go, el id_token puede venir en params
             const token = id_token || params?.id_token;
+            console.log('Final Token Found:', token ? 'YES' : 'NO');
             if (token) {
                 handleGoogleSignInWithIdToken(token);
             } else {
                 console.warn('Google sign-in success but no ID Token found in response');
             }
+        } else if (response?.type === 'error') {
+            console.error('Google Auth Error:', response.error);
         }
+        console.log('---------------------------------');
     }, [response]);
 
     const handleGoogleSignInWithIdToken = async (idToken) => {
@@ -205,15 +214,11 @@ export function AuthProvider({ children }) {
 
     const signInWithGoogle = async () => {
         try {
-            // Generar redirectUri con useProxy para Expo Go
-            const redirectUri = makeRedirectUri({
-                useProxy: true,
-            });
+            console.log('--- DEBUG: AUTH REQUEST DETAILS ---');
+            console.log('Redirect URI:', request?.redirectUri);
+            console.log('------------------------------------');
             
-            await promptAsync({
-                baseRevokeUrl: 'https://accounts.google.com/o/oauth2/revoke',
-                redirectUri,
-            });
+            await promptAsync();
         } catch (error) {
             console.error('Error in Google Auth Prompt:', error);
             throw error;
