@@ -11,6 +11,7 @@ import NewInvoiceScreen from '../screens/NewInvoiceScreen';
 import InvoiceDetailScreen from '../screens/InvoiceDetailScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import ConfirmationSuccessScreen from '../screens/ConfirmationSuccessScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import CreateBusinessScreen from '../screens/CreateBusinessScreen';
 import ProductEditScreen from '../screens/ProductEditScreen';
@@ -88,6 +89,7 @@ export default function AppNavigator() {
                 <>
                     <Stack.Screen name="Login" component={LoginScreen} />
                     <Stack.Screen name="Register" component={RegisterScreen} />
+                    <Stack.Screen name="ConfirmationSuccess" component={ConfirmationSuccessScreen} />
                     <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
                 </>
             ) : !business ? (

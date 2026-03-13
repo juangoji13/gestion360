@@ -68,11 +68,8 @@ export default function RegisterScreen() {
                 
                 const { error } = await signUp(email, password);
                 if (error) throw error;
-                Alert.alert(
-                    '¡Casi listo! 📧',
-                    'Te hemos enviado un correo de confirmación. \n\nAl activarlo, tu empresa se creará automáticamente y podrás empezar a facturar.',
-                    [{ text: 'Entendido', onPress: () => navigation.navigate('Login') }]
-                );
+                
+                navigation.navigate('ConfirmationSuccess', { email });
             } else {
                 // Para Google, guardamos los datos temporalmente y disparamos el OAuth
                 // El AuthContext se encargará de crear la empresa al volver si detecta estos datos
