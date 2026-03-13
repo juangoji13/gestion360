@@ -113,18 +113,9 @@ export default function LoginScreen() {
 
                     <View style={styles.dividerContainer}>
                         <View style={styles.dividerLine} />
-                        <Text style={styles.dividerText}>O</Text>
+                        <Text style={styles.dividerText}>Acceso</Text>
                         <View style={styles.dividerLine} />
                     </View>
-
-                    <TouchableOpacity 
-                        style={[styles.otpButton, { marginTop: 12 }]}
-                        onPress={handleOTPLogin}
-                        disabled={loading}
-                    >
-                        <Mail color={COLORS.textSecondary} size={20} />
-                        <Text style={styles.otpButtonText}>Entrar con Enlace (Email)</Text>
-                    </TouchableOpacity>
 
                     <TouchableOpacity 
                         style={styles.forgotPassword}
