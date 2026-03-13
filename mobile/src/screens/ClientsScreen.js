@@ -1,9 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, ActivityIndicator, RefreshControl, Linking } from 'react-native';
 import { Search, Plus, MessageCircle, MapPin, AlertCircle, ChevronRight } from 'lucide-react-native';
 import { COLORS, SIZES } from '../constants/theme';
 import { useClients } from '../hooks/useClients';
-import { ActivityIndicator, RefreshControl, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const ClientCard = ({ client, onPress }) => {
@@ -48,6 +47,23 @@ export default function ClientsScreen() {
     );
 
     const totalPortfolio = clients.reduce((sum, c) => sum + (c.balance || 0), 0);
+
+    const StatsWidget = () => (
+        <View style={styles.statsCard}>
+            <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Total Clientes</Text>
+                <Text style={styles.statValue}>{clients.length}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Cartera Total</Text>
+                <Text style={[styles.statValue, { color: COLORS.danger }]}>
+                    ${(totalPortfolio || 0).toLocaleString()}
+                </Text>
+            </View>
+        </View>
+    );
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -65,53 +81,42 @@ export default function ClientsScreen() {
                 />
             </View>
 
-            <View style={styles.statsCard}>
-                <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>Total Clientes</Text>
-                    <Text style={styles.statValue}>{clients.length}</Text>
-                </View>
-                <View style={styles.divider} />
-                <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>Cartera Total</Text>
-                    <Text style={[styles.statValue, { color: COLORS.danger }]}>
-                        ${(totalPortfolio || 0).toLocaleString()}
-                    </Text>
-                </View>
-            </View>
-
             {error && (
-                <View style={{ backgroundColor: COLORS.danger + '22', marginHorizontal: 20, padding: 10, borderRadius: 10, flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                <View style={styles.errorBanner}>
                     <AlertCircle color={COLORS.danger} size={16} />
-                    <Text style={{ color: COLORS.danger, marginLeft: 10, fontSize: 12 }}>{error}</Text>
+                    <Text style={styles.errorText}>{error}</Text>
                 </View>
             )}
 
-            <ScrollView
-                contentContainerStyle={styles.list}
-                refreshControl={
-                    <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={COLORS.primary} />
-                }
-            >
-                {loading && !clients.length ? (
-                    <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
-                ) : filteredClients.length === 0 ? (
-                    <Text style={{ color: COLORS.textSecondary, textAlign: 'center', marginTop: 40 }}>No se encontraron clientes</Text>
-                ) : (
-                    filteredClients.map(client => (
+            {loading && !clients.length ? (
+                <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
+            ) : (
+                <FlatList
+                    data={filteredClients}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
                         <ClientCard
-                            key={client.id}
-                            client={client}
-                            onPress={() => navigation.navigate('ClientDashboard', { client })}
+                            client={item}
+                            onPress={() => navigation.navigate('ClientDashboard', { client: item })}
                         />
-                    ))
-                )}
-            </ScrollView>
+                    )}
+                    contentContainerStyle={styles.list}
+                    ListHeaderComponent={<StatsWidget />}
+                    ListEmptyComponent={
+                        <Text style={{ color: COLORS.textSecondary, textAlign: 'center', marginTop: 40 }}>No se encontraron clientes</Text>
+                    }
+                    refreshControl={
+                        <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={COLORS.primary} />
+                    }
+                    showsVerticalScrollIndicator={false}
+                />
+            )}
 
             <TouchableOpacity 
                 style={styles.fab}
-                onPress={() => navigation.navigate('ClientEdit')}
+                onPress={() => navigation.navigate('ClientEdit', { mode: 'create' })}
             >
-                <Plus color={COLORS.text} size={30} />
+                <Plus color="white" size={28} />
             </TouchableOpacity>
         </View>
     );
@@ -154,7 +159,6 @@ const styles = StyleSheet.create({
     statsCard: {
         flexDirection: 'row',
         backgroundColor: COLORS.card,
-        marginHorizontal: SIZES.padding,
         padding: 20,
         borderRadius: SIZES.radius,
         marginBottom: 20,
@@ -181,9 +185,23 @@ const styles = StyleSheet.create({
         height: 30,
         backgroundColor: COLORS.border,
     },
+    errorBanner: {
+        backgroundColor: COLORS.danger + '22',
+        marginHorizontal: 20,
+        padding: 10,
+        borderRadius: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    errorText: {
+        color: COLORS.danger,
+        marginLeft: 10,
+        fontSize: 12,
+    },
     list: {
-        paddingHorizontal: SIZES.padding,
-        paddingBottom: 100,
+        padding: 20,
+        paddingBottom: 160,
     },
     card: {
         flexDirection: 'row',
@@ -207,11 +225,11 @@ const styles = StyleSheet.create({
     locationInfo: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
     },
     details: {
         color: COLORS.textSecondary,
         fontSize: 12,
+        marginLeft: 4,
     },
     cardRight: {
         alignItems: 'flex-end',
@@ -233,14 +251,18 @@ const styles = StyleSheet.create({
     },
     fab: {
         position: 'absolute',
-        right: 20,
-        bottom: 20,
+        right: 25,
+        bottom: 110,
         width: 60,
         height: 60,
         borderRadius: 30,
         backgroundColor: COLORS.primary,
-        alignItems: 'center',
         justifyContent: 'center',
-        elevation: 5,
+        alignItems: 'center',
+        elevation: 8,
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
     },
 });

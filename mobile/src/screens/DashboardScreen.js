@@ -132,8 +132,8 @@ export default function DashboardScreen() {
                         ) : (
                             <LineChart
                                 data={chartData}
-                                width={width - 84}
-                                height={180}
+                                width={Dimensions.get('window').width - 40}
+                                height={220}
                                 chartConfig={{
                                     backgroundColor: 'transparent',
                                     backgroundGradientFrom: 'rgba(15, 23, 42, 0)',

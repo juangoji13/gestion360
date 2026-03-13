@@ -1,26 +1,45 @@
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
 import { Search, Plus, DollarSign, AlertCircle } from 'lucide-react-native';
 import { COLORS, SIZES } from '../constants/theme';
 import { useInvoices } from '../hooks/useInvoices';
 import { useNavigation } from '@react-navigation/native';
-import { ActivityIndicator, RefreshControl } from 'react-native';
 
-const InvoiceCard = ({ id, client, date, amount, status, statusColor, onPress }) => (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-        <View style={styles.cardHeader}>
-            <Text style={styles.invoiceId}>{id}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: statusColor + '22' }]}>
-                <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
+const InvoiceCard = ({ invoice, onPress }) => {
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'paid': return COLORS.success;
+            case 'overdue': return COLORS.danger;
+            case 'pending': return COLORS.warning;
+            default: return COLORS.textSecondary;
+        }
+    };
+
+    const getStatusText = (status) => {
+        switch (status) {
+            case 'paid': return 'Pagada';
+            case 'overdue': return 'Vencida';
+            case 'pending': return 'Pendiente';
+            default: return status;
+        }
+    };
+
+    return (
+        <TouchableOpacity style={styles.card} onPress={onPress}>
+            <View style={styles.cardHeader}>
+                <Text style={styles.invoiceId}>{invoice.invoice_number}</Text>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(invoice.status) + '22' }]}>
+                    <Text style={[styles.statusText, { color: getStatusColor(invoice.status) }]}>{getStatusText(invoice.status)}</Text>
+                </View>
             </View>
-        </View>
-        <Text style={styles.clientName}>{client}</Text>
-        <View style={styles.cardFooter}>
-            <Text style={styles.date}>{date}</Text>
-            <Text style={styles.amount}>{amount}</Text>
-        </View>
-    </TouchableOpacity>
-);
+            <Text style={styles.clientName}>{invoice.client?.name || 'Cliente Genérico'}</Text>
+            <View style={styles.cardFooter}>
+                <Text style={styles.date}>{new Date(invoice.created_at).toLocaleDateString()}</Text>
+                <Text style={styles.amount}>${(invoice.total || 0).toLocaleString()}</Text>
+            </View>
+        </TouchableOpacity>
+    );
+};
 
 export default function InvoicesScreen() {
     const navigation = useNavigation();
@@ -39,23 +58,6 @@ export default function InvoicesScreen() {
         return matchesSearch;
     });
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'paid': return COLORS.success;
-            case 'overdue': return COLORS.danger;
-            case 'pending': return COLORS.warning;
-            default: return COLORS.textSecondary;
-        }
-    };
-
-    const getStatusText = (status) => {
-        switch (status) {
-            case 'paid': return 'Pagada';
-            case 'overdue': return 'Vencida';
-            case 'pending': return 'Pendiente';
-            default: return status;
-        }
-    };
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -96,45 +98,42 @@ export default function InvoicesScreen() {
             </View>
 
             {error && (
-                <View style={{ backgroundColor: COLORS.danger + '22', marginHorizontal: 20, padding: 10, borderRadius: 10, flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                <View style={styles.errorBanner}>
                     <AlertCircle color={COLORS.danger} size={16} />
-                    <Text style={{ color: COLORS.danger, marginLeft: 10, fontSize: 12 }}>{error}</Text>
+                    <Text style={styles.errorText}>{error}</Text>
                 </View>
             )}
 
-            <ScrollView
-                contentContainerStyle={styles.list}
-                refreshControl={
-                    <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={COLORS.primary} />
-                }
-            >
-                {loading && !invoices.length ? (
-                    <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
-                ) : filteredInvoices.length === 0 ? (
-                    <Text style={{ color: COLORS.textSecondary, textAlign: 'center', marginTop: 40 }}>No se encontraron facturas</Text>
-                ) : (
-                    filteredInvoices.map(inv => (
+            {loading && !invoices.length ? (
+                <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 20 }} />
+            ) : (
+                <FlatList
+                    data={filteredInvoices}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
                         <InvoiceCard
-                            key={inv.id}
-                            id={inv.invoice_number}
-                            client={inv.client?.name || 'Cliente Genérico'}
-                            date={new Date(inv.created_at).toLocaleDateString()}
-                            amount={`$${(inv.total || 0).toLocaleString()}`}
-                            status={getStatusText(inv.status)}
-                            statusColor={getStatusColor(inv.status)}
-                            onPress={async () => {
-                                navigation.navigate('InvoiceDetail', { invoice: inv });
-                            }}
+                            invoice={item}
+                            onPress={() => navigation.navigate('InvoiceDetail', { invoice: item })}
                         />
-                    ))
-                )}
-            </ScrollView>
+                    )}
+                    contentContainerStyle={styles.list}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={COLORS.primary} />
+                    }
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyText}>No se encontraron facturas</Text>
+                        </View>
+                    }
+                />
+            )}
 
-            <TouchableOpacity
+            <TouchableOpacity 
                 style={styles.fab}
                 onPress={() => navigation.navigate('NewInvoice')}
             >
-                <Plus color={COLORS.text} size={30} />
+                <Plus color="white" size={28} />
             </TouchableOpacity>
         </View>
     );
@@ -229,9 +228,23 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
     },
+    errorBanner: {
+        backgroundColor: COLORS.danger + '22',
+        marginHorizontal: 20,
+        padding: 10,
+        borderRadius: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    errorText: {
+        color: COLORS.danger,
+        marginLeft: 10,
+        fontSize: 12,
+    },
     list: {
-        paddingHorizontal: SIZES.padding,
-        paddingBottom: 100,
+        padding: 20,
+        paddingBottom: 160,
     },
     card: {
         backgroundColor: COLORS.card,
@@ -281,18 +294,28 @@ const styles = StyleSheet.create({
     },
     fab: {
         position: 'absolute',
-        right: 20,
-        bottom: 20,
+        right: 25,
+        bottom: 110,
         width: 60,
         height: 60,
         borderRadius: 30,
         backgroundColor: COLORS.primary,
-        alignItems: 'center',
         justifyContent: 'center',
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        alignItems: 'center',
+        elevation: 8,
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
-        shadowRadius: 3.5,
+        shadowRadius: 8,
+    },
+    emptyContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 40,
+    },
+    emptyText: {
+        color: COLORS.textSecondary,
+        textAlign: 'center',
+        fontSize: 16,
     },
 });

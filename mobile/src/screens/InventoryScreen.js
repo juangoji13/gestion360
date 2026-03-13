@@ -782,11 +782,16 @@ const styles = StyleSheet.create({
         fontWeight: '800',
         fontSize: 15,
     },
+    scrollContent: {
+        padding: 20,
+        paddingBottom: 160,
+    },
     fabContainer: {
         position: 'absolute',
-        bottom: 30,
-        right: 24,
+        bottom: 110,
+        right: 25,
         zIndex: 1000,
+        alignItems: 'flex-end',
     },
     floatFab: {
         width: 64,

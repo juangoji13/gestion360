@@ -121,16 +121,19 @@ export function useProducts() {
     // Métricas globales calculadas sobre los productos procesados
     const metrics = products.reduce((acc, p) => {
         const physicalStock = parseFloat(p.stock) || 0;
-        
-        // El stock efectivo incluye lo físico + lo que está en transición para ítems flexibles
-        // Para ítems con stock trackeado, el stock físico es la verdad absoluta (ya debería descontarse al facturar si así se programa)
-        // Pero aquí, el usuario quiere ver cuántos tiene "comprometidos" (Reserved)
         const cost = parseFloat(p.base_price) || 0;
         const price = parseFloat(p.sale_price) || 0;
         
-        // Inversión basada en stock físico disponible
-        acc.investment += (cost * physicalStock);
-        acc.salesValue += (price * physicalStock);
+        // Lógica de Reconocimiento de Flexibles / Servicios:
+        // Si no trackea stock o tiene stock 0 pero tiene ventas (soldQty > 0 o reservedQty > 0), 
+        // incluimos su valor en base a lo que se ha movido o lo que se proyecta vender.
+        if (!p.track_stock || physicalStock === 0) {
+            acc.investment += (cost * (p.soldQty + p.reservedQty));
+            acc.salesValue += (price * (p.soldQty + p.reservedQty));
+        } else {
+            acc.investment += (cost * physicalStock);
+            acc.salesValue += (price * physicalStock);
+        }
         return acc;
     }, { investment: 0, salesValue: 0 });
 
