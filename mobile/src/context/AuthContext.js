@@ -136,15 +136,16 @@ export function AuthProvider({ children }) {
             const { error: businessError } = await supabase
                 .from('businesses')
                 .insert([{ 
-                    ...businessData, 
+                    name: businessData.name,
+                    tax_id: businessData.nit,
+                    phone: businessData.phone,
+                    address: businessData.address,
                     user_id: data.user.id,
-                    settings: { theme: 'dark', tax_rate: 0.19 }
+                    default_tax_rate: 19 // Valor por defecto según esquema
                 }]);
             
             if (businessError) {
                 console.error('Error in atomic business creation:', businessError);
-                // No lanzamos error aquí para permitir que el usuario al menos confirme su correo,
-                // pero lo registramos. El usuario podrá crearla manualmente si falla.
             }
         }
 
