@@ -70,13 +70,13 @@ export function AuthProvider({ children }) {
         }
     }
 
-    const signUp = async (email, password, businessName) => {
+    const signUp = async (email, password, businessData) => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
                 data: {
-                    business_name: businessName
+                    business_name: businessData?.name || ''
                 }
             }
         })

@@ -1,27 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert, Image } from 'react-native';
-import * as Linking from 'expo-linking';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, UserPlus, ArrowLeft, Briefcase, MapPin, DollarSign, Globe, Phone, ArrowRight } from 'lucide-react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import { Mail, Lock, UserPlus, ArrowLeft, Briefcase, MapPin, DollarSign, Phone, ArrowRight } from 'lucide-react-native';
 import { COLORS, SIZES } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen() {
     const navigation = useNavigation();
     
     // Paso del formulario
     const [step, setStep] = useState(1); // 1: Identidad, 2: Empresa
-    const authMethod = 'email'; // Forzado a email después de la limpieza
 
-    // Credenciales
+    // Step 1: Credenciales
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    // Empresa
+    // Step 2: Empresa
     const [businessName, setBusinessName] = useState('');
     const [businessNit, setBusinessNit] = useState('');
     const [businessPhone, setBusinessPhone] = useState('');
@@ -59,11 +55,7 @@ export default function RegisterScreen() {
                 address: businessAddress,
             };
 
-            // Guardamos los datos temporalmente en el celular
-            // Así, al confirmar el email y volver, la app los detectará automáticamente
-            await AsyncStorage.setItem('pending_business_data', JSON.stringify(businessData));
-            
-            const { error } = await signUp(email, password);
+            const { error } = await signUp(email, password, businessData);
             if (error) throw error;
             
             navigation.navigate('ConfirmationSuccess', { email });
@@ -201,7 +193,7 @@ export default function RegisterScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
-            <LinearGradient colors={[COLORS.background, '#0A2E28']} style={styles.gradient}>
+            <LinearGradient colors={COLORS.deepGradient} style={styles.gradient}>
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     <TouchableOpacity style={styles.backButton} onPress={() => step === 2 ? setStep(1) : navigation.goBack()}>
                         <ArrowLeft color={COLORS.text} size={24} />
@@ -338,37 +330,6 @@ const styles = StyleSheet.create({
         color: COLORS.text,
         fontSize: 18,
         fontWeight: 'bold',
-    },
-    dividerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 10,
-    },
-    dividerLine: {
-        flex: 1,
-        height: 1,
-        backgroundColor: COLORS.border,
-    },
-    dividerText: {
-        color: COLORS.textSecondary,
-        paddingHorizontal: 15,
-        fontSize: 14,
-    },
-    googleButton: {
-        flexDirection: 'row',
-        backgroundColor: 'transparent',
-        height: 55,
-        borderRadius: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        gap: 12,
-    },
-    googleButtonText: {
-        color: COLORS.text,
-        fontSize: 16,
-        fontWeight: '500',
     },
     linkButton: {
         alignItems: 'center',

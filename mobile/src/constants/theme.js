@@ -3,21 +3,26 @@ export const COLORS = {
     secondary: '#3b82f6', // electric-blue
     accent: '#f97316', // vibrant-orange
     success: '#84cc16', // lime-success
-    background: '#121214', // bg-deep
-    card: 'rgba(255, 255, 255, 0.03)', // glass-card background
-    text: '#f8fafc', // slate-50 / slate-200
-    textSecondary: '#64748b', // slate-500
+    background: '#0a0a0c', // Deep neutral black
+    backgroundDark: '#020617', // Slate-950 for backgrounds
+    backgroundDeep: '#0f172a', // Slate-900
+    card: 'rgba(30, 41, 59, 0.4)', // Slate-800 with transparency
+    text: '#f8fafc', // slate-50
+    textSecondary: '#94a3b8', // slate-400 (lighter than 500 for better contrast)
     danger: '#ef4444',
     warning: '#f59e0b',
     border: 'rgba(255, 255, 255, 0.08)',
-    glass: 'rgba(255, 255, 255, 0.03)',
-    glassHeader: 'rgba(18, 18, 20, 0.8)',
+    glass: 'rgba(255, 255, 255, 0.05)',
+    glassHeader: 'rgba(15, 23, 42, 0.85)',
+    accentGradient: ['#10b981', '#059669'],
+    deepGradient: ['#0f172a', '#020617']
 };
 
 export const SIZES = {
     base: 8,
     font: 14,
     radius: 12,
+    radiusLarge: 18,
     padding: 24,
 };
 

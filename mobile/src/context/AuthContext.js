@@ -76,48 +76,10 @@ export function AuthProvider({ children }) {
             if (session?.user) {
                 setUser(session.user);
                 
-                // Verificar si hay datos de empresa pendientes
                 if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-                    // Primero intentamos cargar la empresa existente
-                    const { data: existingBusiness } = await supabase
-                        .from('businesses')
-                        .select('*')
-                        .eq('user_id', session.user.id)
-                        .maybeSingle();
-
-                    if (!existingBusiness) {
-                        try {
-                            const pendingData = await AsyncStorage.getItem('pending_business_data');
-                            if (pendingData) {
-                                const businessData = JSON.parse(pendingData);
-                                console.log('Creating pending business for user:', session.user.id);
-                                
-                                const { data: newBusiness, error: createError } = await supabase
-                                    .from('businesses')
-                                    .insert([{ 
-                                        ...businessData, 
-                                        user_id: session.user.id,
-                                        settings: { theme: 'dark', tax_rate: 0.19 }
-                                    }])
-                                    .select()
-                                    .single();
-
-                                if (!createError && newBusiness) {
-                                    setBusiness(newBusiness);
-                                    await AsyncStorage.removeItem('pending_business_data');
-                                    console.log('Business successfully created and storage cleared');
-                                    return; // Ya tenemos la empresa, no hace falta fetchBusiness
-                                } else {
-                                    console.error('Error creating business in onAuthStateChange:', createError);
-                                }
-                            }
-                        } catch (e) {
-                            console.error('Error processing pending business data:', e);
-                        }
-                    } else {
-                        setBusiness(existingBusiness);
-                        return; // Ya tenemos la empresa
-                    }
+                    // Solo cargamos la empresa existente. 
+                    // La creación atómica ahora ocurre en el método signUp.
+                    fetchBusiness(session.user.id);
                 }
 
                 fetchBusiness(session.user.id);
@@ -156,7 +118,8 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    const signUp = async (email, password) => {
+    const signUp = async (email, password, businessData) => {
+        // 1. Crear el usuario
         const { data, error } = await supabase.auth.signUp({ 
             email, 
             password,
@@ -164,7 +127,27 @@ export function AuthProvider({ children }) {
                 emailRedirectTo: Linking.createURL('login')
             }
         });
+        
         if (error) throw error;
+
+        // 2. Crear la empresa inmediatamente si tenemos los datos (Sincronización Atómica)
+        if (data?.user && businessData) {
+            console.log('Atomic Business Creation for:', data.user.id);
+            const { error: businessError } = await supabase
+                .from('businesses')
+                .insert([{ 
+                    ...businessData, 
+                    user_id: data.user.id,
+                    settings: { theme: 'dark', tax_rate: 0.19 }
+                }]);
+            
+            if (businessError) {
+                console.error('Error in atomic business creation:', businessError);
+                // No lanzamos error aquí para permitir que el usuario al menos confirme su correo,
+                // pero lo registramos. El usuario podrá crearla manualmente si falla.
+            }
+        }
+
         return data;
     };
 
