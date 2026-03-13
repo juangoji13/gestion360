@@ -77,10 +77,17 @@ export default function Register() {
                         Te hemos enviado un enlace de confirmación a <strong>{email}</strong>.
                         Por favor, confirma tu cuenta para poder iniciar sesión.
                     </p>
-                    <div style={{ marginTop: '2rem' }}>
+                    <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <Link to="/login" className="btn btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }}>
                             Ir al Inicio de Sesión
                         </Link>
+                        <button 
+                            className="btn btn-secondary" 
+                            onClick={() => setSuccess(false)}
+                            style={{ background: 'transparent', border: '1px solid var(--border)' }}
+                        >
+                            Editar datos o correo
+                        </button>
                     </div>
                 </div>
             </div>
