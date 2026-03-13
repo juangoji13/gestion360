@@ -31,60 +31,44 @@ export default function ConfirmSuccess() {
 
   return (
     <div className="auth-page">
-      {/* Background effects consistent with registration */}
       <div className="auth-bg-effects">
         <div className="auth-bg-orb auth-bg-orb-1"></div>
         <div className="auth-bg-orb auth-bg-orb-2"></div>
         <div className="auth-bg-orb auth-bg-orb-3"></div>
       </div>
 
-      <div className="auth-card glass-effect animate-in" style={{ maxWidth: '500px' }}>
+      <div className="auth-card glass-effect animate-in" style={{ maxWidth: '500px', textAlign: 'center' }}>
         <div className="auth-header">
           <div className="premium-icon-badge">
             <div className="icon-pulse-effect"></div>
-            <Rocket size={48} className="rocket-icon" />
+            <ShieldCheck size={48} className="rocket-icon" style={{ color: 'white' }} />
           </div>
-          <h1 className="auth-title" style={{ fontSize: '2.5rem', marginTop: '1.5rem' }}>¡Cuenta Activada!</h1>
-          <p className="auth-subtitle">Bienvenido a la comunidad de Gestión360. Tu espacio de trabajo está listo.</p>
+          <h1 className="auth-title" style={{ fontSize: '2.2rem', marginTop: '1.5rem' }}>¡Cuenta Activada!</h1>
+          <p className="auth-subtitle">Tu dirección de correo ha sido confirmada con éxito.</p>
         </div>
 
-        <div className="auth-body" style={{ textAlign: 'center', marginTop: '2rem' }}>
-          <div className="success-features">
-            <div className="feature-item">
-              <ShieldCheck size={20} className="feature-icon" />
-              <span>Acceso seguro habilitado</span>
-            </div>
-            <div className="feature-item">
-              <ShieldCheck size={20} className="feature-icon" />
-              <span>Empresa configurada automáticamente</span>
-            </div>
+        <div className="auth-body" style={{ marginTop: '2rem' }}>
+          <div className="success-message-container" style={{ 
+            background: 'rgba(16, 185, 129, 0.05)', 
+            padding: '25px', 
+            borderRadius: '16px',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            marginBottom: '2rem'
+          }}>
+            <p style={{ color: 'var(--text-main)', fontSize: '1.1rem', fontWeight: '500', lineHeight: '1.6', margin: 0 }}>
+              ¡Excelente! Tu cuenta profesional ya está lista.
+            </p>
+            <p style={{ color: 'var(--text-muted)', marginTop: '10px', fontSize: '1rem' }}>
+              Ya puedes cerrar esta ventana y regresar a la aplicación de <strong>Gestión360</strong> en tu dispositivo para comenzar a configurar tu empresa.
+            </p>
           </div>
 
-          <p style={{ color: 'var(--text-muted)', margin: '1.5rem 0', lineHeight: '1.6' }}>
-            Tu cuenta ha sido verificada exitosamente. Ahora puedes comenzar a gestionar tus facturas, inventario y clientes desde cualquier dispositivo.
-          </p>
-
-          <div className="action-stack" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <button 
-              className="btn btn-primary btn-lg" 
-              onClick={() => navigate('/login')}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}
-            >
-              <Globe size={20} />
-              Iniciar Sesión en Web
-            </button>
-            <button 
-              className="btn btn-secondary btn-lg" 
-              onClick={() => window.location.href = 'gestion360://login'}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}
-            >
-              <Smartphone size={20} />
-              Abrir en la Aplicación
-            </button>
+          <div style={{ padding: '10px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            <p>Si estás en una computadora, también puedes ingresar directamente desde el sitio web principal.</p>
           </div>
         </div>
 
-        <div className="auth-footer" style={{ marginTop: '2.5rem' }}>
+        <div className="auth-footer" style={{ marginTop: '2rem' }}>
           <div className="premium-tag">
             <CheckCircle size={14} />
             <span>Verificación Oficial Gestión360</span>
@@ -95,19 +79,17 @@ export default function ConfirmSuccess() {
       <style dangerouslySetInnerHTML={{ __html: `
         .premium-icon-badge {
           position: relative;
-          width: 100px;
-          height: 100px;
+          width: 90px;
+          height: 90px;
           margin: 0 auto;
           background: linear-gradient(135deg, var(--primary) 0%, #15A362 100%);
-          border-radius: 30px;
+          border-radius: 25px;
           display: flex;
           align-items: center;
           justify-content: center;
           box-shadow: 0 15px 35px rgba(16, 185, 129, 0.3);
-          transform: rotate(-5deg);
         }
         .rocket-icon {
-          color: white;
           animation: float 3s ease-in-out infinite;
         }
         .icon-pulse-effect {
@@ -115,35 +97,9 @@ export default function ConfirmSuccess() {
           width: 100%;
           height: 100%;
           background: var(--primary);
-          border-radius: 30px;
+          border-radius: 25px;
           opacity: 0.3;
           animation: pulse-ring 2s infinite;
-        }
-        .success-features {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          background: rgba(255, 255, 255, 0.03);
-          padding: 20px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .feature-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          color: var(--text-main);
-          font-weight: 500;
-          font-size: 0.95rem;
-        }
-        .feature-icon {
-          color: var(--primary);
-        }
-        .action-stack .btn {
-          width: 100%;
-          height: 56px;
-          font-weight: bold;
-          font-size: 1.1rem;
         }
         .premium-tag {
           display: inline-flex;
@@ -155,11 +111,10 @@ export default function ConfirmSuccess() {
           border-radius: 100px;
           font-size: 0.8rem;
           font-weight: 600;
-          letter-spacing: 0.5px;
         }
         @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0); }
-          50% { transform: translateY(-10px) rotate(5deg); }
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
         }
         @keyframes pulse-ring {
           0% { transform: scale(0.95); opacity: 0.3; }

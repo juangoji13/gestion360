@@ -199,7 +199,7 @@ export default function InventoryScreen({ navigation }) {
                         <Text style={styles.headerSub}>Catálogo & Inventario</Text>
                         <Text style={styles.headerTitle}>Productos</Text>
                     </View>
-                    <TouchableOpacity style={styles.actionIconBtn}>
+                    <TouchableOpacity style={styles.actionIconBtn} onPress={() => console.log('Notificaciones')}>
                         <Bell color={COLORS.textSecondary} size={22} />
                     </TouchableOpacity>
                 </View>

@@ -25,50 +25,97 @@ import { View, ActivityIndicator } from 'react-native';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+import QuickActionMenu from '../components/QuickActionMenu';
+
 function TabNavigator() {
     return (
-        <Tab.Navigator
-            screenOptions={{
-                headerShown: false,
-                tabBarStyle: {
-                    backgroundColor: COLORS.card,
-                    borderTopWidth: 0,
-                    height: 60,
-                    paddingBottom: 10,
-                },
-                tabBarActiveTintColor: COLORS.primary,
-                tabBarInactiveTintColor: COLORS.textSecondary,
-            }}
-        >
-            <Tab.Screen
-                name="Dashboard"
-                component={DashboardScreen}
-                options={{
-                    tabBarIcon: ({ color, size }) => <LayoutDashboard color={color} size={size} />,
+        <View style={{ flex: 1 }}>
+            <Tab.Navigator
+                screenOptions={{
+                    headerShown: false,
+                    tabBarStyle: {
+                        position: 'absolute',
+                        bottom: 25,
+                        left: 20,
+                        right: 20,
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        borderRadius: 30,
+                        height: 65,
+                        paddingBottom: 0,
+                        borderTopWidth: 0,
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 255, 255, 0.08)',
+                        elevation: 10,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 10,
+                    },
+                    tabBarActiveTintColor: COLORS.primary,
+                    tabBarInactiveTintColor: COLORS.textSecondary,
+                    tabBarLabelStyle: {
+                        fontSize: 10,
+                        fontWeight: '600',
+                        marginBottom: 8,
+                    },
+                    tabBarIconStyle: {
+                        marginTop: 8,
+                    }
                 }}
-            />
-            <Tab.Screen
-                name="Facturas"
-                component={InvoicesScreen}
-                options={{
-                    tabBarIcon: ({ color, size }) => <FileText color={color} size={size} />,
-                }}
-            />
-            <Tab.Screen
-                name="Clientes"
-                component={ClientsScreen}
-                options={{
-                    tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
-                }}
-            />
-            <Tab.Screen
-                name="Inventario"
-                component={InventoryScreen}
-                options={{
-                    tabBarIcon: ({ color, size }) => <Box color={color} size={size} />,
-                }}
-            />
-        </Tab.Navigator>
+            >
+                <Tab.Screen
+                    name="Dashboard"
+                    component={DashboardScreen}
+                    options={{
+                        tabBarIcon: ({ color, size }) => <LayoutDashboard color={color} size={size} />,
+                    }}
+                />
+                <Tab.Screen
+                    name="Facturas"
+                    component={InvoicesScreen}
+                    options={{
+                        tabBarIcon: ({ color, size }) => <FileText color={color} size={size} />,
+                    }}
+                />
+                
+                {/* Espacio para el botón central */}
+                <Tab.Screen
+                    name="Placeholder"
+                    component={View}
+                    options={{
+                        tabBarButton: () => <View style={{ width: 60 }} />,
+                    }}
+                />
+
+                <Tab.Screen
+                    name="Clientes"
+                    component={ClientsScreen}
+                    options={{
+                        tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
+                    }}
+                />
+                <Tab.Screen
+                    name="Inventario"
+                    component={InventoryScreen}
+                    options={{
+                        tabBarIcon: ({ color, size }) => <Box color={color} size={size} />,
+                    }}
+                />
+            </Tab.Navigator>
+            
+            {/* Botón Flotante Central */}
+            <View style={{ 
+                position: 'absolute', 
+                bottom: 30, 
+                left: 0, 
+                right: 0, 
+                alignItems: 'center', 
+                zIndex: 100,
+                pointerEvents: 'box-none' // Permitir clicks en lo que hay debajo si no es el botón
+            }}>
+                <QuickActionMenu />
+            </View>
+        </View>
     );
 }
 

@@ -1,22 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Briefcase, MapPin, DollarSign, ArrowRight, ArrowLeft, LogOut, Mail, Globe } from 'lucide-react-native';
+import { Briefcase, MapPin, DollarSign, ArrowRight, ArrowLeft, LogOut, Mail, Globe, Phone } from 'lucide-react-native';
 import { COLORS, SIZES } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '../services/supabase';
 
 export default function CreateBusinessScreen() {
-    const navigation = useNavigation();
     const [name, setName] = useState('');
     const [nit, setNit] = useState('');
-    const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
-    const [website, setWebsite] = useState('');
-    const [currency, setCurrency] = useState('COP');
+    const [phone, setPhone] = useState('');
+    const [logoPreview, setLogoPreview] = useState(null);
+    const [logoFile, setLogoFile] = useState(null);
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(false);
-    const { createBusiness, signOut } = useAuth();
+
+    const { createBusiness, business, signOut, user } = useAuth();
+    const navigation = useNavigation();
+
+    // Redirigir si ya tiene negocio (doble check)
+    useEffect(() => {
+        if (business) {
+            navigation.replace('MainTabs');
+        }
+    }, [business]);
+
+    const pickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permiso denegado', 'Necesitamos acceso a tu galería para subir el logo.');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.7,
+        });
+
+        if (!result.canceled) {
+            setLogoPreview(result.assets[0].uri);
+            setLogoFile(result.assets[0]);
+        }
+    };
 
     const handleLogout = async () => {
         try {
@@ -27,28 +57,58 @@ export default function CreateBusinessScreen() {
     };
 
     const handleCreate = async () => {
-        if (!name || !nit) {
-            return Alert.alert('Error', 'El nombre y el NIT/RUT son obligatorios');
+        if (!name.trim()) {
+            return Alert.alert('Error', 'El nombre de la empresa es obligatorio');
         }
 
         try {
             setLoading(true);
-            await createBusiness({
-                name,
-                nit,
-                phone,
-                email,
-                website,
-                currency,
-                address,
-                settings: {
-                    theme: 'dark',
-                    tax_rate: 0.19
-                }
+            
+            let logoUrl = null;
+
+            // Subir logo si se seleccionó uno
+            if (logoFile) {
+                const uri = logoFile.uri;
+                const fileExt = uri.split('.').pop();
+                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                const filePath = fileName;
+
+                const formData = new FormData();
+                formData.append('file', {
+                    uri,
+                    name: fileName,
+                    type: `image/${fileExt}`,
+                });
+
+                const { error: uploadError } = await supabase.storage
+                    .from('logos')
+                    .upload(filePath, formData, {
+                        contentType: `image/${fileExt}`,
+                        upsert: true
+                    });
+
+                if (uploadError) throw uploadError;
+
+                const { data: publicUrlData } = supabase.storage
+                    .from('logos')
+                    .getPublicUrl(filePath);
+                
+                logoUrl = publicUrlData.publicUrl;
+            }
+
+            const { error } = await createBusiness({
+                name: name.trim(),
+                tax_id: nit.trim(),
+                email: email.trim(),
+                phone: phone.trim(),
+                address: address.trim(),
+                logo_url: logoUrl
             });
-            Alert.alert('¡Excelente!', 'Tu negocio ha sido creado con éxito.');
+
+            if (error) throw error;
+            
         } catch (error) {
-            Alert.alert('Error', error.message);
+            Alert.alert('Error', error.message || 'No se pudo crear la empresa');
         } finally {
             setLoading(false);
         }
@@ -95,7 +155,7 @@ export default function CreateBusinessScreen() {
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <DollarSign color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
+                            <Phone color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
                             <TextInput
                                 style={styles.input}
                                 placeholder="Teléfono de contacto"
@@ -118,30 +178,20 @@ export default function CreateBusinessScreen() {
                                 autoCapitalize="none"
                             />
                         </View>
-
-                        <View style={styles.inputContainer}>
-                            <Globe color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Sitio Web (Opcional)"
-                                placeholderTextColor={COLORS.textSecondary}
-                                value={website}
-                                onChangeText={setWebsite}
-                                keyboardType="url"
-                                autoCapitalize="none"
-                            />
+                        {/* Selector de Logo */}
+                        <View style={styles.logoUploadContainer}>
+                            <TouchableOpacity style={styles.logoPicker} onPress={pickImage}>
+                                {logoPreview ? (
+                                    <Image source={{ uri: logoPreview }} style={styles.logoPreviewImage} />
+                                ) : (
+                                    <View style={styles.logoPlaceholder}>
+                                        <Globe color={COLORS.textSecondary} size={30} />
+                                        <Text style={styles.logoPlaceholderText}>Subir Logo</Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
                         </View>
 
-                        <View style={styles.inputContainer}>
-                            <DollarSign color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Moneda (ej: COP, USD, MXN)"
-                                placeholderTextColor={COLORS.textSecondary}
-                                value={currency}
-                                onChangeText={setCurrency}
-                            />
-                        </View>
 
                         <View style={styles.inputContainer}>
                             <MapPin color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
@@ -232,6 +282,36 @@ const styles = StyleSheet.create({
     },
     form: {
         gap: 20,
+    },
+    logoUploadContainer: {
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    logoPicker: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: COLORS.glass,
+        borderWidth: 2,
+        borderColor: COLORS.primary,
+        borderStyle: 'dashed',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+    },
+    logoPreviewImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    logoPlaceholder: {
+        alignItems: 'center',
+        gap: 5,
+    },
+    logoPlaceholderText: {
+        color: COLORS.textSecondary,
+        fontSize: 12,
+        fontWeight: 'bold',
     },
     inputContainer: {
         flexDirection: 'row',

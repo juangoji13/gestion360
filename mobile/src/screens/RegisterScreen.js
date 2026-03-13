@@ -1,35 +1,26 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, UserPlus, ArrowLeft, Briefcase, MapPin, DollarSign, Phone, ArrowRight } from 'lucide-react-native';
+import { Mail, Lock, UserPlus, ArrowLeft, Briefcase, MapPin, Phone, ArrowRight } from 'lucide-react-native';
 import { COLORS, SIZES } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import Animated, { FadeInUp, FadeInDown, FadeIn } from 'react-native-reanimated';
 
 export default function RegisterScreen() {
     const navigation = useNavigation();
     
-    // Paso del formulario
-    const [step, setStep] = useState(1); // 1: Identidad, 2: Empresa
-
-    // Step 1: Credenciales
+    // Credenciales
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    // Step 2: Empresa
-    const [businessName, setBusinessName] = useState('');
-    const [businessNit, setBusinessNit] = useState('');
-    const [businessPhone, setBusinessPhone] = useState('');
-    const [businessCurrency, setBusinessCurrency] = useState('COP');
-    const [businessAddress, setBusinessAddress] = useState('');
-
     const [loading, setLoading] = useState(false);
     const { signUp } = useAuth();
 
-    const handleNextStep = () => {
+    const handleRegister = async () => {
         if (!email || !password || !confirmPassword) {
-            return Alert.alert('Error', 'Por favor completa todos los campos de acceso');
+            return Alert.alert('Error', 'Por favor completa todos los campos');
         }
         if (password !== confirmPassword) {
             return Alert.alert('Error', 'Las contraseñas no coinciden');
@@ -37,28 +28,17 @@ export default function RegisterScreen() {
         if (password.length < 6) {
             return Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
         }
-        setStep(2);
-    };
-
-    const handleRegister = async () => {
-        if (!businessName || !businessNit) {
-            return Alert.alert('Error', 'El nombre y el NIT de la empresa son obligatorios');
-        }
 
         try {
             setLoading(true);
-            const businessData = {
-                name: businessName,
-                nit: businessNit,
-                phone: businessPhone,
-                currency: businessCurrency,
-                address: businessAddress,
-            };
-
-            const { error } = await signUp(email, password, businessData);
+            const { data, error } = await signUp(email, password);
             if (error) throw error;
             
-            navigation.navigate('ConfirmationSuccess', { email });
+            // Si no hay sesión inmediata, significa que la confirmación sigue activa en Supabase
+            if (!data.session) {
+                navigation.navigate('ConfirmationSuccess', { email });
+            }
+            // Si hay sesión, el AuthContext actualizará el estado y AppNavigator nos moverá solo
         } catch (error) {
             let message = error.message;
             if (message.includes('already registered')) {
@@ -70,8 +50,8 @@ export default function RegisterScreen() {
         }
     };
 
-    const renderStep1 = () => (
-        <View style={styles.form}>
+    const renderForm = () => (
+        <Animated.View entering={FadeInUp.delay(200).duration(800)} style={styles.form}>
             <View style={styles.inputContainer}>
                 <Mail color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
                 <TextInput
@@ -110,82 +90,20 @@ export default function RegisterScreen() {
             </View>
 
             <TouchableOpacity
-                style={styles.button}
-                onPress={handleNextStep}
-            >
-                <View style={styles.buttonInner}>
-                    <Text style={styles.buttonText}>Siguiente Paso</Text>
-                    <ArrowRight color={COLORS.text} size={20} />
-                </View>
-            </TouchableOpacity>
-        </View>
-    );
-
-    const renderStep2 = () => (
-        <View style={styles.form}>
-            <Text style={styles.stepTitle}>Datos de tu Empresa 🏢</Text>
-            
-            <View style={styles.inputContainer}>
-                <Briefcase color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Nombre del Negocio"
-                    placeholderTextColor={COLORS.textSecondary}
-                    value={businessName}
-                    onChangeText={setBusinessName}
-                />
-            </View>
-
-            <View style={styles.inputContainer}>
-                <MapPin color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
-                <TextInput
-                    style={styles.input}
-                    placeholder="NIT / RUT"
-                    placeholderTextColor={COLORS.textSecondary}
-                    value={businessNit}
-                    onChangeText={setBusinessNit}
-                />
-            </View>
-
-            <View style={styles.inputContainer}>
-                <Phone color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Teléfono (Opcional)"
-                    placeholderTextColor={COLORS.textSecondary}
-                    value={businessPhone}
-                    onChangeText={setBusinessPhone}
-                    keyboardType="phone-pad"
-                />
-            </View>
-
-            <View style={styles.inputContainer}>
-                <DollarSign color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Moneda (ej: COP, USD)"
-                    placeholderTextColor={COLORS.textSecondary}
-                    value={businessCurrency}
-                    onChangeText={setBusinessCurrency}
-                />
-            </View>
-
-            <TouchableOpacity
                 style={[styles.button, loading && styles.buttonDisabled]}
                 onPress={handleRegister}
                 disabled={loading}
             >
                 {loading ? (
-                    <ActivityIndicator color={COLORS.text} />
+                    <ActivityIndicator color={COLORS.background} />
                 ) : (
-                    <Text style={styles.buttonText}>Finalizar y Crear Cuenta</Text>
+                    <View style={styles.buttonInner}>
+                        <Text style={styles.buttonText}>Crear Mi Cuenta</Text>
+                        <ArrowRight color={COLORS.background} size={20} />
+                    </View>
                 )}
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.linkButton} onPress={() => setStep(1)}>
-                <Text style={styles.linkText}>Volver al paso anterior</Text>
-            </TouchableOpacity>
-        </View>
+        </Animated.View>
     );
 
     return (
@@ -193,13 +111,15 @@ export default function RegisterScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
-            <LinearGradient colors={COLORS.deepGradient} style={styles.gradient}>
+            <LinearGradient colors={['#1e293b', '#0f172a']} style={styles.gradient}>
                 <ScrollView contentContainerStyle={styles.scrollContent}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => step === 2 ? setStep(1) : navigation.goBack()}>
-                        <ArrowLeft color={COLORS.text} size={24} />
-                    </TouchableOpacity>
+                    <Animated.View entering={FadeIn.delay(800)}>
+                        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                            <ArrowLeft color={COLORS.text} size={24} />
+                        </TouchableOpacity>
+                    </Animated.View>
 
-                    <View style={styles.header}>
+                    <Animated.View entering={FadeInDown.duration(800)} style={styles.header}>
                         <View style={styles.logoContainer}>
                             <Image
                                 source={require('../../assets/logo.png')}
@@ -207,19 +127,19 @@ export default function RegisterScreen() {
                                 resizeMode="contain"
                             />
                         </View>
-                        <Text style={styles.subtitle}>{step === 1 ? 'Crea tu cuenta profesional hoy' : 'Configura tu espacio de trabajo'}</Text>
-                    </View>
+                        <Text style={styles.subtitle}>Crea tu cuenta profesional hoy</Text>
+                    </Animated.View>
 
-                    {step === 1 ? renderStep1() : renderStep2()}
+                    {renderForm()}
 
-                    {step === 1 && (
+                    <Animated.View entering={FadeIn.delay(600)}>
                         <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
                             <View style={{ flexDirection: 'row', marginTop: 10 }}>
                                 <Text style={styles.linkText}>¿Ya tienes cuenta? </Text>
                                 <Text style={styles.linkTextBold}>Ingresa aquí</Text>
                             </View>
                         </TouchableOpacity>
-                    )}
+                    </Animated.View>
                 </ScrollView>
             </LinearGradient>
         </KeyboardAvoidingView>
@@ -229,6 +149,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: COLORS.background,
     },
     gradient: {
         flex: 1,
@@ -240,107 +161,102 @@ const styles = StyleSheet.create({
     },
     backButton: {
         position: 'absolute',
-        top: 50,
+        top: 60,
         left: 20,
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: COLORS.glass,
+        width: 45,
+        height: 45,
+        borderRadius: 22.5,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
     },
     header: {
         alignItems: 'center',
         marginBottom: 40,
+        marginTop: 40,
     },
     logoContainer: {
-        width: 250,
-        height: 120,
+        width: 200,
+        height: 80,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 0,
+        marginBottom: 5,
     },
     logo: {
         width: '100%',
         height: '100%',
     },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: COLORS.text,
-        marginBottom: 10,
-    },
     subtitle: {
-        fontSize: 16,
-        color: COLORS.textSecondary,
-        textAlign: 'center',
-        marginTop: 0,
-    },
-    stepTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: COLORS.text,
-        textAlign: 'center',
-        marginBottom: 20,
+        fontSize: 14,
+        color: '#94a3b8',
+        fontWeight: '600',
+        letterSpacing: 1,
+        textTransform: 'uppercase',
     },
     form: {
-        gap: 15,
+        gap: 16,
     },
     buttonInner: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
+        gap: 12,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.glass,
-        borderRadius: 15,
-        paddingHorizontal: 15,
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        borderRadius: 20,
+        paddingHorizontal: 20,
+        height: 65,
         borderWidth: 1,
-        borderColor: COLORS.border,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
     },
     inputIcon: {
-        marginRight: 10,
+        marginRight: 15,
+        opacity: 0.7,
     },
     input: {
         flex: 1,
-        height: 55,
-        color: COLORS.text,
+        color: '#ffffff',
         fontSize: 16,
+        fontWeight: '500',
     },
     button: {
         backgroundColor: COLORS.primary,
-        height: 55,
-        borderRadius: 15,
+        height: 65,
+        borderRadius: 20,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 10,
+        marginTop: 15,
         shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 15,
+        elevation: 8,
     },
     buttonDisabled: {
         opacity: 0.7,
     },
     buttonText: {
-        color: COLORS.text,
+        color: COLORS.background,
         fontSize: 18,
-        fontWeight: 'bold',
+        fontWeight: '900',
+        letterSpacing: -0.5,
     },
     linkButton: {
         alignItems: 'center',
-        marginTop: 20,
+        marginTop: 30,
     },
     linkText: {
-        color: COLORS.textSecondary,
-        fontSize: 14,
+        color: '#64748b',
+        fontSize: 15,
+        fontWeight: '500',
     },
     linkTextBold: {
         color: COLORS.primary,
-        fontWeight: 'bold',
+        fontWeight: '800',
     },
 });

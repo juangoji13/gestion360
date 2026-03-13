@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Image } from 'react-native';
-import { Mail, Lock, ChevronRight } from 'lucide-react-native';
-import { COLORS, SIZES, SHADOWS } from '../constants/theme';
-import { useAuth } from '../context/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Mail, Lock, ChevronRight } from 'lucide-react-native';
+import { COLORS, SIZES } from '../constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../context/AuthContext';
+import Animated, { FadeInUp, FadeInDown, FadeIn } from 'react-native-reanimated';
 
 export default function LoginScreen() {
     const navigation = useNavigation();
@@ -35,10 +36,10 @@ export default function LoginScreen() {
             style={styles.container}
         >
             <LinearGradient
-                colors={[COLORS.background, '#1a1a1a']}
+                colors={[COLORS.background, '#0f172a']} // Deep navy to background
                 style={styles.gradient}
             >
-                <View style={styles.header}>
+                <Animated.View entering={FadeInDown.duration(800)} style={styles.header}>
                     <View style={styles.logoContainer}>
                         <Image
                             source={require('../../assets/logo.png')}
@@ -47,9 +48,9 @@ export default function LoginScreen() {
                         />
                     </View>
                     <Text style={styles.subtitle}>Tu negocio en la palma de tu mano</Text>
-                </View>
+                </Animated.View>
 
-                <View style={styles.form}>
+                <Animated.View entering={FadeInUp.delay(200).duration(800)} style={styles.form}>
                     <View style={styles.inputContainer}>
                         <Mail color={COLORS.textSecondary} size={20} style={styles.inputIcon} />
                         <TextInput
@@ -81,20 +82,20 @@ export default function LoginScreen() {
                         disabled={loading}
                     >
                         {loading ? (
-                            <ActivityIndicator color={COLORS.text} />
+                            <ActivityIndicator color={COLORS.background} />
                         ) : (
                             <>
                                 <Text style={styles.loginButtonText}>Ingresar</Text>
-                                <ChevronRight color={COLORS.text} size={20} />
+                                <ChevronRight color={COLORS.background} size={20} />
                             </>
                         )}
                     </TouchableOpacity>
 
-                    <View style={styles.dividerContainer}>
+                    <Animated.View entering={FadeIn.delay(400)} style={styles.dividerContainer}>
                         <View style={styles.dividerLine} />
                         <Text style={styles.dividerText}>Acceso</Text>
                         <View style={styles.dividerLine} />
-                    </View>
+                    </Animated.View>
 
                     <TouchableOpacity 
                         style={styles.forgotPassword}
@@ -102,14 +103,14 @@ export default function LoginScreen() {
                     >
                         <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
                     </TouchableOpacity>
-                </View>
+                </Animated.View>
 
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>¿No tienes una cuenta?</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('Register')} style={{ marginLeft: 5 }}>
+                <Animated.View entering={FadeIn.delay(600)} style={styles.footer}>
+                    <Text style={styles.footerText}>¿No tienes una cuenta? </Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Register')}>
                         <Text style={styles.signUpText}>Regístrate aquí</Text>
                     </TouchableOpacity>
-                </View>
+                </Animated.View>
             </LinearGradient>
         </KeyboardAvoidingView>
     );
@@ -118,126 +119,122 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: COLORS.background,
     },
     gradient: {
         flex: 1,
-        padding: SIZES.padding,
+        padding: SIZES.padding * 1.5,
         justifyContent: 'center',
     },
     header: {
         alignItems: 'center',
-        marginBottom: 50,
+        marginBottom: 60,
     },
     logoContainer: {
-        width: 250,
-        height: 120,
+        width: 220,
+        height: 100,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 0,
+        marginBottom: 10,
     },
     logo: {
         width: '100%',
         height: '100%',
     },
-    title: {
-        color: COLORS.text,
-        fontSize: 32,
-        fontWeight: 'bold',
-        letterSpacing: 1,
-    },
     subtitle: {
-        color: COLORS.textSecondary,
-        fontSize: 16,
-        marginTop: 0,
+        color: '#94a3b8',
+        fontSize: 14,
+        fontWeight: '600',
+        letterSpacing: 1.2,
+        textTransform: 'uppercase',
+        opacity: 0.8,
     },
     form: {
-        gap: 20,
+        gap: 16,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.card,
-        borderRadius: SIZES.radius,
-        paddingHorizontal: 15,
-        height: 60,
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        borderRadius: 20,
+        paddingHorizontal: 20,
+        height: 65,
         borderWidth: 1,
-        borderColor: COLORS.border,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
     },
     inputIcon: {
-        marginRight: 12,
+        marginRight: 15,
+        opacity: 0.7,
     },
     input: {
         flex: 1,
-        color: COLORS.text,
+        color: '#ffffff',
         fontSize: 16,
+        fontWeight: '500',
     },
     loginButton: {
         flexDirection: 'row',
         backgroundColor: COLORS.primary,
-        height: 60,
-        borderRadius: SIZES.radius,
+        height: 65,
+        borderRadius: 20,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 10,
-        ...SHADOWS.medium,
+        marginTop: 15,
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 15,
+        elevation: 8,
     },
     loginButtonText: {
-        color: COLORS.text,
+        color: COLORS.background,
         fontSize: 18,
-        fontWeight: 'bold',
-        marginRight: 8,
+        fontWeight: '900',
+        marginRight: 10,
+        letterSpacing: -0.5,
     },
     dividerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 10,
+        marginVertical: 25,
     },
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: COLORS.border,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
     },
     dividerText: {
-        color: COLORS.textSecondary,
-        paddingHorizontal: 15,
-        fontSize: 14,
-    },
-    otpButton: {
-        flexDirection: 'row',
-        backgroundColor: 'transparent',
-        height: 60,
-        borderRadius: SIZES.radius,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        gap: 12,
-    },
-    otpButtonText: {
-        color: COLORS.text,
-        fontSize: 16,
-        fontWeight: '500',
+        color: '#64748b',
+        paddingHorizontal: 20,
+        fontSize: 12,
+        fontWeight: '800',
+        letterSpacing: 1,
+        textTransform: 'uppercase',
     },
     forgotPassword: {
         alignItems: 'center',
-        marginTop: 10,
+        marginTop: 5,
     },
     forgotPasswordText: {
-        color: COLORS.textSecondary,
+        color: '#94a3b8',
         fontSize: 14,
+        fontWeight: '600',
+        textDecorationLine: 'underline',
     },
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 40,
+        marginTop: 50,
+        alignItems: 'center',
     },
     footerText: {
-        color: COLORS.textSecondary,
-        fontSize: 14,
+        color: '#64748b',
+        fontSize: 15,
+        fontWeight: '500',
     },
     signUpText: {
         color: COLORS.primary,
-        fontSize: 14,
-        fontWeight: 'bold',
+        fontSize: 15,
+        fontWeight: '800',
     },
 });

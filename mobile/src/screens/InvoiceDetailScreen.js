@@ -383,7 +383,7 @@ export default function InvoiceDetailScreen() {
                             <View key={index} style={styles.tableRow}>
                                 <Text style={[styles.itemName, { flex: 7 }]}>{item.name}</Text>
                                 <Text style={[styles.itemQty, { flex: 2, textAlign: 'center' }]}>{item.quantity}</Text>
-                                <Text style={[styles.itemTotal, { flex: 3, textAlign: 'right' }]}>$ ${(Number(item.quantity || 0) * (Number(item.price || 0) || Number(item.unit_price || 0))).toLocaleString()}</Text>
+                                <Text style={[styles.itemTotal, { flex: 3, textAlign: 'right' }]}>$ {(Number(item.quantity || 0) * (Number(item.price || 0) || Number(item.unit_price || 0))).toLocaleString()}</Text>
                             </View>
                         ))}
                         {/* Summary of Quantities */}
@@ -531,7 +531,7 @@ const BlurBackground = () => (
     <View style={styles.blurWrapper}>
         <LinearGradient 
             colors={['transparent', 'rgba(15, 23, 42, 0.95)']} 
-            style={StyleSheet.absoluteFill} 
+            style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} 
         />
     </View>
 );
@@ -837,7 +837,11 @@ const styles = StyleSheet.create({
         paddingTop: 20,
     },
     blurWrapper: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
     },
     actionRow: {
         flexDirection: 'row',

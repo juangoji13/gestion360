@@ -391,21 +391,22 @@ export default function NewInvoiceScreen() {
                         <Text style={styles.summaryLabel}>Subtotal</Text>
                         <Text style={styles.summaryValue}>${(subtotal || 0).toLocaleString()}</Text>
                     </View>
-                    {applyDiscount && (
+                    {discount > 0 && (
                         <View style={styles.summaryRow}>
-                            <Text style={[styles.summaryLabel, { color: PREMIUM_COLORS.emeraldPremium }]}>Descuento</Text>
+                            <Text style={styles.summaryLabel}>Descuento:</Text>
                             <Text style={[styles.summaryValue, { color: PREMIUM_COLORS.emeraldPremium }]}>-${(discount || 0).toLocaleString()}</Text>
                         </View>
                     )}
-                    <View style={styles.summaryRow}>
-                        <Text style={styles.summaryLabel}>Impuestos (IVA 19%)</Text>
-                        <Text style={styles.summaryValue}>${(iva || 0).toLocaleString()}</Text>
-                    </View>
+                    {iva > 0 && (
+                        <View style={styles.summaryRow}>
+                            <Text style={styles.summaryLabel}>IVA (19%):</Text>
+                            <Text style={styles.summaryValue}>${(iva || 0).toLocaleString()}</Text>
+                        </View>
+                    )}
                     <View style={styles.hDivider} />
                     <View style={styles.totalBlock}>
                         <View>
                             <Text style={styles.totalMeta}>Total a Pagar</Text>
-                            <Text style={styles.totalCurrency}>COP</Text>
                         </View>
                         <Text style={styles.grandTotalText}>$ {(total || 0).toLocaleString()}</Text>
                     </View>

@@ -1,8 +1,8 @@
 export const formatCurrency = (val) => {
-    return new Intl.NumberFormat('es-CO', {
-        style: 'currency',
-        currency: 'COP',
-        minimumFractionDigits: 0
+    return '$ ' + new Intl.NumberFormat('es-CO', {
+        style: 'decimal',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     }).format(val || 0)
 }
 

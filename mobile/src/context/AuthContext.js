@@ -118,39 +118,25 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    const signUp = async (email, password, businessData) => {
-        // 1. Crear el usuario
-        const { data, error } = await supabase.auth.signUp({ 
-            email, 
-            password,
-            options: {
-                emailRedirectTo: Linking.createURL('login')
-            }
-        });
-        
-        if (error) throw error;
+    const signUp = async (email, password) => {
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+            });
 
-        // 2. Crear la empresa inmediatamente si tenemos los datos (Sincronización Atómica)
-        if (data?.user && businessData) {
-            console.log('Atomic Business Creation for:', data.user.id);
-            const { error: businessError } = await supabase
-                .from('businesses')
-                .insert([{ 
-                    name: businessData.name,
-                    tax_id: businessData.nit,
-                    phone: businessData.phone,
-                    address: businessData.address,
-                    user_id: data.user.id,
-                    default_tax_rate: 19 // Valor por defecto según esquema
-                }]);
+            if (error) return { error };
             
-            if (businessError) {
-                console.error('Error in atomic business creation:', businessError);
-                throw new Error(`Error al crear la empresa: ${businessError.message}`);
+            // Si la confirmación de email está desactivada, data.session tendrá la sesión
+            if (data?.session?.user) {
+                setUser(data.session.user);
             }
+            
+            return { data };
+        } catch (error) {
+            console.error('Error in signUp:', error);
+            return { error };
         }
-
-        return data;
     };
 
     const createBusiness = async (businessData) => {
@@ -160,8 +146,7 @@ export function AuthProvider({ children }) {
             .from('businesses')
             .insert([{ 
                 ...businessData, 
-                user_id: user.id,
-                settings: businessData.settings || { theme: 'dark', tax_rate: 0.19 }
+                user_id: user.id
             }])
             .select()
             .single();

@@ -85,7 +85,7 @@ export default function DashboardScreen() {
                             <Text style={styles.userNameText}>Hola, {user?.email?.split('@')[0] || 'Alejandro'}</Text>
                         </View>
                     </View>
-                    <TouchableOpacity style={styles.actionIconBtn} onPress={signOut}>
+                    <TouchableOpacity style={styles.actionIconBtn} onPress={() => console.log('Notificaciones')}>
                         <Bell color={COLORS.textSecondary} size={22} />
                     </TouchableOpacity>
                 </View>
@@ -136,17 +136,28 @@ export default function DashboardScreen() {
                                 height={180}
                                 chartConfig={{
                                     backgroundColor: 'transparent',
-                                    backgroundGradientFrom: 'transparent',
-                                    backgroundGradientTo: 'transparent',
+                                    backgroundGradientFrom: 'rgba(15, 23, 42, 0)',
+                                    backgroundGradientTo: 'rgba(15, 23, 42, 0)', // Totalmente traslúcido
                                     decimalPlaces: 0,
-                                    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                    color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`, // Emerald primary color
                                     labelColor: (opacity = 1) => `rgba(148, 163, 184, ${opacity})`,
                                     style: { borderRadius: 16 },
-                                    propsForDots: { r: "4", strokeWidth: "2", stroke: COLORS.background },
-                                    propsForBackgroundLines: { strokeDasharray: "", stroke: "rgba(255,255,255,0.05)" }
+                                    propsForDots: { 
+                                        r: "5", 
+                                        strokeWidth: "2", 
+                                        stroke: COLORS.background 
+                                    },
+                                    propsForBackgroundLines: { 
+                                        strokeDasharray: "5", 
+                                        stroke: "rgba(255,255,255,0.03)" 
+                                    }
                                 }}
                                 bezier
-                                style={{ marginVertical: 8, borderRadius: 16, marginLeft: -12 }}
+                                style={{ 
+                                    marginVertical: 8, 
+                                    borderRadius: 16, 
+                                    marginLeft: -12,
+                                }}
                                 withInnerLines={true}
                                 withOuterLines={false}
                                 withVerticalLines={false}
