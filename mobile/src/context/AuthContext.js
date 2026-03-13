@@ -164,31 +164,34 @@ export function AuthProvider({ children }) {
         path: 'auth'
     });
 
+    // Configuración optimizada para Expo Go: Usamos el Web Client ID para todas las plataformas
+    // ya que Expo Go no tiene el bundle identifier de nuestra app real.
     const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
         webClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
-        iosClientId: '755009452836-ocjdclpimd2b457103n36hlvu8uf7pti.apps.googleusercontent.com',
-        androidClientId: '755009452836-i44i9i1eigp4salaeh087hauhl4dj6be.apps.googleusercontent.com',
+        // En Expo Go, si incluimos ios/android client IDs, Google intentará verificar el paquete 
+        // de Expo Go y fallará. Usando solo webClientId forzamos el flujo de Proxy.
+        iosClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
+        androidClientId: '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com',
     }, {
-        useProxy: true
+        projectNameForProxy: 'Gestion360',
+        useProxy: true,
     });
 
     useEffect(() => {
-        console.log('--- GOOGLE AUTH RESPONSE DEBUG ---');
-        console.log('Response Type:', response?.type);
         if (response?.type === 'success') {
-            console.log('Response Params:', JSON.stringify(response.params, null, 2));
             const { id_token, params } = response;
             const token = id_token || params?.id_token;
+            console.log('--- GOOGLE AUTH SUCCESS ---');
             console.log('Final Token Found:', token ? 'YES' : 'NO');
             if (token) {
                 handleGoogleSignInWithIdToken(token);
-            } else {
-                console.warn('Google sign-in success but no ID Token found in response');
             }
         } else if (response?.type === 'error') {
-            console.error('Google Auth Error:', response.error);
+            console.error('--- GOOGLE AUTH ERROR ---');
+            console.error('Error:', response.error);
+            console.error('Description:', response.params?.error_description);
+            console.log('-------------------------');
         }
-        console.log('---------------------------------');
     }, [response]);
 
     const handleGoogleSignInWithIdToken = async (idToken) => {
@@ -213,12 +216,17 @@ export function AuthProvider({ children }) {
 
     const signInWithGoogle = async () => {
         try {
-            console.log('--- DEBUG: AUTH REQUEST DETAILS ---');
-            console.log('Using implicit redirect URI from Expo Proxy');
-            console.log('------------------------------------');
+            // URI de redirección autorizada en Google Cloud
+            const authProxyUri = 'https://auth.expo.io/@juangoji13/Gestion360';
+            
+            console.log('--- AUDITORÍA DE SOLICITUD ---');
+            console.log('Redirigiendo a:', authProxyUri);
+            console.log('Client ID:', '755009452836-2no96gvj5okvctp2htkloto466ti8bmf.apps.googleusercontent.com');
+            console.log('------------------------------');
             
             await promptAsync({
                 useProxy: true,
+                redirectUri: authProxyUri,
             });
         } catch (error) {
             console.error('Error in Google Auth Prompt:', error);
