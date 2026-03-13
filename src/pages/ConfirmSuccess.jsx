@@ -8,6 +8,25 @@ export default function ConfirmSuccess() {
 
   useEffect(() => {
     document.title = "¡Cuenta Activada! | Gestión360 🚀";
+    
+    // Inyectar meta tags para que la previsualización sea hermosa
+    const metaTags = [
+      { property: 'og:title', content: '✓ Cuenta Activada con Éxito' },
+      { property: 'og:description', content: 'Bienvenido a Gestión360. Tu espacio de trabajo profesional está listo para facturar.' },
+      { property: 'og:image', content: 'https://sistemadefacturacion-silk.vercel.app/logo.png' },
+      { name: 'description', content: 'Confirmación de cuenta exitosa en Gestión360.' }
+    ];
+
+    metaTags.forEach(tag => {
+      let element = document.querySelector(`meta[${tag.property ? 'property="' + tag.property + '"' : 'name="' + tag.name + '"'}]`);
+      if (!element) {
+        element = document.createElement('meta');
+        if (tag.property) element.setAttribute('property', tag.property);
+        if (tag.name) element.setAttribute('name', tag.name);
+        document.head.appendChild(element);
+      }
+      element.setAttribute('content', tag.content);
+    });
   }, []);
 
   return (
