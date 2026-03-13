@@ -207,6 +207,13 @@ export function AuthProvider({ children }) {
         return data;
     };
 
+    const resetPassword = async (email) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: Linking.createURL('login'),
+        });
+        if (error) throw error;
+    };
+
     const signOut = async () => {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
@@ -219,6 +226,7 @@ export function AuthProvider({ children }) {
         signIn,
         signUp,
         signInWithOtp,
+        resetPassword,
         signOut,
         createBusiness,
         refreshBusiness: () => fetchBusiness(user?.id),

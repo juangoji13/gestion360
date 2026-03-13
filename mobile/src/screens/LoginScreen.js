@@ -39,8 +39,8 @@ export default function LoginScreen() {
             setLoading(true);
             await signInWithOtp(email);
             Alert.alert(
-                'Enlace Enviado 📧',
-                'Hemos enviado un enlace de acceso a tu correo. Ábrelo desde tu celular para entrar automáticamente.',
+                '¡Revisa tu bandeja! 🚀',
+                'Te hemos enviado un "Enlace Mágico" a tu correo. Púlsalo para entrar a Gestión360 sin usar contraseña.',
                 [{ text: 'ENTENDIDO' }]
             );
         } catch (error) {
@@ -117,7 +117,7 @@ export default function LoginScreen() {
                         <View style={styles.dividerLine} />
                     </View>
 
-                    <TouchableOpacity
+                    <TouchableOpacity 
                         style={[styles.otpButton, { marginTop: 12 }]}
                         onPress={handleOTPLogin}
                         disabled={loading}
@@ -126,7 +126,10 @@ export default function LoginScreen() {
                         <Text style={styles.otpButtonText}>Entrar con Enlace (Email)</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.forgotPassword}>
+                    <TouchableOpacity 
+                        style={styles.forgotPassword}
+                        onPress={() => navigation.navigate('ForgotPassword')}
+                    >
                         <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
                     </TouchableOpacity>
                 </View>
