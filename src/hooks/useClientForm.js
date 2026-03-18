@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { clientService } from '../services/clientService'
 import { useToast } from '../context/ToastContext'
+import { validationUtils } from '../utils/validationUtils'
 
 export function useClientForm(businessId, onSuccess) {
     const toast = useToast()
@@ -39,13 +40,40 @@ export function useClientForm(businessId, onSuccess) {
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault()
+
+        // Validaciones
+        const cleanName = form.name?.trim();
+        if (!cleanName) {
+            toast.error('El nombre del cliente es obligatorio');
+            return;
+        }
+
+        if (form.email && !validationUtils.isValidEmail(form.email)) {
+            toast.error('El formato del correo electrónico no es válido');
+            return;
+        }
+
+        if (form.phone && !validationUtils.isValidPhone(form.phone)) {
+            toast.error('El número de teléfono debe tener al menos 7 dígitos');
+            return;
+        }
+
+        const cleanData = {
+            ...form,
+            name: cleanName,
+            email: form.email?.trim().toLowerCase(),
+            phone: form.phone?.trim(),
+            tax_id: form.tax_id?.trim(),
+            address: form.address?.trim()
+        };
+
         setSaving(true)
         try {
             if (editing) {
-                await clientService.update(editing.id, form)
+                await clientService.update(editing.id, cleanData)
                 toast.success('Cliente actualizado')
             } else {
-                await clientService.create({ ...form, business_id: businessId })
+                await clientService.create({ ...cleanData, business_id: businessId })
                 toast.success('Cliente creado')
             }
             setShowModal(false)

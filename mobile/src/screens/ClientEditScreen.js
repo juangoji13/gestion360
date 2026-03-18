@@ -65,13 +65,33 @@ export default function ClientEditScreen({ navigation, route }) {
             return Alert.alert('Error', 'El nombre es obligatorio');
         }
 
+        const email = formData.email.trim();
+        const phone = formData.phone.trim();
+
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return Alert.alert('Error', 'El formato del correo electrónico es inválido');
+        }
+
+        if (phone && phone.replace(/[^0-9]/g, '').length < 7) {
+            return Alert.alert('Error', 'El número de teléfono debe tener al menos 7 dígitos');
+        }
+
+        const cleanData = {
+            ...formData,
+            name: formData.name.trim(),
+            email: email || null,
+            phone: phone || null,
+            tax_id: formData.tax_id.trim() || null,
+            address: formData.address.trim() || null,
+        };
+
         setLoading(true);
         try {
             let res;
             if (isEditing) {
-                res = await updateClient(client.id, formData);
+                res = await updateClient(client.id, cleanData);
             } else {
-                res = await createClient(formData);
+                res = await createClient(cleanData);
             }
 
             if (res.error) throw new Error(res.error);

@@ -45,15 +45,34 @@ export function useProductForm(businessId, onSuccess) {
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault()
-        setSaving(true)
         
+        if (!form.name || !form.name.trim()) {
+            toast.error('El nombre del producto es obligatorio');
+            return;
+        }
+
+        const basePrice = parseFloat(form.base_price) || 0;
+        const salePrice = parseFloat(form.sale_price) || 0;
+
+        if (salePrice <= 0) {
+            toast.error('El precio de venta debe ser mayor a cero');
+            return;
+        }
+
+        if (basePrice < 0) {
+            toast.error('El costo no puede ser negativo');
+            return;
+        }
+
+        setSaving(true)
         const round2 = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
 
         try {
             const data = {
                 ...form,
-                base_price: round2(parseFloat(form.base_price) || 0),
-                sale_price: round2(parseFloat(form.sale_price) || 0),
+                name: form.name.trim(),
+                base_price: round2(basePrice),
+                sale_price: round2(salePrice),
                 stock: round2(parseFloat(form.stock) || 0),
                 unit: form.unit || ''
             }

@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { User, Bell, Plus, TrendingUp, DollarSign, Clock, CheckCircle, AlertCircle, LogOut, FileText, LayoutGrid, Receipt, Users, Settings2, PlusSquare, UserPlus } from 'lucide-react-native';
-import { LineChart } from 'react-native-chart-kit';
+import { LineChart, BarChart } from 'react-native-chart-kit';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useStats } from '../hooks/useStats';
 import { useInvoices } from '../hooks/useInvoices';
@@ -30,6 +30,7 @@ const KPICard = ({ title, value, icon: Icon, color, growth, subtitle }) => (
         <View style={styles.cardBodyKPI}>
             <Text style={styles.kpiLabel}>{title}</Text>
             <Text style={styles.kpiValueMainText}>{value}</Text>
+            {subtitle && <Text style={styles.kpiSubtitle}>{subtitle}</Text>}
         </View>
     </View>
 );
@@ -38,9 +39,15 @@ export default function DashboardScreen() {
     const navigation = useNavigation();
     const { signOut, user, business } = useAuth();
     const [range, setRange] = React.useState('7d');
-    const { totalIncome, netProfit, pendingInvoices, paidInvoices, chartData, loading, error, refresh } = useStats();
+    const { totalIncome, totalPending, netProfit, inventoryInvestment, pendingCount, paidCount, chartData, loading, error, refresh } = useStats();
     const { invoices, loading: loadingInvoices, refresh: refreshInvoices } = useInvoices();
 
+    // Refrescar cuando el rango cambia
+    React.useEffect(() => {
+        refresh(range);
+    }, [range]);
+
+    // Refrescar cuando la pantalla gana foco (ej. vuelve de crear factura)
     useFocusEffect(
         React.useCallback(() => {
             refresh(range);
@@ -107,21 +114,27 @@ export default function DashboardScreen() {
                     </View>
                 )}
                 <View style={styles.kpiGrid}>
-                    <KPICard title="Ingresos Totales" value={`$${(totalIncome || 0).toLocaleString()}`} icon={DollarSign} color={COLORS.primary} />
+                    <KPICard 
+                        title="Venta Real (Cobros)" 
+                        value={`$${(totalIncome || 0).toLocaleString()}`} 
+                        subtitle={`Pendiente: $${(totalPending || 0).toLocaleString()}`}
+                        icon={DollarSign} 
+                        color={COLORS.primary} 
+                    />
                     <KPICard title="Ganancia Neta" value={`$${(netProfit || 0).toLocaleString()}`} icon={TrendingUp} color={COLORS.secondary} />
-                    <KPICard title="Facturas Pendientes" value={(pendingInvoices || 0).toString()} icon={Clock} color={COLORS.accent} />
-                    <KPICard title="Facturas Pagadas" value={(paidInvoices || 0).toString()} icon={CheckCircle} color={COLORS.success} />
+                    <KPICard title="Inversión Inventario" value={`$${(inventoryInvestment || 0).toLocaleString()}`} icon={LayoutGrid} color={COLORS.accent} />
+                    <KPICard title="Facturas No Pagas" value={(pendingCount || 0).toString()} icon={Clock} color={COLORS.warning} />
                 </View>
                 <View style={styles.chartGlassCard}>
                     <View style={styles.chartHeader}>
-                        <Text style={styles.chartTitle}>Ingresos vs Ganancias</Text>
+                        <Text style={styles.chartTitle}>Ventas vs Ganancias</Text>
                         <View style={styles.chartLegend}>
                             <View style={styles.legendDotBox}>
-                                <View style={[styles.dot, { backgroundColor: COLORS.primary }]} />
-                                <Text style={styles.dotLabel}>INGR.</Text>
+                                <View style={[styles.dot, { backgroundColor: '#10b981' }]} />
+                                <Text style={styles.dotLabel}>VENTAS</Text>
                             </View>
                             <View style={styles.legendDotBox}>
-                                <View style={[styles.dot, { backgroundColor: COLORS.secondary }]} />
+                                <View style={[styles.dot, { backgroundColor: '#2563eb' }]} />
                                 <Text style={styles.dotLabel}>GAN.</Text>
                             </View>
                         </View>
@@ -130,40 +143,35 @@ export default function DashboardScreen() {
                         {loading ? (
                             <ActivityIndicator size="small" color={COLORS.primary} />
                         ) : (
-                            <LineChart
+                            <BarChart
                                 data={chartData}
-                                width={Dimensions.get('window').width - 40}
+                                width={width - 84} // Ajustado para márgenes (20x2) y padding (22x2)
                                 height={220}
+                                yAxisLabel="$"
                                 chartConfig={{
                                     backgroundColor: 'transparent',
-                                    backgroundGradientFrom: 'rgba(15, 23, 42, 0)',
-                                    backgroundGradientTo: 'rgba(15, 23, 42, 0)', // Totalmente traslúcido
+                                    backgroundGradientFrom: 'rgba(255,255,255,0)',
+                                    backgroundGradientTo: 'rgba(255,255,255,0)',
                                     decimalPlaces: 0,
-                                    color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`, // Emerald primary color
+                                    color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`,
                                     labelColor: (opacity = 1) => `rgba(148, 163, 184, ${opacity})`,
-                                    style: { borderRadius: 16 },
-                                    propsForDots: { 
-                                        r: "5", 
-                                        strokeWidth: "2", 
-                                        stroke: COLORS.background 
-                                    },
-                                    propsForBackgroundLines: { 
-                                        strokeDasharray: "5", 
-                                        stroke: "rgba(255,255,255,0.03)" 
+                                    barPercentage: 0.6,
+                                    useShadowColorFromDataset: false,
+                                    propsForBackgroundLines: {
+                                        strokeDasharray: '', // Líneas sólidas
+                                        stroke: 'rgba(255,255,255,0.05)',
                                     }
                                 }}
-                                bezier
                                 style={{ 
-                                    marginVertical: 8, 
-                                    borderRadius: 16, 
-                                    marginLeft: -12,
+                                    marginVertical: 8,
+                                    borderRadius: 16,
+                                    marginLeft: -20 // Compensar padding interno del chart kit
                                 }}
+                                verticalLabelRotation={0}
+                                fromZero={true}
                                 withInnerLines={true}
-                                withOuterLines={false}
-                                withVerticalLines={false}
-                                withHorizontalLines={true}
-                                withShadow={true}
-                                withDots={true}
+                                showBarTops={true}
+                                flatColor={true}
                             />
                         )}
                     </View>
@@ -412,6 +420,12 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: '800',
         letterSpacing: -1,
+    },
+    kpiSubtitle: {
+        color: 'rgba(255,255,255,0.4)',
+        fontSize: 9,
+        fontWeight: '700',
+        marginTop: 2,
     },
     chartGlassCard: {
         marginHorizontal: 20,

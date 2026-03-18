@@ -1,16 +1,24 @@
-# React + Vite
+## 🚀 Acceso
+- **Producción:** [https://gestion360.jghermanos.xyz/](https://gestion360.jghermanos.xyz/)
+- **Preview/Internet:** [https://sistemadefacturacion-silk.vercel.app/](https://sistemadefacturacion-silk.vercel.app/)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## ✨ Características Principales
+- **Dashboard en Tiempo Real:** Métricas de ventas, ganancias netas y recaudación mensual.
+- **Módulo de Facturación:** Creación de facturas con soporte para IVA, descuentos (fijos/porcentuales) y gestión de abonos parciales.
+- **Gestión de Clientes:** Seguimiento de saldos pendientes y contacto directo via WhatsApp.
+- **Catálogo de Productos:** Control de inventario y optimización de márgenes de ganancia.
+- **Seguridad Garantizada:** Autenticación robusta y protección de datos mediante Supabase RLS.
 
-Currently, two official plugins are available:
+## 🛠️ Tecnologías Usadas
+- **Frontend:** React 19 + Vite + Vanilla CSS.
+- **Backend:** Supabase (PostgreSQL + PostgREST).
+- **Despliegue:** Vercel.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📦 Instalación Local
+1. Clonar el repositorio.
+2. Ejecutar `npm install`.
+3. Configurar las variables en `.env` (Basarse en `.env.example`).
+4. Iniciar desarrollo: `npm run dev`.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+*Desarrollado con ❤️ para la optimización de negocios.*

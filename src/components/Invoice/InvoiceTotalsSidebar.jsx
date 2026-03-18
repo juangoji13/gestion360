@@ -7,6 +7,8 @@ export default function InvoiceTotalsSidebar({
     taxRate, setTaxRate,
     showDiscount, setShowDiscount,
     discountAmount, setDiscountAmount,
+    discountType, setDiscountType,
+    amountPaid, setAmountPaid,
     saving, onSave, onPreview
 }) {
     return (
@@ -34,13 +36,29 @@ export default function InvoiceTotalsSidebar({
 
                 {showDiscount && (
                     <div style={{ marginBottom: '1.25rem' }}>
-                        <label className="sidebar-label">Monto Descuento ($)</label>
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                             <button 
+                                className={`btn-type-toggle ${discountType === 'fixed' ? 'active' : ''}`}
+                                onClick={() => setDiscountType('fixed')}
+                             >
+                                 $ Fijo
+                             </button>
+                             <button 
+                                className={`btn-type-toggle ${discountType === 'percentage' ? 'active' : ''}`}
+                                onClick={() => setDiscountType('percentage')}
+                             >
+                                 % Porc.
+                             </button>
+                        </div>
+                        <label className="sidebar-label">Monto Descuento ({discountType === 'fixed' ? '$' : '%'})</label>
                         <input
                             type="number"
                             className="cinv-input-mini"
                             value={discountAmount}
                             onChange={e => setDiscountAmount(e.target.value)}
                             placeholder="0.00"
+                            min="0"
+                            step="any"
                         />
                     </div>
                 )}
@@ -65,6 +83,9 @@ export default function InvoiceTotalsSidebar({
                             value={taxRate}
                             onChange={e => setTaxRate(e.target.value)}
                             placeholder="19"
+                            min="0"
+                            max="100"
+                            step="any"
                         />
                     </div>
                 )}
@@ -86,6 +107,27 @@ export default function InvoiceTotalsSidebar({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.5rem' }}>
                     <span style={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#fff' }}>TOTAL:</span>
                     <span style={{ fontWeight: 900, fontSize: '2rem', color: 'var(--accent-primary)' }}>{formatCurrency(totals.total)}</span>
+                </div>
+
+                <hr className="cinv-hr" />
+
+                <div style={{ marginBottom: '1.25rem' }}>
+                    <label className="sidebar-label">¿Cuánto pagó el cliente? (Abono)</label>
+                    <input
+                        type="number"
+                        className="cinv-input-mini"
+                        value={amountPaid}
+                        onChange={e => setAmountPaid(e.target.value)}
+                        placeholder="0.00"
+                        style={{ border: '2px solid #334155' }}
+                        min="0"
+                        step="any"
+                    />
+                </div>
+
+                <div className="cinv-total-row" style={{ fontSize: '0.9rem', color: totals.balance > 0 ? '#ef4444' : '#10b981' }}>
+                    <span>Saldo Pendiente:</span>
+                    <span style={{ fontWeight: 800 }}>{formatCurrency(totals.balance)}</span>
                 </div>
             </div>
 
@@ -115,6 +157,23 @@ export default function InvoiceTotalsSidebar({
                     padding: 10px;
                     color: #fff;
                     font-weight: 700;
+                }
+                .btn-type-toggle {
+                    flex: 1;
+                    padding: 6px;
+                    font-size: 0.7rem;
+                    font-weight: 800;
+                    background: #1e293b;
+                    border: 1px solid #334155;
+                    border-radius: 6px;
+                    color: #94a3b8;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .btn-type-toggle.active {
+                    background: var(--accent-primary);
+                    color: #fff;
+                    border-color: var(--accent-primary);
                 }
             `}</style>
         </div>

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 export function useInvoices() {
     const { business } = useAuth();
@@ -8,7 +9,8 @@ export function useInvoices() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    async function fetchInvoices() {
+    const fetchInvoices = useCallback(async () => {
+        if (!business?.id) return;
         try {
             setLoading(true);
             const { data, error: fetchError } = await supabase
@@ -22,14 +24,21 @@ export function useInvoices() {
                 .order('created_at', { ascending: false });
 
             if (fetchError) throw fetchError;
-            setInvoices(data);
+            setInvoices(data || []);
             setError(null);
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
         }
-    }
+    }, [business?.id]);
+
+    // Refrescar automáticamente cuando la pantalla gana el foco (vuelve de otra pantalla)
+    useFocusEffect(
+        useCallback(() => {
+            fetchInvoices();
+        }, [fetchInvoices])
+    );
 
     async function createInvoice(invoiceData, items) {
         try {
@@ -39,6 +48,7 @@ export function useInvoices() {
             });
 
             if (rpcError) throw rpcError;
+            // Refrescamos inmediatamente tras la mutación
             await fetchInvoices();
             return data;
         } catch (err) {
@@ -63,11 +73,6 @@ export function useInvoices() {
     async function addPayment(invoiceId, currentPaid, paymentAmount) {
         try {
             const newTotalPaid = (parseFloat(currentPaid) || 0) + (parseFloat(paymentAmount) || 0);
-            
-            // Si el nuevo total pagado es mayor o igual al total de la factura, marcamos como paid
-            // Pero primero necesitamos el total de la factura. Como no lo tenemos aquí directamente,
-            // la lógica de negocio suele estar en el servidor o se calcula antes de llamar.
-            // Para simplicidad, actualizamos el monto pagado.
             
             const { error: updateError } = await supabase
                 .from('invoices')
@@ -103,9 +108,9 @@ export function useInvoices() {
                 .eq('invoice_id', invoiceId);
 
             if (error) throw error;
-            return data.map(item => ({
+            return (data || []).map(item => ({
                 ...item,
-                price: item.unit_price, // Alias for compatibility with NewInvoiceScreen
+                price: item.unit_price,
                 name: item.products?.name || 'Producto eliminado',
                 sku: item.products?.sku || 'N/A'
             }));
@@ -115,12 +120,8 @@ export function useInvoices() {
         }
     }
 
-    useEffect(() => {
-        if (business?.id) fetchInvoices();
-    }, [business?.id]);
-
-    const totalPending = invoices
-        .filter(inv => inv.status === 'pending' || inv.status === 'overdue')
+    const totalPending = (invoices || [])
+        .filter(inv => inv.status === 'pending')
         .reduce((sum, inv) => {
             const total = parseFloat(inv.total) || 0;
             const paid = parseFloat(inv.amount_paid) || 0;

@@ -120,13 +120,15 @@ export default function InvoiceView() {
                         client={invoice.client}
                         invoiceNumber={invoice.invoice_number}
                         invoiceDate={invoice.date}
-                        dueDate={invoice.due_date}
                         items={items}
                         subtotal={invoice.subtotal}
                         taxRate={invoice.tax_rate}
                         taxAmount={invoice.tax_amount}
                         discountAmount={invoice.discount_amount}
+                        discountType={invoice.discount_type}
                         total={invoice.total}
+                        amountPaid={invoice.amount_paid}
+                        balance={invoice.total - (invoice.amount_paid || 0)}
                         notes={invoice.notes}
                         isPaid={isPaid}
                     />

@@ -77,8 +77,19 @@ export default function ProductEditScreen({ navigation, route }) {
     }, [product]);
 
     const handleSave = async () => {
-        if (!formData.name || !formData.sale_price) {
-            return Alert.alert('Error', 'Nombre y Precio de Venta son obligatorios');
+        if (!formData.name.trim()) {
+            return Alert.alert('Error', 'El nombre del producto es obligatorio');
+        }
+
+        const salePrice = parseFloat(formData.sale_price) || 0;
+        const basePrice = parseFloat(formData.base_price) || 0;
+
+        if (salePrice <= 0) {
+            return Alert.alert('Error', 'El precio de venta debe ser mayor a cero');
+        }
+
+        if (basePrice < 0) {
+            return Alert.alert('Error', 'El costo no puede ser negativo');
         }
 
         const payload = {

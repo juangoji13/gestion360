@@ -7,8 +7,9 @@ import './InvoiceTemplate.css'
 
 export default function InvoiceTemplate({ 
     business, client, invoiceNumber, invoiceDate, items, 
-    subtotal, taxRate, taxAmount, discountAmount, total, 
-    notes, onImageGenerated, dueDate, isPaid 
+    subtotal, taxRate, taxAmount, discountAmount, discountType,
+    total, amountPaid, balance, 
+    notes, onImageGenerated, isPaid 
 }) {
     const templateRef = useRef(null)
 
@@ -55,9 +56,7 @@ export default function InvoiceTemplate({
         doc.text('FACTURA', 150, margin, { align: 'right' })
         doc.setFontSize(12)
         doc.text(`N°: ${invoiceNumber}`, 150, margin + 8, { align: 'right' })
-        doc.text(`Fecha: ${formatDate(invoiceDate)}`, 150, margin + 14, { align: 'right' })
-
-        y = Math.max(y, margin + 30)
+        y = Math.max(y, margin + 25)
         doc.setDrawColor(226, 232, 240)
         doc.line(margin, y, 190, y)
         y += 10
@@ -114,8 +113,10 @@ export default function InvoiceTemplate({
         doc.text(formatCurrency(subtotal), totalX, y, { align: 'right' })
         y += 7
         if (parseFloat(discountAmount) > 0) {
-            doc.text('Descuento:', 150, y, { align: 'right' })
-            doc.text(`-${formatCurrency(discountAmount)}`, totalX, y, { align: 'right' })
+            const discLabel = discountType === 'percentage' ? `Descuento (${discountAmount}%):` : 'Descuento:'
+            const discVal = discountType === 'percentage' ? (subtotal * (discountAmount / 100)) : discountAmount
+            doc.text(discLabel, 150, y, { align: 'right' })
+            doc.text(`-${formatCurrency(discVal)}`, totalX, y, { align: 'right' })
             y += 7
         }
         doc.text(`IVA (${taxRate}%):`, 150, y, { align: 'right' })
@@ -126,6 +127,18 @@ export default function InvoiceTemplate({
         doc.setTextColor(37, 99, 235)
         doc.text('TOTAL:', 150, y, { align: 'right' })
         doc.text(formatCurrency(total), totalX, y, { align: 'right' })
+
+        if (parseFloat(amountPaid) > 0) {
+            y += 10
+            doc.setFontSize(11)
+            doc.setTextColor(16, 185, 129) // Success color
+            doc.text('Abono Recibido:', 150, y, { align: 'right' })
+            doc.text(formatCurrency(amountPaid), totalX, y, { align: 'right' })
+            y += 7
+            doc.setTextColor(239, 68, 68) // Danger color
+            doc.text('Saldo Pendiente:', 150, y, { align: 'right' })
+            doc.text(formatCurrency(balance || (total - amountPaid)), totalX, y, { align: 'right' })
+        }
 
         y += 20
         if (notes) {
@@ -203,7 +216,6 @@ export default function InvoiceTemplate({
                                 <p className="it-client-name" style={{ color: isPaid ? '#10b981' : '#f59e0b' }}>
                                     {isPaid ? 'Completado' : 'Pendiente'}
                                 </p>
-                                <p className="it-client-detail">Vence: {formatDate(dueDate || invoiceDate)}</p>
                             </div>
                         </div>
 
@@ -243,8 +255,8 @@ export default function InvoiceTemplate({
                                 </div>
                                 {parseFloat(discountAmount) > 0 && (
                                     <div className="it-totals-row" style={{ color: '#ef4444' }}>
-                                        <span>Descuento</span>
-                                        <strong>-{formatCurrency(discountAmount)}</strong>
+                                        <span>Descuento {discountType === 'percentage' ? `(${discountAmount}%)` : ''}</span>
+                                        <strong>-{formatCurrency(discountType === 'percentage' ? (subtotal * (discountAmount / 100)) : discountAmount)}</strong>
                                     </div>
                                 )}
                                 <div className="it-totals-row">
@@ -255,6 +267,19 @@ export default function InvoiceTemplate({
                                     <span>TOTAL</span>
                                     <span className="it-total-amount">{formatCurrency(total)}</span>
                                 </div>
+
+                                {parseFloat(amountPaid) > 0 && (
+                                    <>
+                                        <div className="it-totals-row" style={{ marginTop: '10px', color: '#10b981' }}>
+                                            <span>Abono Recibido</span>
+                                            <strong>{formatCurrency(amountPaid)}</strong>
+                                        </div>
+                                        <div className="it-totals-row" style={{ color: '#ef4444' }}>
+                                            <span>Saldo Pendiente</span>
+                                            <strong>{formatCurrency(balance)}</strong>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 

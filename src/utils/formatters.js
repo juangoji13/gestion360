@@ -20,8 +20,8 @@ export const formatDate = (dateStr) => {
 export const getStatusBadge = (status) => {
     const badges = {
         pending: { label: 'Pendiente', class: 'status-pending' },
+        overdue: { label: 'Pendiente', class: 'status-pending' },
         paid: { label: 'Pagada', class: 'status-paid' },
-        overdue: { label: 'Vencida', class: 'status-overdue' },
         cancelled: { label: 'Anulada', class: 'status-cancelled' }
     }
     return badges[status] || { label: status, class: 'status-pending' }

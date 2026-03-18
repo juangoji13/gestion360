@@ -107,8 +107,8 @@ export default function Invoices() {
 
                 <div className="inv-table-card">
                     <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        {['all', 'pending', 'paid', 'overdue'].map(f => {
-                            const labels = { all: 'Todas', pending: 'Pendientes', paid: 'Pagadas', overdue: 'Vencidas' };
+                        {['all', 'pending', 'paid'].map(f => {
+                            const labels = { all: 'Todas', pending: 'Pendientes', paid: 'Pagadas' };
                             const isActive = filter === f;
                             return (
                                 <button

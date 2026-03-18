@@ -23,6 +23,8 @@ export function useInvoiceForm(business, invoiceId = null) {
     const [clientBalance, setClientBalance] = useState(null)
     const [taxRate, setTaxRate] = useState(19)
     const [discountAmount, setDiscountAmount] = useState(0)
+    const [discountType, setDiscountType] = useState('fixed') // 'fixed' o 'percentage'
+    const [amountPaid, setAmountPaid] = useState(0)
     const [showTax, setShowTax] = useState(false)
     const [showDiscount, setShowDiscount] = useState(false)
 
@@ -58,7 +60,9 @@ export function useInvoiceForm(business, invoiceId = null) {
                 setTaxRate(inv.tax_rate)
                 setShowTax(inv.tax_rate > 0)
                 setDiscountAmount(inv.discount_amount)
+                setDiscountType(inv.discount_type || 'fixed')
                 setShowDiscount(inv.discount_amount > 0)
+                setAmountPaid(inv.amount_paid || 0)
                 
                 setItems(inv.invoice_items.map(item => ({
                     ...item,
@@ -137,13 +141,14 @@ export function useInvoiceForm(business, invoiceId = null) {
 
     const totals = useMemo(() => {
         const subtotal = FinanceUtils.calculateSubtotal(items)
-        const discount = showDiscount ? FinanceUtils.calculateDiscount(subtotal, discountAmount, 'fixed') : 0
+        const discount = showDiscount ? FinanceUtils.calculateDiscount(subtotal, discountAmount, discountType) : 0
         const taxable = Math.max(0, subtotal - discount)
         const taxRateVal = showTax ? (parseFloat(taxRate) || 0) : 0
         const tax = FinanceUtils.calculateTax(taxable, taxRateVal)
         const total = FinanceUtils.calculateFinalTotal(taxable, tax, 0)
-        return { subtotal, discount, taxable, tax, total }
-    }, [items, showDiscount, discountAmount, showTax, taxRate])
+        const balance = Math.max(0, total - (parseFloat(amountPaid) || 0))
+        return { subtotal, discount, taxable, tax, total, balance }
+    }, [items, showDiscount, discountAmount, discountType, showTax, taxRate, amountPaid])
 
     // --- AUTO-SAVE LOGIC ---
     const DRAFT_KEY = business ? `invoice_draft_${business.id}` : null
@@ -180,8 +185,10 @@ export function useInvoiceForm(business, invoiceId = null) {
             items,
             taxRate,
             discountAmount,
+            discountType,
             showTax,
             showDiscount,
+            amountPaid,
             updatedAt: new Date().toISOString()
         }
 
@@ -232,8 +239,10 @@ export function useInvoiceForm(business, invoiceId = null) {
                 tax_rate: showTax ? (parseFloat(taxRate) || 0) : 0,
                 tax_amount: totals.tax,
                 discount_amount: showDiscount ? (parseFloat(discountAmount) || 0) : 0,
+                discount_type: discountType,
                 total: totals.total,
-                status: 'pending',
+                amount_paid: parseFloat(amountPaid) || 0,
+                status: (parseFloat(amountPaid) >= totals.total) ? 'paid' : 'pending',
                 notes,
             }
 
@@ -278,6 +287,8 @@ export function useInvoiceForm(business, invoiceId = null) {
         clientBalance,
         taxRate, setTaxRate,
         discountAmount, setDiscountAmount,
+        discountType, setDiscountType,
+        amountPaid, setAmountPaid,
         showTax, setShowTax,
         showDiscount, setShowDiscount,
         totals,

@@ -52,8 +52,11 @@ export function useDashboard(business) {
     const getNetProfit = (invoice) => {
         if (!invoice.invoice_items) return invoice.total || 0
         return invoice.invoice_items.reduce((sum, item) => {
-            const product = products.find(p => p.id === item.product_id)
-            const base = product ? (parseFloat(product.base_price) || 0) : 0
+            let base = parseFloat(item.purchase_price);
+            if (isNaN(base) || base === 0) {
+                const product = products.find(p => p.id === item.product_id)
+                base = product ? (parseFloat(product.base_price) || 0) : 0
+            }
             return sum + (parseFloat(item.total) || 0) - base * (parseFloat(item.quantity) || 0)
         }, 0)
     }
@@ -94,6 +97,7 @@ export function useDashboard(business) {
     const [stats, setStats] = useState({
         totalRevenue: 0,
         netProfit: 0,
+        totalPending: 0,
         pendingCount: 0,
         paidCount: 0,
         totalInvoices: 0,
@@ -122,7 +126,12 @@ export function useDashboard(business) {
 
             const data = await invoiceService.getStatsV2(business.id, startDate, endDate)
             const rangeLabel = RANGES.find(r => r.key === range)?.label || 'periodo'
-            setStats({ ...data, rangeLabel })
+            
+            setStats(prev => ({ 
+                ...prev,
+                ...data, 
+                rangeLabel 
+            }))
         } catch (err) {
             console.error('Error fetching range stats:', err)
         }
@@ -131,6 +140,49 @@ export function useDashboard(business) {
     useEffect(() => {
         fetchRangeStats()
     }, [range, business])
+
+    // Escuchar cambios en rangeInvoices y products para recalcular de manera precisa
+    useEffect(() => {
+        if (!rangeInvoices || !products.length) return;
+
+        const totalPending = rangeInvoices.reduce((sum, inv) => {
+            if (inv.status === 'paid') return sum; // Factura pagada, nada que cobrar
+            const total = parseFloat(inv.total) || 0;
+            const paid = parseFloat(inv.amount_paid) || 0;
+            return sum + Math.max(0, total - paid);
+        }, 0);
+        
+        const totalRevenue = rangeInvoices.reduce((sum, inv) => {
+            const total = parseFloat(inv.total) || 0;
+            const paid = parseFloat(inv.amount_paid) || 0;
+            const realPaid = inv.status === 'paid' ? Math.max(total, paid) : paid;
+            return sum + realPaid;
+        }, 0);
+
+        const netProfit = rangeInvoices.reduce((sum, inv) => {
+            const total = parseFloat(inv.total) || 0;
+            const paid = parseFloat(inv.amount_paid) || 0;
+            const realPaid = inv.status === 'paid' ? Math.max(total, paid) : paid;
+            const totalBaseCost = (inv.invoice_items || []).reduce((costSum, item) => {
+                let base = parseFloat(item.purchase_price);
+                if (isNaN(base) || base === 0) {
+                    const product = products.find(p => p.id === item.product_id)
+                    base = product ? (parseFloat(product.base_price) || 0) : 0
+                }
+                return costSum + (base * (parseFloat(item.quantity) || 0))
+            }, 0)
+            const paidRatio = total > 0 ? (realPaid / total) : 0;
+            const estimatedProfit = (total - totalBaseCost - (parseFloat(inv.tax_amount) || 0)) * paidRatio;
+            return sum + estimatedProfit;
+        }, 0);
+
+        setStats(prev => ({
+            ...prev,
+            totalPending,
+            totalRevenue,
+            netProfit
+        }));
+    }, [rangeInvoices, products])
 
     const chartData = useMemo(() => {
         const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
@@ -152,8 +204,11 @@ export function useDashboard(business) {
                     const total = parseFloat(inv.total) || 0;
                     const realPaid = inv.status === 'paid' ? Math.max(total, amountPaid) : amountPaid;
                     const totalBaseCost = (inv.invoice_items || []).reduce((sum, item) => {
-                        const product = products.find(p => p.id === item.product_id)
-                        const base = product ? (parseFloat(product.base_price) || 0) : 0
+                        let base = parseFloat(item.purchase_price);
+                        if (isNaN(base) || base === 0) {
+                            const product = products.find(p => p.id === item.product_id)
+                            base = product ? (parseFloat(product.base_price) || 0) : 0
+                        }
                         return sum + (base * (parseFloat(item.quantity) || 0))
                     }, 0)
                     const paidRatio = total > 0 ? (realPaid / total) : 0;
@@ -189,8 +244,11 @@ export function useDashboard(business) {
                     const total = parseFloat(inv.total) || 0;
                     const realPaid = inv.status === 'paid' ? Math.max(total, amountPaid) : amountPaid;
                     const totalBaseCost = (inv.invoice_items || []).reduce((sum, item) => {
-                        const product = products.find(p => p.id === item.product_id)
-                        const base = product ? (parseFloat(product.base_price) || 0) : 0
+                        let base = parseFloat(item.purchase_price);
+                        if (isNaN(base) || base === 0) {
+                            const product = products.find(p => p.id === item.product_id)
+                            base = product ? (parseFloat(product.base_price) || 0) : 0
+                        }
                         return sum + (base * (parseFloat(item.quantity) || 0))
                     }, 0)
                     const paidRatio = total > 0 ? (realPaid / total) : 0;
@@ -219,8 +277,11 @@ export function useDashboard(business) {
                 const total = parseFloat(inv.total) || 0;
                 const realPaid = inv.status === 'paid' ? Math.max(total, amountPaid) : amountPaid;
                 const totalBaseCost = (inv.invoice_items || []).reduce((sum, item) => {
-                    const product = products.find(p => p.id === item.product_id)
-                    const base = product ? (parseFloat(product.base_price) || 0) : 0
+                    let base = parseFloat(item.purchase_price);
+                    if (isNaN(base) || base === 0) {
+                        const product = products.find(p => p.id === item.product_id)
+                        base = product ? (parseFloat(product.base_price) || 0) : 0
+                    }
                     return sum + (base * (parseFloat(item.quantity) || 0))
                 }, 0)
                 const paidRatio = total > 0 ? (realPaid / total) : 0;

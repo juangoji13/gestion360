@@ -20,7 +20,7 @@ export const ReportService = {
                             
                             if (inv.status === 'paid') {
                                 soldQty += qty;
-                            } else if (inv.status === 'pending' || inv.status === 'overdue') {
+                            } else if (inv.status === 'pending') {
                                 reservedQty += qty;
                             }
 

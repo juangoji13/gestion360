@@ -29,7 +29,7 @@ export const ReportService = {
             return sum + (inv.status === 'paid' ? Math.max(total, paid) : paid);
         }, 0)
 
-        const totalPending = invoices.filter(i => i.status === 'pending' || i.status === 'overdue').reduce((sum, inv) => {
+        const totalPending = invoices.filter(i => i.status === 'pending').reduce((sum, inv) => {
             const total = parseFloat(inv.total) || 0;
             const paid = parseFloat(inv.amount_paid) || 0;
             const actualPaid = inv.status === 'paid' ? Math.max(total, paid) : paid;
@@ -65,8 +65,7 @@ export const ReportService = {
                     documentId: inv.client?.document_id || 'N/A',
                     totalInvoiced: 0,
                     totalPaid: 0,
-                    totalOpen: 0,
-                    totalOverdue: 0
+                    totalOpen: 0
                 }
             }
 
@@ -80,10 +79,7 @@ export const ReportService = {
             clientSummary[groupKey].totalInvoiced += total
             clientSummary[groupKey].totalPaid += actualPaid
 
-            if (inv.status === 'overdue') {
-                clientSummary[groupKey].totalOverdue += pending
-                clientSummary[groupKey].totalOpen += pending
-            } else if (inv.status === 'pending') {
+            if (inv.status === 'pending') {
                 clientSummary[groupKey].totalOpen += pending
             }
         })
@@ -93,20 +89,18 @@ export const ReportService = {
             c.name,
             formatCurrency(c.totalInvoiced),
             formatCurrency(c.totalPaid),
-            formatCurrency(c.totalOpen),
-            formatCurrency(c.totalOverdue)
+            formatCurrency(c.totalOpen)
         ])
 
         const totalInvoicedAll = Object.values(clientSummary).reduce((sum, c) => sum + c.totalInvoiced, 0)
         const totalPaidAll = Object.values(clientSummary).reduce((sum, c) => sum + c.totalPaid, 0)
         const totalOpenAll = Object.values(clientSummary).reduce((sum, c) => sum + c.totalOpen, 0)
-        const totalOverdueAll = Object.values(clientSummary).reduce((sum, c) => sum + c.totalOverdue, 0)
 
         autoTable(doc, {
             startY: 90,
-            head: [['Doc. Cliente', 'Cliente', 'Monto Facturado', 'Pagos', 'Monto Abierto', 'Monto Vencido']],
+            head: [['Doc. Cliente', 'Cliente', 'Monto Facturado', 'Pagos', 'Monto Abierto']],
             body: tableBody,
-            foot: [['', 'TOTALES', formatCurrency(totalInvoicedAll), formatCurrency(totalPaidAll), formatCurrency(totalOpenAll), formatCurrency(totalOverdueAll)]],
+            foot: [['', 'TOTALES', formatCurrency(totalInvoicedAll), formatCurrency(totalPaidAll), formatCurrency(totalOpenAll)]],
             headStyles: { fillColor: [26, 86, 219], textColor: [255, 255, 255] },
             footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' },
             alternateRowStyles: { fillColor: [250, 250, 250] },
@@ -155,7 +149,7 @@ export const ReportService = {
                         
                         if (inv.status === 'paid') {
                             soldQty += qty
-                        } else if (inv.status === 'pending' || inv.status === 'overdue') {
+                        } else if (inv.status === 'pending') {
                             reservedQty += qty
                         }
 

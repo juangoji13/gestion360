@@ -27,6 +27,8 @@ export default function CreateInvoice() {
         clientBalance,
         taxRate, setTaxRate,
         discountAmount, setDiscountAmount,
+        discountType, setDiscountType,
+        amountPaid, setAmountPaid,
         showTax, setShowTax,
         showDiscount, setShowDiscount,
         totals,
@@ -90,7 +92,10 @@ export default function CreateInvoice() {
                         taxRate={showTax ? taxRate : 0}
                         taxAmount={totals.tax}
                         discountAmount={showDiscount ? discountAmount : 0}
+                        discountType={discountType}
                         total={totals.total}
+                        amountPaid={amountPaid}
+                        balance={totals.balance}
                         notes={notes}
                     />
                 </div>
@@ -162,6 +167,10 @@ export default function CreateInvoice() {
                             setShowDiscount={setShowDiscount}
                             discountAmount={discountAmount}
                             setDiscountAmount={setDiscountAmount}
+                            discountType={discountType}
+                            setDiscountType={setDiscountType}
+                            amountPaid={amountPaid}
+                            setAmountPaid={setAmountPaid}
                             saving={saving}
                             onSave={handleSave}
                             onPreview={() => setShowPreview(true)}

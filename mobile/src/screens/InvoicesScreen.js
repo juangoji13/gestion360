@@ -9,7 +9,6 @@ const InvoiceCard = ({ invoice, onPress }) => {
     const getStatusColor = (status) => {
         switch (status) {
             case 'paid': return COLORS.success;
-            case 'overdue': return COLORS.danger;
             case 'pending': return COLORS.warning;
             default: return COLORS.textSecondary;
         }
@@ -18,7 +17,6 @@ const InvoiceCard = ({ invoice, onPress }) => {
     const getStatusText = (status) => {
         switch (status) {
             case 'paid': return 'Pagada';
-            case 'overdue': return 'Vencida';
             case 'pending': return 'Pendiente';
             default: return status;
         }
@@ -52,9 +50,8 @@ export default function InvoicesScreen() {
             inv.client?.name?.toLowerCase().includes(search.toLowerCase());
 
         if (filter === 'Todas') return matchesSearch;
-        if (filter === 'Pendientes') return matchesSearch && (inv.status === 'pending' || inv.status === 'overdue');
+        if (filter === 'Pendientes') return matchesSearch && inv.status === 'pending';
         if (filter === 'Pagadas') return matchesSearch && inv.status === 'paid';
-        if (filter === 'Vencidas') return matchesSearch && inv.status === 'overdue';
         return matchesSearch;
     });
 
@@ -76,7 +73,7 @@ export default function InvoicesScreen() {
             </View>
 
             <View style={styles.filterBar}>
-                {['Todas', 'Pendientes', 'Pagadas', 'Vencidas'].map((label) => (
+                {['Todas', 'Pendientes', 'Pagadas'].map((label) => (
                     <TouchableOpacity
                         key={label}
                         style={[styles.chip, filter === label && styles.activeChip]}

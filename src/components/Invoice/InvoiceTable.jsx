@@ -81,7 +81,7 @@ export default function InvoiceTable({ invoices, onStatusChange, onDelete, onAdd
                                                 <DollarSign size={18} />
                                             </button>
                                         )}
-                                        {inv.status === 'pending' && (
+                                        {(inv.status === 'pending' || inv.status === 'overdue') && (
                                             <button
                                                 onClick={() => onStatusChange(inv, 'paid')}
                                                 className="inv-action-btn inv-status-btn"

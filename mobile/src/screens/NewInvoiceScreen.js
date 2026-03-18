@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../services/supabase';
+import { OfflineManager } from '../services/OfflineManager';
 
 const { width } = Dimensions.get('window');
 
@@ -100,8 +101,11 @@ export default function NewInvoiceScreen() {
     const [selectedClient, setSelectedClient] = useState(editingInvoice?.client || null);
     const [items, setItems] = useState(editingItems || []);
     const [applyIVA, setApplyIVA] = useState(editingInvoice?.tax_amount > 0);
+    const [ivaPercent, setIvaPercent] = useState('19');
     const [applyDiscount, setApplyDiscount] = useState(editingInvoice?.discount_amount > 0);
+    const [discountType, setDiscountType] = useState('fixed'); // 'fixed' or 'percent'
     const [discountValue, setDiscountValue] = useState(editingInvoice?.discount_amount?.toString() || '0');
+    const [initialPayment, setInitialPayment] = useState(editingInvoice?.amount_paid?.toString() || '0');
     const [saving, setSaving] = useState(false);
     const [invoiceNumber, setInvoiceNumber] = useState(editingInvoice?.invoice_number || '');
 
@@ -124,9 +128,17 @@ export default function NewInvoiceScreen() {
     }, [invoices, editingInvoice]);
 
     const subtotal = round2(items.reduce((sum, item) => sum + ((parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 0)), 0));
-    const discount = applyDiscount ? round2(parseFloat(discountValue) || 0) : 0;
+    
+    // Cálculo de descuento dinámico
+    const rawDiscount = parseFloat(discountValue) || 0;
+    const discount = applyDiscount 
+        ? (discountType === 'percent' ? round2(subtotal * (rawDiscount / 100)) : round2(rawDiscount))
+        : 0;
+
     const subtotalAfterDiscount = Math.max(0, round2(subtotal - discount));
-    const iva = applyIVA ? round2(subtotalAfterDiscount * 0.19) : 0;
+    
+    // IVA dinámico
+    const iva = applyIVA ? round2(subtotalAfterDiscount * (parseFloat(ivaPercent) / 100 || 0)) : 0;
     const total = round2(subtotalAfterDiscount + iva);
 
     const handleAddItem = (product) => {
@@ -148,22 +160,34 @@ export default function NewInvoiceScreen() {
     };
 
     const updateItemQuantity = (index, deltaOrValue) => {
-        const newItems = [...items];
-        let newQty;
-        if (typeof deltaOrValue === 'string') {
-            newQty = parseInt(deltaOrValue) || 0;
-        } else {
-            newQty = Math.max(0, newItems[index].quantity + deltaOrValue);
-        }
-        newItems[index].quantity = newQty;
-        setItems(newItems);
+        setItems(prev => prev.map((item, i) => {
+            if (i !== index) return item;
+            let newQty;
+            if (typeof deltaOrValue === 'string') {
+                // Solo permitimos dígitos para evitar confusiones con separadores
+                newQty = parseInt(deltaOrValue.replace(/[^0-9]/g, '')) || 0;
+            } else {
+                newQty = Math.max(0, item.quantity + deltaOrValue);
+            }
+            return { ...item, quantity: newQty, total: Math.round(item.price * newQty) };
+        }));
     };
 
     const updateItemPrice = (index, priceText) => {
-        const newItems = [...items];
-        const newPrice = parseFloat(priceText) || 0;
-        newItems[index].price = newPrice;
-        setItems(newItems);
+        // Permitimos números y detectamos si el usuario usa punto o coma como separador de miles
+        // Si el texto tiene formato como "15.000", lo limpiamos a "15000"
+        const cleanVal = priceText.replace(/[^\d]/g, '');
+        const newPrice = parseFloat(cleanVal) || 0;
+        
+        setItems(prev => {
+            const next = [...prev];
+            next[index] = { 
+                ...next[index], 
+                price: newPrice, 
+                total: Math.round(newPrice * next[index].quantity) 
+            };
+            return next;
+        });
     };
 
     const handlePreview = () => {
@@ -179,6 +203,7 @@ export default function NewInvoiceScreen() {
             subtotal: subtotal,
             tax_amount: iva,
             discount_amount: discount,
+            amount_paid: parseFloat(initialPayment) || 0,
             created_at: new Date().toISOString(),
             client: selectedClient
         };
@@ -195,15 +220,19 @@ export default function NewInvoiceScreen() {
 
         try {
             setSaving(true);
+            
+            const isOffline = await OfflineManager.checkIsOffline();
+            
             const invoiceData = {
                 business_id: business.id,
                 client_id: selectedClient.id,
                 invoice_number: invoiceNumber,
-                status: 'pending',
+                status: (parseFloat(initialPayment) >= total) ? 'paid' : 'pending',
                 total: total,
                 subtotal: subtotal,
                 tax_amount: iva,
-                discount_amount: discount
+                discount_amount: discount,
+                amount_paid: parseFloat(initialPayment) || 0
             };
 
             const invoiceItems = items.map(it => ({
@@ -213,6 +242,18 @@ export default function NewInvoiceScreen() {
                 purchase_price: it.purchase_price || 0,
                 total: it.price * it.quantity
             }));
+
+            if (isOffline) {
+                await OfflineManager.saveToQueue(invoiceData, invoiceItems);
+                Alert.alert(
+                    'Modo Sin Conexión', 
+                    'No hay conexión a internet. La factura se ha guardado localmente y se sincronizará automáticamente cuando recuperes la conexión.',
+                    [
+                        { text: 'Entendido', onPress: () => navigation.navigate('MainTabs') }
+                    ]
+                );
+                return;
+            }
 
             if (editingInvoice) {
                 // Lógica de actualización (Podría requerir una nueva función en el hook o rpc)
@@ -349,14 +390,28 @@ export default function NewInvoiceScreen() {
                             <View style={styles.toggleIconBox}>
                                 <Percent color={PREMIUM_COLORS.slate400} size={18} />
                             </View>
-                            <Text style={styles.toggleTitle}>Aplicar IVA (19%)</Text>
+                            <Text style={styles.toggleTitle}>Aplicar IVA</Text>
                         </View>
-                        <Switch
-                            value={applyIVA}
-                            onValueChange={setApplyIVA}
-                            trackColor={{ false: '#1e293b', true: PREMIUM_COLORS.electricBlue }}
-                            thumbColor="#fff"
-                        />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                            {applyIVA && (
+                                <View style={styles.ivaPercentInputBox}>
+                                    <TextInput
+                                        style={styles.ivaPercentInput}
+                                        value={ivaPercent}
+                                        onChangeText={setIvaPercent}
+                                        keyboardType="numeric"
+                                        maxLength={2}
+                                    />
+                                    <Text style={styles.percentSymbol}>%</Text>
+                                </View>
+                            )}
+                            <Switch
+                                value={applyIVA}
+                                onValueChange={setApplyIVA}
+                                trackColor={{ false: '#1e293b', true: PREMIUM_COLORS.electricBlue }}
+                                thumbColor="#fff"
+                            />
+                        </View>
                     </View>
                     <View style={[styles.toggleCard, !applyDiscount && { opacity: 0.6 }]}>
                         <View style={styles.toggleLeft}>
@@ -373,15 +428,31 @@ export default function NewInvoiceScreen() {
                         />
                     </View>
                     {applyDiscount && (
-                        <View style={styles.discountInputBox}>
-                            <TextInput
-                                style={styles.discountInput}
-                                placeholder="Valor del descuento..."
-                                placeholderTextColor={PREMIUM_COLORS.slate600}
-                                value={discountValue}
-                                onChangeText={setDiscountValue}
-                                keyboardType="numeric"
-                            />
+                        <View style={styles.discountContainer}>
+                            <View style={styles.discountSelector}>
+                                <TouchableOpacity 
+                                    style={[styles.selectorBtn, discountType === 'fixed' && styles.selectorBtnActive]}
+                                    onPress={() => setDiscountType('fixed')}
+                                >
+                                    <Text style={[styles.selectorText, discountType === 'fixed' && styles.selectorTextActive]}>$ COP</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style={[styles.selectorBtn, discountType === 'percent' && styles.selectorBtnActive]}
+                                    onPress={() => setDiscountType('percent')}
+                                >
+                                    <Text style={[styles.selectorText, discountType === 'percent' && styles.selectorTextActive]}>% PORC.</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.discountInputBox}>
+                                <TextInput
+                                    style={styles.discountInput}
+                                    placeholder={discountType === 'fixed' ? "Valor fijo..." : "Porcentaje..."}
+                                    placeholderTextColor={PREMIUM_COLORS.slate600}
+                                    value={discountValue}
+                                    onChangeText={setDiscountValue}
+                                    keyboardType="numeric"
+                                />
+                            </View>
                         </View>
                     )}
                 </View>
@@ -399,7 +470,7 @@ export default function NewInvoiceScreen() {
                     )}
                     {iva > 0 && (
                         <View style={styles.summaryRow}>
-                            <Text style={styles.summaryLabel}>IVA (19%):</Text>
+                            <Text style={styles.summaryLabel}>IVA ({ivaPercent}%):</Text>
                             <Text style={styles.summaryValue}>${(iva || 0).toLocaleString()}</Text>
                         </View>
                     )}
@@ -409,6 +480,21 @@ export default function NewInvoiceScreen() {
                             <Text style={styles.totalMeta}>Total a Pagar</Text>
                         </View>
                         <Text style={styles.grandTotalText}>$ {(total || 0).toLocaleString()}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionLabel}>Abono Inicial (Recibido)</Text>
+                    <View style={styles.glassCardSmall}>
+                        <DollarSign color={PREMIUM_COLORS.emeraldPremium} size={18} />
+                        <TextInput
+                            style={styles.invoiceInput}
+                            placeholder="Monto ya pagado..."
+                            placeholderTextColor={PREMIUM_COLORS.slate600}
+                            value={initialPayment}
+                            onChangeText={setInitialPayment}
+                            keyboardType="numeric"
+                        />
                     </View>
                 </View>
 
@@ -1127,5 +1213,60 @@ const styles = StyleSheet.create({
     modalDivider: {
         height: 1,
         backgroundColor: 'rgba(255,255,255,0.05)',
+    },
+    ivaPercentInputBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderRadius: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    ivaPercentInput: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+        width: 24,
+        textAlign: 'center',
+        padding: 0,
+    },
+    percentSymbol: {
+        color: PREMIUM_COLORS.slate500,
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    discountContainer: {
+        marginTop: 12,
+        gap: 12,
+    },
+    discountSelector: {
+        flexDirection: 'row',
+        backgroundColor: 'rgba(255,255,255,0.03)',
+        borderRadius: 14,
+        padding: 4,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.06)',
+    },
+    selectorBtn: {
+        flex: 1,
+        paddingVertical: 8,
+        alignItems: 'center',
+        borderRadius: 10,
+    },
+    selectorBtnActive: {
+        backgroundColor: 'rgba(37, 99, 235, 0.15)',
+        borderWidth: 1,
+        borderColor: 'rgba(37, 99, 235, 0.3)',
+    },
+    selectorText: {
+        color: PREMIUM_COLORS.slate500,
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 0.5,
+    },
+    selectorTextActive: {
+        color: PREMIUM_COLORS.electricBlue,
     },
 });

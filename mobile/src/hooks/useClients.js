@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 export function useClients() {
     const { business } = useAuth();
@@ -8,7 +9,8 @@ export function useClients() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    async function fetchClients() {
+    const fetchClients = useCallback(async () => {
+        if (!business?.id) return;
         try {
             setLoading(true);
             const { data, error: fetchError } = await supabase
@@ -19,7 +21,6 @@ export function useClients() {
 
             if (fetchError) throw fetchError;
 
-            // Calculamos el balance pendiente y la última venta para cada cliente
             const { data: invoices, error: invError } = await supabase
                 .from('invoices')
                 .select('client_id, total, amount_paid, status, created_at')
@@ -28,10 +29,9 @@ export function useClients() {
 
             if (invError) throw invError;
 
-            const clientsWithStats = data.map(client => {
-                const clientInvoices = invoices.filter(inv => inv.client_id === client.id);
+            const clientsWithStats = (data || []).map(client => {
+                const clientInvoices = (invoices || []).filter(inv => inv.client_id === client.id);
 
-                // Balance pendiente (solo facturas no pagadas)
                 const balance = clientInvoices
                     .filter(inv => inv.status !== 'paid')
                     .reduce((sum, inv) => {
@@ -40,7 +40,6 @@ export function useClients() {
                         return sum + Math.max(0, total - paid);
                     }, 0);
 
-                // Fecha de la última venta
                 const lastSale = clientInvoices[0]?.created_at || null;
 
                 return { ...client, balance, lastSale };
@@ -53,15 +52,16 @@ export function useClients() {
         } finally {
             setLoading(false);
         }
-    }
-
-    useEffect(() => {
-        if (business?.id) fetchClients();
     }, [business?.id]);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchClients();
+        }, [fetchClients])
+    );
 
     async function createClient(clientData) {
         try {
-            // Sanitize: convert empty strings to null for optional fields
             const sanitizedData = Object.fromEntries(
                 Object.entries(clientData).map(([key, value]) => [
                     key, 
@@ -84,7 +84,6 @@ export function useClients() {
 
     async function updateClient(id, clientData) {
         try {
-            // Sanitize: convert empty strings to null for optional fields
             const sanitizedData = Object.fromEntries(
                 Object.entries(clientData).map(([key, value]) => [
                     key, 
