@@ -29,15 +29,25 @@ export default function RecentActivity({ recentInvoices }) {
                                 <th>Cliente</th>
                                 <th>Estado</th>
                                 <th className="dash-td-right">Total</th>
+                                <th style={{ textAlign: 'center' }}>Acción</th>
                             </tr>
                         </thead>
                         <tbody>
                             {recentInvoices.map(inv => (
                                 <tr key={inv.id}>
-                                    <td className="dash-td-strong">{inv.invoice_number}</td>
+                                    <td className="dash-td-strong">
+                                        <Link to={`/invoices/${inv.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                                            {inv.invoice_number}
+                                        </Link>
+                                    </td>
                                     <td>{inv.client?.name || '-'}</td>
                                     <td>{statusBadge(inv.status)}</td>
                                     <td className="dash-td-right">{formatCurrency(inv.total)}</td>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <Link to={`/invoices/${inv.id}`} className="dash-table-link" style={{ fontSize: '0.75rem' }}>
+                                            Ver
+                                        </Link>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
