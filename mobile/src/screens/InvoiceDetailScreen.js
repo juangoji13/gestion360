@@ -27,6 +27,15 @@ export default function InvoiceDetailScreen() {
     const [isLoadingItems, setIsLoadingItems] = useState(!initialItems);
 
     React.useEffect(() => {
+        if (isPreview) {
+            navigation.setOptions({
+                headerLeft: () => null,
+                title: 'Vista Previa'
+            });
+        }
+    }, [isPreview, navigation]);
+
+    React.useEffect(() => {
         if (!initialItems && invoice?.id) {
             loadItems();
         }
@@ -592,7 +601,7 @@ const styles = StyleSheet.create({
     },
     premiumHeader: {
         paddingTop: 60,
-        backgroundColor: 'rgba(10, 10, 12, 0.7)',
+        backgroundColor: '#0a0a0c',
         borderBottomLeftRadius: 32,
         borderBottomRightRadius: 32,
         paddingHorizontal: 16,

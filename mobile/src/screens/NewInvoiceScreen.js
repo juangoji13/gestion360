@@ -201,7 +201,8 @@ export default function NewInvoiceScreen() {
 
         navigation.navigate('InvoiceDetail', { 
             invoice: invoiceData, 
-            items: items 
+            items: items,
+            isPreview: true
         });
     };
 
@@ -531,7 +532,7 @@ export default function NewInvoiceScreen() {
                     disabled={saving}
                 >
                     <LinearGradient
-                        colors={COLORS.primaryGradient}
+                        colors={['#475569', '#1e293b']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={styles.btnPrimaryGradient}

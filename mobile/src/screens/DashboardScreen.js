@@ -264,7 +264,7 @@ const RecentItem = ({ item, onPress }) => (
                 <Text style={styles.itemValue}>${(item.total || 0).toLocaleString()}</Text>
                 {item.amount_paid > 0 && item.status !== 'paid' && (
                     <Text style={{color: COLORS.warning, fontSize: 11, fontWeight: '700', marginTop: 2}}>
-                        Resta: ${(item.total - item.amount_paid).toLocaleString()}
+                        ${(item.total - item.amount_paid).toLocaleString()}
                     </Text>
                 )}
             </View>

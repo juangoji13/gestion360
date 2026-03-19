@@ -37,9 +37,14 @@ const InvoiceCard = ({ invoice, onPress }) => {
                 <View style={{ alignItems: 'flex-end' }}>
                     <Text style={styles.amount}>${(invoice.total || 0).toLocaleString()}</Text>
                     {invoice.amount_paid > 0 && invoice.status !== 'paid' && (
-                        <Text style={{ color: COLORS.warning, fontSize: 12, fontWeight: '700', marginTop: 2 }}>
-                            Resta: ${(invoice.total - invoice.amount_paid).toLocaleString()}
-                        </Text>
+                        <View style={{ alignItems: 'flex-end', marginTop: 2 }}>
+                            <Text style={{ color: COLORS.warning, fontSize: 12, fontWeight: '700' }}>
+                                ${(invoice.total - invoice.amount_paid).toLocaleString()}
+                            </Text>
+                            <Text style={{ color: COLORS.warning, fontSize: 10, fontWeight: '600' }}>
+                                PENDIENTE
+                            </Text>
+                        </View>
                     )}
                 </View>
             </View>

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Gestión360",
+    "name": "Gestion360",
     "slug": "mobile",
     "scheme": "gestion360",
     "version": "1.0.0",
@@ -22,20 +22,21 @@
         "NSFaceIDUsageDescription": "Gestión360 usa Face ID para iniciar sesión de forma rápida y segura."
       }
     },
-    "android": {
-      "package": "com.juangoji13.gestion360",
-      "softwareKeyboardLayoutMode": "adjustResize",
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      },
-      "permissions": [
-        "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
-      ]
-    },
+"android": {
+  "package": "com.juangoji13.gestion360",
+  "softwareKeyboardLayoutMode": "resize",
+  "adaptiveIcon": {
+    "backgroundColor": "#E6F4FE",
+    "foregroundImage": "./assets/android-icon-foreground.png",
+    "backgroundImage": "./assets/android-icon-background.png",
+    "monochromeImage": "./assets/android-icon-monochrome.png"
+  },
+  "permissions": [
+    "android.permission.USE_BIOMETRIC",
+    "android.permission.USE_FINGERPRINT"
+  ]
+}
+,
     "web": {
       "favicon": "./assets/favicon.png"
     },
@@ -51,8 +52,12 @@
       ]
     ],
     "extra": {
-      "eas": {}
+      "eas": {
+        "projectId": "6bbc279b-95fc-4b70-9eae-4b78ed2d01a0"
+      }
     },
-    "owner": "juangoji13"
+    "updates": {
+      "url": "https://u.expo.dev/6bbc279b-95fc-4b70-9eae-4b78ed2d01a0"
+    }
   }
 }
