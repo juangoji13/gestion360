@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Dimensions, Share, Alert, ActivityIndicator, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
-import { X, Share2, Printer, Edit2, Send, Info, Trash2, DollarSign, CreditCard, ChevronLeft } from 'lucide-react-native';
+import { X, Share2, Printer, Edit2, Send, Info, Trash2, DollarSign, CreditCard, ChevronLeft, Check } from 'lucide-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Print from 'expo-print';
