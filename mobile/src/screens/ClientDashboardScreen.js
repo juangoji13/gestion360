@@ -6,7 +6,7 @@ import {
     FileText, UserRoundPen, Edit 
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, SIZES } from '../constants/theme';
+import { COLORS, SIZES, PREMIUM_COLORS } from '../constants/theme';
 import { useInvoices } from '../hooks/useInvoices';
 import { useClients } from '../hooks/useClients';
 import { ReportService } from '../services/ReportService';
@@ -14,17 +14,7 @@ import { useAuth } from '../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
-const PREMIUM_COLORS = {
-    charcoal: '#0a0a0c',
-    electricBlue: '#2563eb',
-    emeraldPremium: '#10b981',
-    glassWhite: 'rgba(255, 255, 255, 0.03)',
-    glassBorder: 'rgba(255, 255, 255, 0.08)',
-    slate400: '#94a3b8',
-    slate500: '#64748b',
-    warningYellow: '#eab308',
-    slate300: '#cbd5e1',
-};
+
 
 const KPICard = ({ title, value, subtext, icon: Icon, color, trend }) => (
     <View style={styles.kpiCard}>
@@ -216,7 +206,14 @@ export default function ClientDashboardScreen({ route, navigation }) {
                                 <Text style={styles.activityDate}>{new Date(inv.created_at).toLocaleDateString()}</Text>
                             </View>
                             <View style={styles.activityRight}>
-                                <Text style={styles.activityAmount}>${(inv.total || 0).toLocaleString()}</Text>
+                                <View style={{ alignItems: 'flex-end' }}>
+                                    <Text style={styles.activityAmount}>${(inv.total || 0).toLocaleString()}</Text>
+                                    {inv.amount_paid > 0 && inv.status !== 'paid' && (
+                                        <Text style={{ color: PREMIUM_COLORS.warningYellow, fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+                                        ${(inv.total - inv.amount_paid).toLocaleString()}
+                                        </Text>
+                                    )}
+                                </View>
                                 <Text style={[styles.activityStatus, { color: inv.status === 'paid' ? PREMIUM_COLORS.emeraldPremium : PREMIUM_COLORS.warningYellow }]}>
                                     {inv.status === 'paid' ? 'Pagada' : 'Pendiente'}
                                 </Text>

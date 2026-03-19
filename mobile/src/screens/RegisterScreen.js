@@ -90,18 +90,23 @@ export default function RegisterScreen() {
             </View>
 
             <TouchableOpacity
-                style={[styles.button, loading && styles.buttonDisabled]}
+                style={styles.buttonContainer}
                 onPress={handleRegister}
                 disabled={loading}
             >
-                {loading ? (
-                    <ActivityIndicator color={COLORS.background} />
-                ) : (
-                    <View style={styles.buttonInner}>
-                        <Text style={styles.buttonText}>Crear Mi Cuenta</Text>
-                        <ArrowRight color={COLORS.background} size={20} />
-                    </View>
-                )}
+                <LinearGradient
+                    colors={[COLORS.success, '#059669']}
+                    style={[styles.button, loading && { opacity: 0.7 }]}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <View style={styles.buttonInner}>
+                            <Text style={styles.buttonText}>Crear Mi Cuenta</Text>
+                            <ArrowRight color="#fff" size={20} />
+                        </View>
+                    )}
+                </LinearGradient>
             </TouchableOpacity>
         </Animated.View>
     );
@@ -111,14 +116,9 @@ export default function RegisterScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
-            <LinearGradient colors={['#1e293b', '#0f172a']} style={styles.gradient}>
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-                    <Animated.View entering={FadeIn.delay(800)}>
-                        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                            <ArrowLeft color={COLORS.text} size={24} />
-                        </TouchableOpacity>
-                    </Animated.View>
-
+            <LinearGradient colors={COLORS.darkGradient} style={styles.gradient}>
+                <View style={styles.topBlur} />
+                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                     <Animated.View entering={FadeInDown.duration(800)} style={styles.header}>
                         <View style={styles.logoContainer}>
                             <Image
@@ -134,7 +134,7 @@ export default function RegisterScreen() {
 
                     <Animated.View entering={FadeIn.delay(600)}>
                         <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
-                            <View style={{ flexDirection: 'row', marginTop: 10 }}>
+                            <View style={{ flexDirection: 'row', marginTop: 15 }}>
                                 <Text style={styles.linkText}>¿Ya tienes cuenta? </Text>
                                 <Text style={styles.linkTextBold}>Ingresa aquí</Text>
                             </View>
@@ -149,74 +149,65 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
+        backgroundColor: '#0a0a0c',
     },
     gradient: {
         flex: 1,
     },
+    topBlur: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 300,
+        backgroundColor: COLORS.success + '08',
+        opacity: 0.5,
+    },
     scrollContent: {
         flexGrow: 1,
-        padding: 30,
+        padding: 24,
         justifyContent: 'center',
-    },
-    backButton: {
-        position: 'absolute',
-        top: 60,
-        left: 20,
-        width: 45,
-        height: 45,
-        borderRadius: 22.5,
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 10,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
     },
     header: {
         alignItems: 'center',
-        marginBottom: 40,
-        marginTop: 40,
+        marginBottom: 35,
+        marginTop: 20,
     },
     logoContainer: {
-        width: 200,
+        width: 220,
         height: 80,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 5,
+        marginBottom: 10,
     },
     logo: {
         width: '100%',
         height: '100%',
     },
     subtitle: {
-        fontSize: 14,
-        color: '#94a3b8',
-        fontWeight: '600',
-        letterSpacing: 1,
+        fontSize: 11,
+        color: COLORS.textSecondary,
+        fontWeight: 'bold',
+        letterSpacing: 1.5,
         textTransform: 'uppercase',
+        opacity: 0.6,
     },
     form: {
         gap: 16,
-    },
-    buttonInner: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        borderRadius: 20,
+        borderRadius: 18,
         paddingHorizontal: 20,
-        height: 65,
+        height: 60,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
     inputIcon: {
         marginRight: 15,
-        opacity: 0.7,
+        opacity: 0.5,
     },
     input: {
         flex: 1,
@@ -224,39 +215,44 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
-    button: {
-        backgroundColor: COLORS.primary,
-        height: 65,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 15,
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.4,
+    buttonContainer: {
+        height: 60,
+        borderRadius: 18,
+        overflow: 'hidden',
+        marginTop: 10,
+        shadowColor: COLORS.success,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
         shadowRadius: 15,
         elevation: 8,
     },
-    buttonDisabled: {
-        opacity: 0.7,
+    button: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buttonInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
     },
     buttonText: {
-        color: COLORS.background,
+        color: '#fff',
         fontSize: 18,
         fontWeight: '900',
         letterSpacing: -0.5,
     },
     linkButton: {
         alignItems: 'center',
-        marginTop: 30,
+        marginTop: 20,
     },
     linkText: {
-        color: '#64748b',
-        fontSize: 15,
+        color: COLORS.textSecondary,
+        fontSize: 14,
         fontWeight: '500',
     },
     linkTextBold: {
-        color: COLORS.primary,
+        color: COLORS.success,
         fontWeight: '800',
     },
 });

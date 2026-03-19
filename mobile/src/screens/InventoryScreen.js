@@ -10,6 +10,7 @@ import { useInvoices } from '../hooks/useInvoices';
 import { useAuth } from '../context/AuthContext';
 import { ReportService } from '../services/ReportService';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -114,8 +115,8 @@ const ProductCard = ({ product, onEdit, onDelete }) => {
                     <Text style={styles.basePriceText}>${(basePrice || 0).toLocaleString()}</Text>
                 </View>
                 <View style={[styles.priceItem, styles.salePriceItem]}>
-                    <Text style={[styles.miniLabel, { color: COLORS.primary + 'CC' }]}>Precio Venta</Text>
-                    <Text style={styles.salePriceText}>${(salePrice || 0).toLocaleString()}</Text>
+                    <Text style={[styles.miniLabel, { color: COLORS.success + 'CC' }]}>Precio Venta</Text>
+                    <Text style={[styles.salePriceText, { color: COLORS.success }]}>${(salePrice || 0).toLocaleString()}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -191,12 +192,17 @@ export default function InventoryScreen({ navigation }) {
     };
 
     return (
-        <View style={styles.container}>
+        <LinearGradient colors={COLORS.darkGradient} style={styles.container}>
+            {loading && products.length > 0 && (
+                <View style={styles.topLoader}>
+                    <ActivityIndicator size="small" color={COLORS.success} />
+                </View>
+            )}
             {/* stickyHeader like Dashboard */}
             <View style={styles.stickyHeader}>
                 <View style={styles.headerContent}>
                     <View>
-                        <Text style={styles.headerSub}>Catálogo & Inventario</Text>
+                        <Text style={styles.headerSub}>INVENTARIO</Text>
                         <Text style={styles.headerTitle}>Productos</Text>
                     </View>
                     <TouchableOpacity style={styles.actionIconBtn} onPress={() => console.log('Notificaciones')}>
@@ -218,7 +224,6 @@ export default function InventoryScreen({ navigation }) {
 
             <Animated.ScrollView 
                 contentContainerStyle={styles.scrollContent}
-                refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={COLORS.primary} />}
                 showsVerticalScrollIndicator={false}
                 onScroll={Animated.event(
                     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -254,9 +259,9 @@ export default function InventoryScreen({ navigation }) {
 
                 {/* Quick Actions Row - Smaller buttons & no redundant Add Product */}
                 <View style={styles.quickActionsRow}>
-                    <TouchableOpacity style={styles.actionBtnSmall} onPress={() => navigation.navigate('ProductEdit')}>
-                        <Plus color={COLORS.background} size={22} />
-                        <Text style={styles.actionBtnTextSmall}>Añadir</Text>
+                    <TouchableOpacity style={[styles.actionBtnSmall, { backgroundColor: COLORS.success }]} onPress={() => navigation.navigate('ProductEdit')}>
+                        <Plus color="white" size={22} />
+                        <Text style={[styles.actionBtnTextSmall, { color: 'white' }]}>Añadir</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                         style={[styles.actionBtnSmall, styles.actionBtnGlassSmall]}
@@ -342,29 +347,34 @@ export default function InventoryScreen({ navigation }) {
             {/* Dynamic FAB - Only visible on scroll */}
             <Animated.View style={[styles.fabContainer, { opacity: fabOpacity, transform: [{ scale: fabScale }] }]}>
                 <TouchableOpacity 
-                    style={styles.floatFab}
+                    style={[styles.floatFab, { backgroundColor: COLORS.success }]}
                     onPress={() => navigation.navigate('ProductEdit')}
                 >
-                    <Plus color={COLORS.background} size={28} strokeWidth={3} />
+                    <Plus color="white" size={28} strokeWidth={3} />
                 </TouchableOpacity>
             </Animated.View>
-        </View>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
     },
     stickyHeader: {
-        backgroundColor: 'rgba(18, 18, 20, 0.9)',
+        backgroundColor: 'transparent',
         paddingTop: 60,
         paddingBottom: 20,
-        borderBottomWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
         zIndex: 100,
         paddingHorizontal: 20,
+    },
+    topLoader: {
+        position: 'absolute',
+        top: 60,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 999,
     },
     headerContent: {
         flexDirection: 'row',
@@ -420,7 +430,7 @@ const styles = StyleSheet.create({
     kpiGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        paddingHorizontal: 16,
+        paddingHorizontal: 20,
         justifyContent: 'space-between',
         marginBottom: 8,
     },

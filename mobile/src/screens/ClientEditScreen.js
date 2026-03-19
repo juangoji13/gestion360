@@ -13,7 +13,7 @@ import { COLORS, SIZES } from '../constants/theme';
 
 const { height } = Dimensions.get('window');
 
-const GlassInput = ({ label, value, onChangeText, icon: Icon, keyboardType = 'default', multiline = false, placeholder, prefix, colSpan = 12 }) => (
+const GlassInput = ({ label, value, onChangeText, icon: Icon, keyboardType = 'default', multiline = false, placeholder, prefix, colSpan = 12, editable = true }) => (
     <View style={[styles.inputGroup, { width: `${(colSpan / 12) * 100}%` }]}>
         <Text style={styles.label}>{label}</Text>
         <View style={[styles.inputContainer, multiline && styles.inputMultiline]}>
@@ -21,7 +21,7 @@ const GlassInput = ({ label, value, onChangeText, icon: Icon, keyboardType = 'de
                 <Icon size={18} color={COLORS.textSecondary} strokeWidth={1.5} />
             </View>
             <TextInput
-                style={[styles.input, multiline && { height: 80, paddingTop: 12 }]}
+                style={[styles.input, multiline && { height: 80, paddingTop: 12 }, !editable && styles.inputDisabled]}
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
@@ -29,6 +29,7 @@ const GlassInput = ({ label, value, onChangeText, icon: Icon, keyboardType = 'de
                 keyboardType={keyboardType}
                 multiline={multiline}
                 selectionColor={COLORS.primary}
+                editable={editable}
             />
         </View>
     </View>
@@ -39,6 +40,7 @@ export default function ClientEditScreen({ navigation, route }) {
     const isEditing = !!client;
     const { updateClient, createClient } = useClients();
     const [loading, setLoading] = useState(false);
+    const [allowEditing, setAllowEditing] = useState(!isEditing); // Si es nuevo, permitir editar
 
     const [formData, setFormData] = useState({
         name: '',
@@ -111,9 +113,21 @@ export default function ClientEditScreen({ navigation, route }) {
                 <View>
                     <Text style={styles.headerTitle}>{isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}</Text>
                 </View>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
-                    <X color={COLORS.textSecondary} size={20} />
-                </TouchableOpacity>
+                {isEditing && (
+                    <TouchableOpacity 
+                        onPress={() => setAllowEditing(!allowEditing)}
+                        style={styles.editHeaderBtn}
+                    >
+                        <Text style={[styles.editText, allowEditing && styles.cancelTextRed]}>
+                            {allowEditing ? 'Cancelar' : 'Editar'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+                {!isEditing && (
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
+                        <X color={COLORS.textSecondary} size={20} />
+                    </TouchableOpacity>
+                )}
             </View>
 
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
@@ -121,18 +135,20 @@ export default function ClientEditScreen({ navigation, route }) {
                     
                     <GlassInput 
                         label="Nombre Completo *" 
-                        placeholder="Ej. Juan Pérez"
+                        placeholder="Nombre del cliente"
                         value={formData.name}
                         onChangeText={(t) => setFormData({...formData, name: t})}
                         icon={User}
+                        editable={allowEditing}
                     />
 
                     <GlassInput 
-                        label="ID / Documento (Opcional)" 
-                        placeholder="Ej. 12345678"
+                        label="IDENTIFICACION" 
+                        placeholder="N. Documento"
                         value={formData.tax_id}
                         onChangeText={(t) => setFormData({...formData, tax_id: t})}
                         icon={FileText}
+                        editable={allowEditing}
                     />
 
                     <GlassInput 
@@ -142,41 +158,45 @@ export default function ClientEditScreen({ navigation, route }) {
                         value={formData.email}
                         onChangeText={(t) => setFormData({...formData, email: t})}
                         icon={Mail}
+                        editable={allowEditing}
                     />
 
                     <GlassInput 
                         label="Teléfono" 
-                        placeholder="Ej. +57 300 000 0000"
+                        placeholder="+57 300 000 0000"
                         keyboardType="phone-pad"
                         value={formData.phone}
                         onChangeText={(t) => setFormData({...formData, phone: t})}
                         icon={Phone}
+                        editable={allowEditing}
                     />
 
                     <GlassInput 
                         label="Dirección" 
                         placeholder="Ej. Calle 123 # 45-67"
-                        multiline
                         value={formData.address}
                         onChangeText={(t) => setFormData({...formData, address: t})}
                         icon={MapPin}
+                        editable={allowEditing}
                     />
 
                 </ScrollView>
             </KeyboardAvoidingView>
 
             <View style={styles.footer}>
-                <TouchableOpacity 
-                    style={[styles.mainActionBtn, loading && { opacity: 0.7 }]} 
-                    onPress={handleSave}
-                    disabled={loading}
-                >
-                    {loading ? <ActivityIndicator color="#fff" /> : (
-                        <Text style={styles.mainActionText}>
-                            {isEditing ? 'Guardar Cambios' : 'Crear Cliente'}
-                        </Text>
-                    )}
-                </TouchableOpacity>
+                {allowEditing && (
+                    <TouchableOpacity 
+                        style={[styles.mainActionBtn, loading && { opacity: 0.7 }]} 
+                        onPress={handleSave}
+                        disabled={loading}
+                    >
+                        {loading ? <ActivityIndicator color="#fff" /> : (
+                            <Text style={styles.mainActionText}>
+                                {isEditing ? 'Guardar Cambios' : 'Crear Cliente'}
+                            </Text>
+                        )}
+                    </TouchableOpacity>
+                )}
                 <TouchableOpacity 
                     style={styles.cancelBtn} 
                     onPress={() => navigation.goBack()}
@@ -296,5 +316,23 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         textDecorationLine: 'underline',
+    },
+    editHeaderBtn: {
+        minWidth: 80,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+    },
+    editText: {
+        color: COLORS.primary,
+        fontSize: 15,
+        fontWeight: 'bold',
+    },
+    cancelTextRed: {
+        color: '#ef4444',
+    },
+    inputDisabled: {
+        opacity: 0.6,
+        color: COLORS.textSecondary,
     }
 });

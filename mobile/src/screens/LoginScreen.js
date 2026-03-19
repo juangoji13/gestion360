@@ -5,6 +5,7 @@ import { Mail, Lock, ChevronRight } from 'lucide-react-native';
 import { COLORS, SIZES } from '../constants/theme';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import { Fingerprint } from 'lucide-react-native';
 import Animated, { FadeInUp, FadeInDown, FadeIn } from 'react-native-reanimated';
 
 export default function LoginScreen() {
@@ -12,7 +13,7 @@ export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const { signIn } = useAuth();
+    const { signIn, isBiometricEnabled, signInWithBiometrics } = useAuth();
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -30,15 +31,28 @@ export default function LoginScreen() {
         }
     };
 
+    const handleBiometricLogin = async () => {
+        try {
+            setLoading(true);
+            await signInWithBiometrics();
+        } catch (error) {
+            Alert.alert('Error Biométrico', error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
             <LinearGradient
-                colors={[COLORS.background, '#0f172a']} // Deep navy to background
+                colors={COLORS.darkGradient}
                 style={styles.gradient}
             >
+                <View style={styles.topBlur} />
+                
                 <Animated.View entering={FadeInDown.duration(800)} style={styles.header}>
                     <View style={styles.logoContainer}>
                         <Image
@@ -77,19 +91,37 @@ export default function LoginScreen() {
                     </View>
 
                     <TouchableOpacity
-                        style={[styles.loginButton, loading && { opacity: 0.7 }]}
+                        style={styles.loginBtnContainer}
                         onPress={handleLogin}
                         disabled={loading}
                     >
-                        {loading ? (
-                            <ActivityIndicator color={COLORS.background} />
-                        ) : (
-                            <>
-                                <Text style={styles.loginButtonText}>Ingresar</Text>
-                                <ChevronRight color={COLORS.background} size={20} />
-                            </>
-                        )}
+                        <LinearGradient
+                            colors={[COLORS.success, '#059669']}
+                            style={[styles.loginButton, loading && { opacity: 0.7 }]}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <>
+                                    <Text style={styles.loginButtonText}>Ingresar</Text>
+                                    <ChevronRight color="#fff" size={20} />
+                                </>
+                            )}
+                        </LinearGradient>
                     </TouchableOpacity>
+
+                    {isBiometricEnabled && (
+                        <TouchableOpacity
+                            style={styles.biometricButton}
+                            onPress={handleBiometricLogin}
+                            disabled={loading}
+                        >
+                            <View style={styles.biometricIconBox}>
+                                <Fingerprint color={COLORS.success} size={32} />
+                            </View>
+                            <Text style={styles.biometricText}>Usar Biometría</Text>
+                        </TouchableOpacity>
+                    )}
 
                     <Animated.View entering={FadeIn.delay(400)} style={styles.dividerContainer}>
                         <View style={styles.dividerLine} />
@@ -119,35 +151,44 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
+        backgroundColor: '#0a0a0c',
     },
     gradient: {
         flex: 1,
-        padding: SIZES.padding * 1.5,
+        padding: 24,
         justifyContent: 'center',
+    },
+    topBlur: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 300,
+        backgroundColor: COLORS.success + '08',
+        opacity: 0.5,
     },
     header: {
         alignItems: 'center',
-        marginBottom: 60,
+        marginBottom: 50,
     },
     logoContainer: {
-        width: 220,
+        width: 250,
         height: 100,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 10,
+        marginBottom: 16,
     },
     logo: {
         width: '100%',
         height: '100%',
     },
     subtitle: {
-        color: '#94a3b8',
-        fontSize: 14,
-        fontWeight: '600',
-        letterSpacing: 1.2,
+        color: COLORS.textSecondary,
+        fontSize: 12,
+        fontWeight: 'bold',
+        letterSpacing: 1.5,
         textTransform: 'uppercase',
-        opacity: 0.8,
+        opacity: 0.6,
     },
     form: {
         gap: 16,
@@ -156,15 +197,15 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        borderRadius: 20,
+        borderRadius: 18,
         paddingHorizontal: 20,
-        height: 65,
+        height: 60,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
     inputIcon: {
         marginRight: 15,
-        opacity: 0.7,
+        opacity: 0.5,
     },
     input: {
         flex: 1,
@@ -172,31 +213,34 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
-    loginButton: {
-        flexDirection: 'row',
-        backgroundColor: COLORS.primary,
-        height: 65,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 15,
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.4,
+    loginBtnContainer: {
+        height: 60,
+        borderRadius: 18,
+        overflow: 'hidden',
+        marginTop: 10,
+        shadowColor: COLORS.success,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
         shadowRadius: 15,
         elevation: 8,
     },
+    loginButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+    },
     loginButtonText: {
-        color: COLORS.background,
+        color: '#fff',
         fontSize: 18,
         fontWeight: '900',
-        marginRight: 10,
         letterSpacing: -0.5,
     },
     dividerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 25,
+        marginVertical: 20,
     },
     dividerLine: {
         flex: 1,
@@ -204,19 +248,18 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
     },
     dividerText: {
-        color: '#64748b',
+        color: COLORS.textSecondary,
         paddingHorizontal: 20,
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '800',
-        letterSpacing: 1,
+        letterSpacing: 1.5,
         textTransform: 'uppercase',
     },
     forgotPassword: {
         alignItems: 'center',
-        marginTop: 5,
     },
     forgotPasswordText: {
-        color: '#94a3b8',
+        color: COLORS.textSecondary,
         fontSize: 14,
         fontWeight: '600',
         textDecorationLine: 'underline',
@@ -224,17 +267,39 @@ const styles = StyleSheet.create({
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 50,
+        marginTop: 40,
         alignItems: 'center',
     },
     footerText: {
-        color: '#64748b',
-        fontSize: 15,
+        color: COLORS.textSecondary,
+        fontSize: 14,
         fontWeight: '500',
     },
     signUpText: {
-        color: COLORS.primary,
-        fontSize: 15,
+        color: COLORS.success,
+        fontSize: 14,
         fontWeight: '800',
+    },
+    biometricButton: {
+        alignItems: 'center',
+        marginTop: 15,
+        gap: 10,
+    },
+    biometricIconBox: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: 'rgba(16, 185, 129, 0.05)',
+        borderWidth: 1,
+        borderColor: 'rgba(16, 185, 129, 0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    biometricText: {
+        color: COLORS.success,
+        fontSize: 11,
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
     },
 });

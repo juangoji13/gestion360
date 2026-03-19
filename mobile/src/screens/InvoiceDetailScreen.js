@@ -8,32 +8,16 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useAuth } from '../context/AuthContext';
 import { useInvoices } from '../hooks/useInvoices';
-import { COLORS, SIZES } from '../constants/theme';
+import { COLORS, SIZES, PREMIUM_COLORS } from '../constants/theme';
 
-const { width } = Dimensions.get('window');
-
-const PREMIUM_COLORS = {
-    charcoal: '#0a0a0c',
-    electricBlue: '#3b82f6',
-    electricBlueDark: '#2563eb',
-    emeraldPremium: '#10b981',
-    glassWhite: 'rgba(255, 255, 255, 0.03)',
-    glassBorder: 'rgba(255, 255, 255, 0.08)',
-    slate400: '#94a3b8',
-    slate500: '#64748b',
-    slate600: '#475569',
-    slate800: '#1e293b',
-    slate900: '#0f172a',
-    paperLight: '#f8fafc',
-    paperBlue: '#eff6ff',
-};
+const { width, height } = Dimensions.get('window');
 
 export default function InvoiceDetailScreen() {
     const navigation = useNavigation();
     const route = useRoute();
-    const { invoice: initialInvoice, items: initialItems } = route.params || {};
+    const { invoice: initialInvoice, items: initialItems, isPreview } = route.params || {};
     const { business } = useAuth();
-    const { updateStatus, deleteInvoice, addPayment, fetchInvoiceItems } = useInvoices();
+    const { updateStatus, deleteInvoice, addPayment, fetchInvoiceItems, createInvoice } = useInvoices();
     
     const [invoice, setInvoice] = useState(initialInvoice);
     const [items, setItems] = useState(initialItems || []);
@@ -110,16 +94,23 @@ export default function InvoiceDetailScreen() {
     };
 
     const handleEdit = () => {
-        navigation.navigate('NewInvoice', { 
-            editingInvoice: invoice, 
-            editingItems: items 
-        });
+        if (isPreview) {
+            navigation.goBack();
+        } else {
+            navigation.navigate('NewInvoice', { 
+                editingInvoice: invoice, 
+                editingItems: items 
+            });
+        }
     };
 
     const handleEmit = async () => {
-        if (invoice.id) {
+        if (invoice.id && !isPreview) {
             Alert.alert('Éxito', 'La factura ya ha sido emitida.');
-            navigation.navigate('MainTabs');
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'MainTabs' }],
+            });
             return;
         }
 
@@ -147,7 +138,10 @@ export default function InvoiceDetailScreen() {
             await createInvoice(invoiceData, invoiceItems);
             
             Alert.alert('Éxito', 'Factura emitida correctamente');
-            navigation.navigate('MainTabs');
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'MainTabs' }],
+            });
         } catch (error) {
             console.error('Error al emitir factura:', error);
             Alert.alert('Error', 'No se pudo emitir la factura. Inténtelo de nuevo.');
@@ -279,60 +273,105 @@ export default function InvoiceDetailScreen() {
     if (!invoice) return null;
 
     return (
-        <View style={styles.container}>
+        <LinearGradient 
+            colors={COLORS.darkGradient} 
+            style={styles.container}
+        >
+            <View style={styles.topBlur} />
+
             {/* Header Sticky con Acciones Premium */}
             <View style={styles.premiumHeader}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <ChevronLeft color="#fff" size={24} />
-                </TouchableOpacity>
+                {!isPreview && (
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+                        <ChevronLeft color="#fff" size={24} />
+                    </TouchableOpacity>
+                )}
                 
                 <View style={styles.actionNav}>
-                    {invoice.status !== 'paid' && (
+                    {isPreview ? (
                         <>
                             <TouchableOpacity 
-                                style={[styles.navItem, isLoadingItems && { opacity: 0.5 }]} 
-                                onPress={handleEdit}
-                                disabled={isLoadingItems}
+                                style={[styles.navItem, styles.centerAction]} 
+                                onPress={handleEmit}
+                                disabled={isSaving}
                             >
-                                <View style={styles.navIconBox}>
-                                    {isLoadingItems ? (
-                                        <ActivityIndicator size="small" color={PREMIUM_COLORS.slate400} />
+                                <View style={styles.centerIconBox}>
+                                    {isSaving ? (
+                                        <ActivityIndicator color="#fff" />
                                     ) : (
-                                        <Edit2 color={PREMIUM_COLORS.slate400} size={20} />
+                                        <Check color="#fff" size={24} strokeWidth={2.5} />
                                     )}
                                 </View>
-                                <Text style={styles.navLabel}>{isLoadingItems ? 'Cargando...' : 'Editar'}</Text>
+                                <Text style={[styles.navLabel, { color: COLORS.success, fontWeight: '800' }]}>Emitir</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.navItem} onPress={() => setPaymentModalVisible(true)}>
+                            <TouchableOpacity style={styles.navItem} onPress={handleShare}>
                                 <View style={styles.navIconBox}>
-                                    <CreditCard color={PREMIUM_COLORS.emeraldPremium} size={20} />
+                                    <Send color={COLORS.textSecondary} size={20} />
                                 </View>
-                                <Text style={styles.navLabel}>Abonar</Text>
+                                <Text style={styles.navLabel}>Enviar</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.centerAction} onPress={() => handleUpdateStatus('paid')}>
-                                <View style={styles.centerIconBox}>
-                                    <DollarSign color="#fff" size={24} />
+                            <TouchableOpacity 
+                                style={styles.navItem} 
+                                onPress={handleEdit}
+                            >
+                                <View style={styles.navIconBox}>
+                                    <Edit2 color={COLORS.textSecondary} size={20} />
                                 </View>
-                                <Text style={[styles.navLabel, { color: PREMIUM_COLORS.electricBlue, fontWeight: '800' }]}>Pagar</Text>
+                                <Text style={styles.navLabel}>Editar</Text>
+                            </TouchableOpacity>
+                        </>
+                    ) : (
+                        <>
+                            {invoice.status !== 'paid' && (
+                                <>
+                                    <TouchableOpacity 
+                                        style={[styles.navItem, isLoadingItems && { opacity: 0.5 }]} 
+                                        onPress={handleEdit}
+                                        disabled={isLoadingItems}
+                                    >
+                                        <View style={styles.navIconBox}>
+                                            {isLoadingItems ? (
+                                                <ActivityIndicator size="small" color={COLORS.textSecondary} />
+                                            ) : (
+                                                <Edit2 color={COLORS.textSecondary} size={20} />
+                                            )}
+                                        </View>
+                                        <Text style={styles.navLabel}>{isLoadingItems ? 'Cargando...' : 'Editar'}</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity style={styles.navItem} onPress={() => setPaymentModalVisible(true)}>
+                                        <View style={styles.navIconBox}>
+                                            <CreditCard color={COLORS.success} size={20} />
+                                        </View>
+                                        <Text style={styles.navLabel}>Abonar</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity style={styles.centerAction} onPress={() => handleUpdateStatus('paid')}>
+                                        <View style={styles.centerIconBox}>
+                                            <DollarSign color="#fff" size={24} />
+                                        </View>
+                                        <Text style={[styles.navLabel, { color: COLORS.success, fontWeight: '800' }]}>Pagar</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+
+                            <TouchableOpacity style={styles.navItem} onPress={handleShare}>
+                                <View style={styles.navIconBox}>
+                                    <Share2 color={COLORS.textSecondary} size={20} />
+                                </View>
+                                <Text style={styles.navLabel}>Enviar</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.navItem} onPress={handleDelete}>
+                                <View style={styles.navIconBox}>
+                                    <Trash2 color={COLORS.danger} size={20} />
+                                </View>
+                                <Text style={styles.navLabel}>Eliminar</Text>
                             </TouchableOpacity>
                         </>
                     )}
-
-                    <TouchableOpacity style={styles.navItem} onPress={handleShare}>
-                        <View style={styles.navIconBox}>
-                            <Share2 color={PREMIUM_COLORS.slate400} size={20} />
-                        </View>
-                        <Text style={styles.navLabel}>Enviar</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.navItem} onPress={handleDelete}>
-                        <View style={styles.navIconBox}>
-                            <Trash2 color="#ef4444" size={20} />
-                        </View>
-                        <Text style={styles.navLabel}>Eliminar</Text>
-                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -432,44 +471,46 @@ export default function InvoiceDetailScreen() {
             </ScrollView>
 
             {/* Bottom Floating Actions */}
-            <View style={styles.bottomBar}>
-                <BlurBackground />
-                <View style={[styles.actionRow, invoice.status === 'paid' && { justifyContent: 'center' }]}>
-                    {invoice.status !== 'paid' && (
+            {!isPreview && (
+                <View style={styles.bottomBar}>
+                    <BlurBackground />
+                    <View style={[styles.actionRow, invoice.status === 'paid' && { justifyContent: 'center' }]}>
+                        {invoice.status !== 'paid' && (
+                            <TouchableOpacity 
+                                style={[styles.editBtn, isLoadingItems && { opacity: 0.5 }]} 
+                                onPress={handleEdit}
+                                disabled={isLoadingItems}
+                            >
+                                {isLoadingItems ? (
+                                    <ActivityIndicator size="small" color={PREMIUM_COLORS.electricBlue} />
+                                ) : (
+                                    <Edit2 color={PREMIUM_COLORS.electricBlue} size={20} />
+                                )}
+                                <Text style={styles.editBtnText}>{isLoadingItems ? 'Cargando...' : 'Editar'}</Text>
+                            </TouchableOpacity>
+                        )}
                         <TouchableOpacity 
-                            style={[styles.editBtn, isLoadingItems && { opacity: 0.5 }]} 
-                            onPress={handleEdit}
-                            disabled={isLoadingItems}
+                            style={[styles.sendBtn, isSaving && { opacity: 0.7 }, invoice.status === 'paid' && { flex: 0, width: '100%' }]}
+                            onPress={handleShare}
+                            disabled={isSaving}
                         >
-                            {isLoadingItems ? (
-                                <ActivityIndicator size="small" color={PREMIUM_COLORS.electricBlue} />
-                            ) : (
-                                <Edit2 color={PREMIUM_COLORS.electricBlue} size={20} />
-                            )}
-                            <Text style={styles.editBtnText}>{isLoadingItems ? 'Cargando...' : 'Editar'}</Text>
+                            <LinearGradient 
+                                colors={[PREMIUM_COLORS.electricBlue, PREMIUM_COLORS.electricBlueDark]}
+                                style={styles.sendGradient}
+                            >
+                                {isSaving ? (
+                                    <ActivityIndicator color="#fff" size="small" />
+                                ) : (
+                                    <>
+                                        <Share2 color="#fff" size={20} />
+                                        <Text style={styles.sendBtnText}>Compartir PDF</Text>
+                                    </>
+                                )}
+                            </LinearGradient>
                         </TouchableOpacity>
-                    )}
-                    <TouchableOpacity 
-                        style={[styles.sendBtn, isSaving && { opacity: 0.7 }, invoice.status === 'paid' && { flex: 0, width: '100%' }]}
-                        onPress={handleShare}
-                        disabled={isSaving}
-                    >
-                        <LinearGradient 
-                            colors={[PREMIUM_COLORS.electricBlue, PREMIUM_COLORS.electricBlueDark]}
-                            style={styles.sendGradient}
-                        >
-                            {isSaving ? (
-                                <ActivityIndicator color="#fff" size="small" />
-                            ) : (
-                                <>
-                                    <Share2 color="#fff" size={20} />
-                                    <Text style={styles.sendBtnText}>Compartir PDF</Text>
-                                </>
-                            )}
-                        </LinearGradient>
-                    </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
+            )}
             {/* Modal para Abonar */}
             <Modal
                 animationType="slide"
@@ -485,7 +526,7 @@ export default function InvoiceDetailScreen() {
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>Registrar Abono</Text>
                             <TouchableOpacity onPress={() => setPaymentModalVisible(false)}>
-                                <X color={PREMIUM_COLORS.slate400} size={24} />
+                                <X color={COLORS.textSecondary} size={24} />
                             </TouchableOpacity>
                         </View>
                         
@@ -497,7 +538,7 @@ export default function InvoiceDetailScreen() {
                         <TextInput
                             style={styles.paymentInput}
                             placeholder="Monto a abonar"
-                            placeholderTextColor={PREMIUM_COLORS.slate500}
+                            placeholderTextColor={COLORS.textSecondary}
                             keyboardType="numeric"
                             value={paymentAmount}
                             onChangeText={setPaymentAmount}
@@ -510,7 +551,7 @@ export default function InvoiceDetailScreen() {
                             disabled={isSaving || !paymentAmount}
                         >
                             <LinearGradient 
-                                colors={[PREMIUM_COLORS.emeraldPremium, '#059669']}
+                                colors={[COLORS.success, '#059669']}
                                 style={styles.paymentGradient}
                             >
                                 {isSaving ? (
@@ -523,7 +564,7 @@ export default function InvoiceDetailScreen() {
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
-        </View>
+        </LinearGradient>
     );
 }
 
@@ -539,20 +580,25 @@ const BlurBackground = () => (
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: PREMIUM_COLORS.slate900,
+    },
+    topBlur: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: height * 0.4,
+        backgroundColor: COLORS.success + '10',
+        opacity: 0.5,
     },
     premiumHeader: {
         paddingTop: 60,
-        backgroundColor: COLORS.card,
+        backgroundColor: 'rgba(10, 10, 12, 0.7)',
         borderBottomLeftRadius: 32,
         borderBottomRightRadius: 32,
         paddingHorizontal: 16,
         paddingBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-        elevation: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.05)',
     },
     backBtn: {
         marginBottom: 16,
@@ -573,14 +619,14 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 12,
-        backgroundColor: 'rgba(255,255,255,0.03)',
+        backgroundColor: 'rgba(255,255,255,0.05)',
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
+        borderColor: 'rgba(255,255,255,0.1)',
     },
     navLabel: {
-        color: PREMIUM_COLORS.slate500,
+        color: COLORS.textSecondary,
         fontSize: 10,
         fontWeight: 'bold',
         textTransform: 'uppercase',
@@ -596,25 +642,24 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: PREMIUM_COLORS.electricBlue,
+        backgroundColor: COLORS.success,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: PREMIUM_COLORS.electricBlue,
+        shadowColor: COLORS.success,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.5,
         shadowRadius: 10,
         elevation: 8,
         borderWidth: 3,
-        borderColor: COLORS.card,
+        borderColor: '#0a0a0c',
     },
     scrollContent: {
         padding: 24,
     },
     invoicePaper: {
+        backgroundColor: '#fff',
         borderRadius: 24,
         padding: 24,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.5)',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 20 },
         shadowOpacity: 0.3,
@@ -625,53 +670,55 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         borderBottomWidth: 1,
-        borderBottomColor: '#dbeafe',
+        borderBottomColor: '#f1f5f9',
         paddingBottom: 16,
         marginBottom: 20,
     },
     companyName: {
         fontSize: 18,
         fontWeight: '900',
-        color: PREMIUM_COLORS.electricBlueDark,
+        color: '#0f172a',
         letterSpacing: -0.5,
     },
     nitLabel: {
         fontSize: 10,
         fontWeight: 'bold',
-        color: PREMIUM_COLORS.slate500,
+        color: '#64748b',
         textTransform: 'uppercase',
         letterSpacing: 1.5,
         marginTop: 2,
     },
     companySub: {
         fontSize: 11,
-        color: PREMIUM_COLORS.slate600,
+        color: '#64748b',
         marginTop: 1,
     },
     metaInfoInline: {
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: 8,
-        backgroundColor: 'rgba(59, 130, 246, 0.05)',
+        backgroundColor: '#f8fafc',
         paddingVertical: 4,
         paddingHorizontal: 8,
         borderRadius: 8,
         alignSelf: 'flex-start',
+        borderWidth: 1,
+        borderColor: '#f1f5f9',
     },
     docLabel: {
         fontSize: 9,
         fontWeight: 'bold',
-        color: PREMIUM_COLORS.slate500,
+        color: '#64748b',
         letterSpacing: 0.5,
     },
     docNumberSmall: {
         fontSize: 11,
         fontWeight: '900',
-        color: PREMIUM_COLORS.slate900,
+        color: '#0f172a',
     },
     docDateSmall: {
         fontSize: 10,
-        color: PREMIUM_COLORS.slate500,
+        color: '#64748b',
         marginLeft: 4,
     },
     cardRow: {
@@ -680,18 +727,18 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     infoCard: {
-        backgroundColor: 'rgba(255,255,255,0.6)',
+        backgroundColor: '#f8fafc',
         borderRadius: 16,
         padding: 12,
         borderWidth: 1,
-        borderColor: '#eff6ff',
+        borderColor: '#f1f5f9',
         minHeight: 60,
         justifyContent: 'center',
     },
     cardLabel: {
         fontSize: 9,
         fontWeight: 'bold',
-        color: PREMIUM_COLORS.slate400,
+        color: '#94a3b8',
         textTransform: 'uppercase',
         letterSpacing: 1,
         marginBottom: 4,
@@ -699,11 +746,11 @@ const styles = StyleSheet.create({
     clientName: {
         fontSize: 13,
         fontWeight: 'bold',
-        color: PREMIUM_COLORS.slate800,
+        color: '#1e293b',
     },
     clientNit: {
         fontSize: 11,
-        color: PREMIUM_COLORS.slate600,
+        color: '#64748b',
         marginTop: 2,
     },
     itemsContainer: {
@@ -712,7 +759,7 @@ const styles = StyleSheet.create({
     tableHeader: {
         flexDirection: 'row',
         borderBottomWidth: 2,
-        borderBottomColor: '#eff6ff',
+        borderBottomColor: '#f1f5f9',
         paddingBottom: 10,
         marginBottom: 10,
         paddingHorizontal: 4,
@@ -720,7 +767,7 @@ const styles = StyleSheet.create({
     tableLabel: {
         fontSize: 10,
         fontWeight: 'bold',
-        color: PREMIUM_COLORS.slate400,
+        color: '#94a3b8',
         textTransform: 'uppercase',
         letterSpacing: 1,
     },
@@ -729,22 +776,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(219, 234, 254, 0.5)',
+        borderBottomColor: '#f8fafc',
         paddingHorizontal: 4,
     },
     itemName: {
         fontSize: 13,
         fontWeight: '600',
-        color: PREMIUM_COLORS.slate800,
+        color: '#1e293b',
     },
     itemQty: {
         fontSize: 13,
-        color: PREMIUM_COLORS.slate600,
+        color: '#64748b',
     },
     itemTotal: {
         fontSize: 13,
         fontWeight: 'bold',
-        color: PREMIUM_COLORS.slate900,
+        color: '#0f172a',
     },
     totalQtyRow: {
         flexDirection: 'row',
@@ -757,13 +804,13 @@ const styles = StyleSheet.create({
     totalQtyLabel: {
         fontSize: 11,
         fontWeight: 'bold',
-        color: PREMIUM_COLORS.slate500,
+        color: '#64748b',
         textTransform: 'uppercase',
     },
     totalQtyValue: {
         fontSize: 14,
         fontWeight: '900',
-        color: PREMIUM_COLORS.slate900,
+        color: '#0f172a',
         minWidth: 40,
         textAlign: 'center',
     },
@@ -772,7 +819,7 @@ const styles = StyleSheet.create({
         alignItems: 'flex-end',
         gap: 8,
         borderTopWidth: 1,
-        borderTopColor: '#eff6ff',
+        borderTopColor: '#f1f5f9',
         paddingTop: 16,
     },
     summaryItem: {
@@ -782,12 +829,12 @@ const styles = StyleSheet.create({
     },
     summaryLabel: {
         fontSize: 13,
-        color: PREMIUM_COLORS.slate500,
+        color: '#64748b',
     },
     summaryValue: {
         fontSize: 13,
         fontWeight: '600',
-        color: PREMIUM_COLORS.slate800,
+        color: '#1e293b',
     },
     totalBlock: {
         flexDirection: 'row',
@@ -797,44 +844,44 @@ const styles = StyleSheet.create({
         marginTop: 8,
         paddingTop: 12,
         borderTopWidth: 2,
-        borderTopColor: 'rgba(59, 130, 246, 0.2)',
+        borderTopColor: '#f1f5f9',
     },
     totalLabel: {
         fontSize: 14,
         fontWeight: '900',
-        color: PREMIUM_COLORS.slate900,
+        color: '#0f172a',
     },
     totalValue: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: '900',
-        color: PREMIUM_COLORS.electricBlue,
+        color: COLORS.success,
     },
     footerSection: {
         marginTop: 32,
-        paddingTop: 24,
+        paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: '#dbeafe',
+        borderTopColor: '#f1f5f9',
         borderStyle: 'dashed',
     },
     legalNotice: {
         flexDirection: 'row',
+        alignItems: 'center',
         gap: 8,
-        paddingRight: 16,
+        justifyContent: 'center',
     },
     legalText: {
-        fontSize: 11,
-        color: PREMIUM_COLORS.slate400,
+        fontSize: 10,
+        color: '#94a3b8',
         fontStyle: 'italic',
-        lineHeight: 16,
     },
     bottomBar: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        height: 120,
+        height: 100,
         paddingHorizontal: 24,
-        paddingTop: 20,
+        paddingTop: 12,
     },
     blurWrapper: {
         position: 'absolute',
@@ -845,35 +892,30 @@ const styles = StyleSheet.create({
     },
     actionRow: {
         flexDirection: 'row',
-        gap: 16,
+        gap: 12,
     },
     editBtn: {
         flex: 1,
-        height: 56,
-        borderRadius: 16,
-        borderWidth: 2,
-        borderColor: 'rgba(59, 130, 246, 0.3)',
-        backgroundColor: 'rgba(59, 130, 246, 0.05)',
+        height: 54,
+        borderRadius: 18,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
     },
     editBtnText: {
-        fontSize: 16,
+        color: COLORS.success,
+        fontSize: 15,
         fontWeight: 'bold',
-        color: PREMIUM_COLORS.electricBlue,
     },
     sendBtn: {
-        flex: 1,
-        height: 56,
-        borderRadius: 16,
+        flex: 2,
+        height: 54,
+        borderRadius: 18,
         overflow: 'hidden',
-        shadowColor: PREMIUM_COLORS.electricBlue,
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 15,
-        elevation: 10,
     },
     sendGradient: {
         flex: 1,
@@ -883,21 +925,23 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     sendBtnText: {
-        fontSize: 16,
-        fontWeight: '900',
         color: '#fff',
+        fontSize: 15,
+        fontWeight: '900',
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.6)',
+        backgroundColor: 'rgba(0,0,0,0.8)',
         justifyContent: 'flex-end',
     },
     modalContent: {
-        backgroundColor: COLORS.card,
+        backgroundColor: '#0a0a0c',
         borderTopLeftRadius: 32,
         borderTopRightRadius: 32,
         padding: 24,
         paddingBottom: 40,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
     },
     modalHeader: {
         flexDirection: 'row',
@@ -906,43 +950,42 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     modalTitle: {
+        color: '#fff',
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#fff',
     },
     paymentInfo: {
         backgroundColor: 'rgba(255,255,255,0.03)',
         padding: 16,
         borderRadius: 16,
         marginBottom: 20,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
     },
     paymentLabel: {
-        color: PREMIUM_COLORS.slate400,
-        fontSize: 14,
+        color: COLORS.textSecondary,
+        fontSize: 12,
+        marginBottom: 4,
     },
     paymentBalance: {
-        color: PREMIUM_COLORS.emeraldPremium,
-        fontSize: 18,
+        color: COLORS.warning,
+        fontSize: 24,
         fontWeight: 'bold',
     },
     paymentInput: {
-        height: 64,
         backgroundColor: 'rgba(255,255,255,0.05)',
         borderRadius: 16,
-        paddingHorizontal: 20,
-        fontSize: 24,
+        padding: 16,
         color: '#fff',
+        fontSize: 18,
         fontWeight: 'bold',
+        textAlign: 'center',
         marginBottom: 24,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.1)',
     },
     confirmPaymentBtn: {
-        height: 56,
-        borderRadius: 16,
+        height: 54,
+        borderRadius: 18,
         overflow: 'hidden',
     },
     paymentGradient: {

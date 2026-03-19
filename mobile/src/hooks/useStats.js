@@ -8,7 +8,9 @@ export function useStats() {
     const [stats, setStats] = useState({
         totalIncome: 0,
         netProfit: 0,
-        inventoryInvestment: 0, // FIXED: Added missing initial key
+        prevTotalIncome: 0,
+        prevNetProfit: 0,
+        inventoryInvestment: 0,
         pendingInvoices: 0,
         paidInvoices: 0,
         chartData: {
@@ -43,59 +45,85 @@ export function useStats() {
                 return sum + (stock * cost);
             }, 0);
 
-            // 3. Filtrar por rango
+            // 3. Obtener Estadísticas base desde RPC (Paridad con Web)
             const now = new Date();
+            let startDate, endDate = now.toISOString();
+            let prevStartDate, prevEndDate;
+
+            if (range === 'today') {
+                startDate = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+                prevStartDate = new Date(new Date(new Date().setDate(now.getDate() - 1)).setHours(0, 0, 0, 0)).toISOString();
+                prevEndDate = new Date(new Date(new Date().setDate(now.getDate() - 1)).setHours(23, 59, 59, 999)).toISOString();
+            } else if (range === '7d') {
+                startDate = new Date(new Date().setDate(now.getDate() - 7)).toISOString();
+                prevStartDate = new Date(new Date().setDate(now.getDate() - 14)).toISOString();
+                prevEndDate = startDate;
+            } else if (range === '30d') {
+                startDate = new Date(new Date().setDate(now.getDate() - 30)).toISOString();
+                prevStartDate = new Date(new Date().setDate(now.getDate() - 60)).toISOString();
+                prevEndDate = startDate;
+            } else {
+                startDate = new Date(now.getFullYear(), 0, 1).toISOString();
+                prevStartDate = new Date(now.getFullYear() - 1, 0, 1).toISOString();
+                prevEndDate = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59).toISOString();
+            }
+
+            const [{ data: rpcStats, error: rpcError }, { data: prevRpcStats, error: prevRpcError }] = await Promise.all([
+                supabase.rpc('get_dashboard_stats_v2', {
+                    p_business_id: business.id,
+                    p_start_date: startDate,
+                    p_end_date: endDate
+                }),
+                supabase.rpc('get_dashboard_stats_v2', {
+                    p_business_id: business.id,
+                    p_start_date: prevStartDate,
+                    p_end_date: prevEndDate
+                })
+            ]);
+
+            if (rpcError) throw rpcError;
+            if (prevRpcError) throw prevRpcError;
+
+            // 4. Filtrar localmente solo para la lógica de la gráfica
             const filteredInvoices = invoices.filter(inv => {
                 const d = new Date(inv.date || inv.created_at);
                 if (range === 'today') {
-                    return d.toLocaleDateString() === now.toLocaleDateString();
+                    const todayStr = new Date().toLocaleDateString();
+                    return d.toLocaleDateString() === todayStr;
                 }
-                if (range === '7d') {
-                    const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 7);
-                    return d >= cutoff;
-                }
-                if (range === '30d') {
-                    const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 30);
-                    return d >= cutoff;
-                }
-                return d.getFullYear() === now.getFullYear();
+                const cutoff = new Date(startDate);
+                return d >= cutoff;
             });
 
-            // 4. Calcular Totales (Lógica Precision Web)
-            let totalIncome = 0;
-            let totalPending = 0;
-            let netProfit = 0;
-            let pendingCount = 0;
-            let paidCount = 0;
+            // 5. Calcular Totales (Desde RPC para máxima precisión, con fallback local)
+            let totalIncome = rpcStats?.total_revenue || 0;
+            let totalPending = rpcStats?.total_pending || 0;
+            let netProfit = rpcStats?.net_profit || 0;
+            let pendingCount = rpcStats?.pending_count || 0;
+            let paidCount = rpcStats?.paid_count || 0;
 
-            filteredInvoices.forEach(inv => {
-                const total = parseFloat(inv.total) || 0;
-                const amountPaid = parseFloat(inv.amount_paid) || 0;
-                
-                // Lógica unificada con Web: 
-                // Si está pagada, usamos el total. Si no, lo que realmente se ha abonado.
-                const realPaid = inv.status === 'paid' ? Math.max(total, amountPaid) : amountPaid;
-                const pending = Math.max(0, total - realPaid);
+            if (totalIncome === 0 && totalPending === 0 && filteredInvoices.length > 0) {
+                filteredInvoices.forEach(inv => {
+                    const total = parseFloat(inv.total) || 0;
+                    const amountPaid = parseFloat(inv.amount_paid) || 0;
+                    const realPaid = inv.status === 'paid' ? Math.max(total, amountPaid) : amountPaid;
+                    
+                    const cost = (inv.invoice_items || []).reduce((s, it) => s + (parseFloat(it.purchase_price) || 0) * (parseFloat(it.quantity) || 0), 0);
+                    const tax = parseFloat(inv.tax_amount) || 0;
+                    
+                    const paidRatio = total > 0 ? (realPaid / total) : 0;
+                    const estimatedProfit = (total - cost - tax) * paidRatio;
 
-                totalIncome += realPaid;
-                totalPending += pending;
+                    totalIncome += realPaid;
+                    totalPending += Math.max(0, total - realPaid);
+                    netProfit += estimatedProfit;
 
-                if (inv.status === 'paid') paidCount++;
-                else if (inv.status === 'pending') pendingCount++;
+                    if (inv.status === 'pending') pendingCount++;
+                    if (inv.status === 'paid') paidCount++;
+                });
+            }
 
-                const totalBaseCost = (inv.invoice_items || []).reduce((sum, item) => {
-                    const cost = parseFloat(item.purchase_price) || 0;
-                    return sum + (cost * (parseFloat(item.quantity) || 0));
-                }, 0);
-
-                const tax = parseFloat(inv.tax_amount) || 0;
-                
-                // La ganancia neta también se calcula sobre lo cobrado
-                const paidRatio = total > 0 ? (realPaid / total) : 0;
-                const estimatedProfit = (total - totalBaseCost - tax) * paidRatio;
-                
-                netProfit += estimatedProfit;
-            });
+            // ... el resto de la lógica de buckets para la gráfica se mantiene igual ...
 
             // 5. Preparar Gráfica (Buckets de Barras)
             let labels = [];
@@ -179,6 +207,8 @@ export function useStats() {
                 totalIncome: totalIncome,
                 totalPending: totalPending,
                 netProfit: netProfit,
+                prevTotalIncome: prevRpcStats?.total_revenue || 0,
+                prevNetProfit: prevRpcStats?.net_profit || 0,
                 inventoryInvestment: inventoryInvestment,
                 pendingCount: pendingCount,
                 paidCount: paidCount,

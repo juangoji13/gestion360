@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 const round2 = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
 
@@ -12,7 +13,8 @@ export function useProducts() {
 
     const [topProducts, setTopProducts] = useState([]);
 
-    async function fetchProducts() {
+    const fetchProducts = useCallback(async () => {
+        if (!business?.id) return;
         try {
             setLoading(true);
             const { data, error: fetchError } = await supabase
@@ -68,7 +70,7 @@ export function useProducts() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [business?.id]);
 
     async function createProduct(productData) {
         const sanitizedData = Object.fromEntries(
@@ -82,7 +84,7 @@ export function useProducts() {
             .from('products')
             .insert([{ ...sanitizedData, business_id: business.id }])
             .select();
-        if (!error) fetchProducts();
+        
         return { data, error };
     }
 
@@ -99,22 +101,28 @@ export function useProducts() {
             .update(sanitizedData)
             .eq('id', id)
             .select();
-        if (!error) fetchProducts();
+        
         return { data, error };
     }
 
     async function deleteProduct(id) {
+        setProducts(prev => prev.filter(p => p.id !== id));
+        
         const { error } = await supabase
             .from('products')
             .delete()
             .eq('id', id);
-        if (!error) fetchProducts();
+        
+        if (error) fetchProducts();
+        
         return { error };
     }
 
-    useEffect(() => {
-        if (business?.id) fetchProducts();
-    }, [business?.id]);
+    useFocusEffect(
+        useCallback(() => {
+            fetchProducts();
+        }, [fetchProducts])
+    );
 
     const lowStockCount = products.filter(p => p.track_stock && (parseFloat(p.stock) || 0) <= 5).length;
     
@@ -126,10 +134,12 @@ export function useProducts() {
         
         // Lógica de Reconocimiento de Flexibles / Servicios:
         // Si no trackea stock o tiene stock 0 pero tiene ventas (soldQty > 0 o reservedQty > 0), 
-        // incluimos su valor en base a lo que se ha movido o lo que se proyecta vender.
+        // Si no trackea stock o tiene stock 0 pero tiene ventas
+        const sold = p.soldQty || 0;
+        const reserved = p.reservedQty || 0;
         if (!p.track_stock || physicalStock === 0) {
-            acc.investment += (cost * (p.soldQty + p.reservedQty));
-            acc.salesValue += (price * (p.soldQty + p.reservedQty));
+            acc.investment += (cost * (sold + reserved));
+            acc.salesValue += (price * (sold + reserved));
         } else {
             acc.investment += (cost * physicalStock);
             acc.salesValue += (price * physicalStock);

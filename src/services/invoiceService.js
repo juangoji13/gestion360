@@ -60,32 +60,13 @@ export const invoiceService = {
     },
 
     async update(id, invoice, items) {
-        // 1. Actualizar la factura
-        const { error: updateError } = await supabase
-            .from('invoices')
-            .update(invoice)
-            .eq('id', id)
-
-        if (updateError) throw updateError
-
-        // 2. Eliminar ítems antiguos
-        // Nota: En una implementación más compleja manejaríamos el stock aquí.
-        // Pero para seguir la lógica del móvil (donde se asume que si se edita se ajustan los items),
-        // eliminamos y volvemos a insertar.
-        const { error: deleteError } = await supabase
-            .from('invoice_items')
-            .delete()
-            .eq('invoice_id', id)
-
-        if (deleteError) throw deleteError
-
-        // 3. Insertar nuevos ítems
-        const { error: insertError } = await supabase
-            .from('invoice_items')
-            .insert(items.map(item => ({ ...item, invoice_id: id })))
-
-        if (insertError) throw insertError
-
+        // Usamos la nueva función atómica (RPC) que maneja stock y numeración correctamente
+        const { data, error } = await supabase.rpc('update_invoice_final', {
+            p_invoice_id: id,
+            p_invoice: invoice,
+            p_items: items
+        })
+        if (error) throw error
         return { id }
     },
 
@@ -119,37 +100,10 @@ export const invoiceService = {
     },
 
     async delete(id) {
-        // First retrieve all items from this invoice to deduct stock
-        const { data: items, error: fetchError } = await supabase
-            .from('invoice_items')
-            .select('product_id, quantity')
-            .eq('invoice_id', id)
-        if (fetchError) throw fetchError
-
-        // Process stock returns
-        if (items && items.length > 0) {
-            for (const item of items) {
-                if (!item.product_id) continue
-                // Get current stock
-                const { data: pData } = await supabase
-                    .from('products')
-                    .select('stock')
-                    .eq('id', item.product_id)
-                    .single()
-
-                if (pData) {
-                    const returnStock = (pData.stock || 0) + (parseFloat(item.quantity) || 0)
-                    await supabase
-                        .from('products')
-                        .update({ stock: returnStock })
-                        .eq('id', item.product_id)
-                }
-            }
-        }
-
-        // Now actually delete items and invoice
-        await supabase.from('invoice_items').delete().eq('invoice_id', id)
-        const { error } = await supabase.from('invoices').delete().eq('id', id)
+        // Usamos eliminación atómica (RPC) para asegurar el retorno de stock
+        const { error } = await supabase.rpc('delete_invoice_final', {
+            p_invoice_id: id
+        })
         if (error) throw error
     },
 

@@ -17,8 +17,11 @@ const ConfirmSuccess = lazy(() => import('./pages/ConfirmSuccess'))
 function LoadingScreen() {
   return (
     <div className="loading-screen">
-      <div className="spinner"></div>
-      <p style={{ color: 'var(--text-muted)' }}>Cargando ERP...</p>
+      <div className="loading-logo-container">
+        <div className="loading-circle"></div>
+        <div className="loading-circle-inner"></div>
+      </div>
+      <div className="loading-text">Cargando</div>
     </div>
   )
 }

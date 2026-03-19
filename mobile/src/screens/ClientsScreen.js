@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, ActivityIndicator, RefreshControl, Linking } from 'react-native';
 import { Search, Plus, MessageCircle, MapPin, AlertCircle, ChevronRight } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SIZES } from '../constants/theme';
 import { useClients } from '../hooks/useClients';
 import { useNavigation } from '@react-navigation/native';
@@ -65,7 +66,12 @@ export default function ClientsScreen() {
     );
 
     return (
-        <View style={styles.container}>
+        <LinearGradient colors={COLORS.darkGradient} style={styles.container}>
+            {loading && clients.length > 0 && (
+                <View style={styles.topLoader}>
+                    <ActivityIndicator size="small" color={COLORS.success} />
+                </View>
+            )}
             <View style={styles.header}>
                 <Text style={styles.title}>Clientes</Text>
             </View>
@@ -118,15 +124,22 @@ export default function ClientsScreen() {
             >
                 <Plus color="white" size={28} />
             </TouchableOpacity>
-        </View>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
         paddingTop: 60,
+    },
+    topLoader: {
+        position: 'absolute',
+        top: 60,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 999,
     },
     header: {
         flexDirection: 'row',
@@ -246,7 +259,7 @@ const styles = StyleSheet.create({
     },
     whatsappButton: {
         padding: 8,
-        backgroundColor: COLORS.primary + '11',
+        backgroundColor: COLORS.success + '11',
         borderRadius: 8,
     },
     fab: {
@@ -256,13 +269,13 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: COLORS.primary,
+        backgroundColor: COLORS.success,
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 8,
-        shadowColor: COLORS.primary,
+        shadowColor: COLORS.success,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
     },
 });

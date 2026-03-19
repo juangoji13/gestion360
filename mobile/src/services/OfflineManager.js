@@ -6,7 +6,7 @@ const OFFLINE_QUEUE_KEY = '@facturacion_offline_queue'
 export const OfflineManager = {
     async checkIsOffline() {
         const state = await NetInfo.fetch()
-        return !state.isConnected || !state.isInternetReachable
+        return state.isConnected === false
     },
 
     async saveToQueue(invoiceData, invoiceItems) {

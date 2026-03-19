@@ -75,7 +75,7 @@ export function useClients() {
                 .select();
 
             if (createError) throw createError;
-            await fetchClients();
+            
             return { data: data[0], error: null };
         } catch (err) {
             return { data: null, error: err.message };
@@ -98,7 +98,7 @@ export function useClients() {
                 .select();
 
             if (updateError) throw updateError;
-            await fetchClients();
+            
             return { data: data[0], error: null };
         } catch (err) {
             return { data: null, error: err.message };

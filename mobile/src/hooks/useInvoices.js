@@ -48,8 +48,23 @@ export function useInvoices() {
             });
 
             if (rpcError) throw rpcError;
-            // Refrescamos inmediatamente tras la mutación
-            await fetchInvoices();
+            
+            return data;
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    async function updateInvoice(invoiceId, invoiceData, items) {
+        try {
+            const { data, error: rpcError } = await supabase.rpc('update_invoice_final', {
+                p_invoice_id: invoiceId,
+                p_invoice: invoiceData,
+                p_items: items
+            });
+
+            if (rpcError) throw rpcError;
+            
             return data;
         } catch (err) {
             throw err;
@@ -64,7 +79,7 @@ export function useInvoices() {
                 .eq('id', invoiceId);
 
             if (updateError) throw updateError;
-            await fetchInvoices();
+            
         } catch (err) {
             throw err;
         }
@@ -80,7 +95,7 @@ export function useInvoices() {
                 .eq('id', invoiceId);
 
             if (updateError) throw updateError;
-            await fetchInvoices();
+            
         } catch (err) {
             throw err;
         }
@@ -88,13 +103,16 @@ export function useInvoices() {
 
     async function deleteInvoice(invoiceId) {
         try {
-            const { error: deleteError } = await supabase
-                .from('invoices')
-                .delete()
-                .eq('id', invoiceId);
+            setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+            
+            const { error: deleteError } = await supabase.rpc('delete_invoice_final', {
+                p_invoice_id: invoiceId
+            });
 
-            if (deleteError) throw deleteError;
-            await fetchInvoices();
+            if (deleteError) {
+                fetchInvoices();
+                throw deleteError;
+            }
         } catch (err) {
             throw err;
         }

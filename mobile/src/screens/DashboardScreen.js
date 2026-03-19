@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { User, Bell, Plus, TrendingUp, DollarSign, Clock, CheckCircle, AlertCircle, LogOut, FileText, LayoutGrid, Receipt, Users, Settings2, PlusSquare, UserPlus } from 'lucide-react-native';
-import { LineChart, BarChart } from 'react-native-chart-kit';
+import { Svg, Path, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+import { User, Bell, Plus, TrendingUp, TrendingDown, DollarSign, Clock, CheckCircle, AlertCircle, LogOut, FileText, LayoutGrid, Receipt, Users, Settings2, PlusSquare, UserPlus, ArrowRightLeft, Wallet } from 'lucide-react-native';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useStats } from '../hooks/useStats';
 import { useInvoices } from '../hooks/useInvoices';
@@ -11,35 +11,98 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
-const KPICard = ({ title, value, icon: Icon, color, growth, subtitle }) => (
-    <View style={styles.glassCardKPI}>
-        {/* Absolute blur spot background */}
-        <View style={[styles.blurSpot, { backgroundColor: color + '15' }]} />
+const MasterBalanceCard = ({ total, profit, pending, prevTotal, range, chartData }) => {
+    const width = Dimensions.get('window').width - 40;
+    const height = 110;
+    const sparkData = (chartData?.datasets?.[0]?.data || [0, 0, 0, 0]).map(v => v || 0);
+    const maxVal = Math.max(...sparkData, 1);
+    
+    // Smooth SVG Path logic (Bézier Approximation)
+    const points = sparkData.map((val, i) => {
+        const x = (i / Math.max(1, sparkData.length - 1)) * width;
+        const y = height - ((val / maxVal) * (height * 0.7)) - 15;
+        return { x, y };
+    });
 
-        <View style={styles.cardHeaderKPI}>
-            <View style={[styles.iconBox, { backgroundColor: color + '15' }]}>
-                <Icon color={color} size={20} />
-            </View>
-            {growth && (
-                <View style={[styles.growthBox, { backgroundColor: color + '15', borderColor: color + '20' }]}>
-                    <Text style={[styles.growthText, { color: color }]}>{growth}</Text>
+    let d = `M ${points[0].x} ${points[0].y}`;
+    if (points.length > 2) {
+        for (let i = 0; i < points.length - 1; i++) {
+            const xc = (points[i].x + points[i + 1].x) / 2;
+            const yc = (points[i].y + points[i + 1].y) / 2;
+            d += ` Q ${points[i].x} ${points[i].y}, ${xc} ${yc}`;
+        }
+        d += ` L ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+    } else {
+        d += ` L ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+    }
+
+    const growth = prevTotal > 0 ? ((total - prevTotal) / prevTotal) * 100 : 0;
+    const isPositive = growth >= 0;
+
+    return (
+        <View style={styles.masterCardWrapper}>
+            <LinearGradient colors={COLORS.primaryGradient} style={styles.masterCard}>
+                <View style={styles.masterHeader}>
+                    <View>
+                        <Text style={styles.masterLabel}>Balance Total Cobrado</Text>
+                        <Text style={styles.masterValue}>${(total || 0).toLocaleString()}</Text>
+                    </View>
+                    <View style={[styles.masterBadge, { backgroundColor: isPositive ? COLORS.success + '15' : COLORS.danger + '15' }]}>
+                        {isPositive ? <TrendingUp size={14} color={COLORS.success} /> : <TrendingDown size={14} color={COLORS.danger} />}
+                        <Text style={[styles.masterBadgeText, { color: isPositive ? COLORS.success : COLORS.danger }]}>
+                            {Math.abs(growth).toFixed(1)}%
+                        </Text>
+                    </View>
                 </View>
-            )}
-        </View>
 
-        <View style={styles.cardBodyKPI}>
-            <Text style={styles.kpiLabel}>{title}</Text>
-            <Text style={styles.kpiValueMainText}>{value}</Text>
-            {subtitle && <Text style={styles.kpiSubtitle}>{subtitle}</Text>}
+                <View style={styles.masterChartContainer}>
+                    <Svg width={width} height={height}>
+                        <Defs>
+                            <SvgGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                                <Stop offset="0" stopColor={COLORS.secondary} stopOpacity="0.05" />
+                                <Stop offset="0.5" stopColor={COLORS.secondary} stopOpacity="0.4" />
+                                <Stop offset="1" stopColor={COLORS.secondary} stopOpacity="0.05" />
+                            </SvgGradient>
+                        </Defs>
+                        <Path d={d} stroke="url(#lineGrad)" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+                    </Svg>
+                </View>
+
+                <View style={styles.masterFooter}>
+                    <View style={styles.footerItem}>
+                        <View style={[styles.footerIcon, { backgroundColor: COLORS.info + '20' }]}>
+                            <TrendingUp size={12} color={COLORS.info} />
+                        </View>
+                        <Text style={styles.footerLabel}>Ganancia: </Text>
+                        <Text style={styles.footerValue}>${(profit || 0).toLocaleString()}</Text>
+                    </View>
+                    <View style={styles.footerItem}>
+                        <View style={[styles.footerIcon, { backgroundColor: COLORS.warning + '20' }]}>
+                            <Wallet size={12} color={COLORS.warning} />
+                        </View>
+                        <Text style={styles.footerLabel}>Por Cobrar:</Text>
+                        <Text style={styles.footerValue}>${(pending || 0).toLocaleString()}</Text>
+                    </View>
+                </View>
+            </LinearGradient>
         </View>
-    </View>
+    );
+};
+
+const QuickAction = ({ icon: Icon, label, onPress, color }) => (
+    <TouchableOpacity style={styles.quickActionItem} activeOpacity={0.7} onPress={onPress}>
+        <View style={[styles.quickActionIcon, { backgroundColor: color + '15' }]}>
+            <Icon color={color} size={22} />
+        </View>
+        <Text style={styles.quickActionLabel}>{label}</Text>
+    </TouchableOpacity>
 );
 
 export default function DashboardScreen() {
     const navigation = useNavigation();
     const { signOut, user, business } = useAuth();
     const [range, setRange] = React.useState('7d');
-    const { totalIncome, totalPending, netProfit, inventoryInvestment, pendingCount, paidCount, chartData, loading, error, refresh } = useStats();
+    const { totalIncome, totalPending, netProfit, prevTotalIncome, prevNetProfit, inventoryInvestment, pendingCount, paidCount, chartData, loading, error, refresh } = useStats();
     const { invoices, loading: loadingInvoices, refresh: refreshInvoices } = useInvoices();
 
     // Refrescar cuando el rango cambia
@@ -64,20 +127,28 @@ export default function DashboardScreen() {
         { key: 'all', label: 'Año' },
     ];
 
-    if (loading && !totalIncome) {
+    // Only show a blocking loader on the very first mount if we have absolutely no totals yet.
+    // For updates or when returning from other screens, we refresh "silently" to avoid flicker.
+    const isInitialLoading = loading && totalIncome === undefined && !invoices.length;
+
+    if (isInitialLoading) {
         return (
-            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
-                <Text style={{ color: COLORS.text, marginTop: 20 }}>Cargando diseño premium...</Text>
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }]}>
+                <ActivityIndicator size="large" color={COLORS.accent} />
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
+        <LinearGradient colors={COLORS.darkGradient} style={styles.container}>
+
             <View style={styles.stickyHeader}>
                 <View style={styles.headerContent}>
-                    <View style={styles.profileRow}>
+                    <TouchableOpacity 
+                        style={styles.profileRow} 
+                        activeOpacity={0.7}
+                        onPress={() => navigation.navigate('Profile')}
+                    >
                         <View style={styles.avatarBorder}>
                             <LinearGradient colors={[COLORS.primary + '66', COLORS.secondary + '66']} style={styles.avatarGradient}>
                                 <View style={styles.avatarInner}>
@@ -88,16 +159,21 @@ export default function DashboardScreen() {
                             </LinearGradient>
                         </View>
                         <View style={styles.businessInfo}>
-                            <Text style={styles.businessSub}>{business?.name || 'TECH SOLUTIONS S.A.S'}</Text>
-                            <Text style={styles.userNameText}>Hola, {user?.email?.split('@')[0] || 'Alejandro'}</Text>
+                            <Text style={styles.businessSub}>{business?.name || 'MI NEGOCIO'}</Text>
+                            <Text style={styles.userNameText}>Hola, {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Alejandro'}</Text>
                         </View>
-                    </View>
+                    </TouchableOpacity>
                     <TouchableOpacity style={styles.actionIconBtn} onPress={() => console.log('Notificaciones')}>
                         <Bell color={COLORS.textSecondary} size={22} />
                     </TouchableOpacity>
                 </View>
             </View>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} refreshControl={<RefreshControl refreshing={loading} onRefresh={() => refresh(range)} tintColor={COLORS.primary} />}>
+            {loading && !isInitialLoading && (
+                <View style={styles.topLoader}>
+                    <ActivityIndicator size="small" color={COLORS.success} />
+                </View>
+            )}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 <View style={styles.rangeBar}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rangeInner}>
                         {RANGES.map((r) => (
@@ -113,78 +189,40 @@ export default function DashboardScreen() {
                         <Text style={styles.errorMsg}>{error}</Text>
                     </View>
                 )}
-                <View style={styles.kpiGrid}>
-                    <KPICard 
-                        title="Venta Real (Cobros)" 
-                        value={`$${(totalIncome || 0).toLocaleString()}`} 
-                        subtitle={`Pendiente: $${(totalPending || 0).toLocaleString()}`}
-                        icon={DollarSign} 
-                        color={COLORS.primary} 
-                    />
-                    <KPICard title="Ganancia Neta" value={`$${(netProfit || 0).toLocaleString()}`} icon={TrendingUp} color={COLORS.secondary} />
-                    <KPICard title="Inversión Inventario" value={`$${(inventoryInvestment || 0).toLocaleString()}`} icon={LayoutGrid} color={COLORS.accent} />
-                    <KPICard title="Facturas No Pagas" value={(pendingCount || 0).toString()} icon={Clock} color={COLORS.warning} />
-                </View>
-                <View style={styles.chartGlassCard}>
-                    <View style={styles.chartHeader}>
-                        <Text style={styles.chartTitle}>Ventas vs Ganancias</Text>
-                        <View style={styles.chartLegend}>
-                            <View style={styles.legendDotBox}>
-                                <View style={[styles.dot, { backgroundColor: '#10b981' }]} />
-                                <Text style={styles.dotLabel}>VENTAS</Text>
-                            </View>
-                            <View style={styles.legendDotBox}>
-                                <View style={[styles.dot, { backgroundColor: '#2563eb' }]} />
-                                <Text style={styles.dotLabel}>GAN.</Text>
-                            </View>
-                        </View>
-                    </View>
-                    <View style={styles.chartContainer}>
-                        {loading ? (
-                            <ActivityIndicator size="small" color={COLORS.primary} />
-                        ) : (
-                            <BarChart
-                                data={chartData}
-                                width={width - 84} // Ajustado para márgenes (20x2) y padding (22x2)
-                                height={220}
-                                yAxisLabel="$"
-                                chartConfig={{
-                                    backgroundColor: 'transparent',
-                                    backgroundGradientFrom: 'rgba(255,255,255,0)',
-                                    backgroundGradientTo: 'rgba(255,255,255,0)',
-                                    decimalPlaces: 0,
-                                    color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`,
-                                    labelColor: (opacity = 1) => `rgba(148, 163, 184, ${opacity})`,
-                                    barPercentage: 0.6,
-                                    useShadowColorFromDataset: false,
-                                    propsForBackgroundLines: {
-                                        strokeDasharray: '', // Líneas sólidas
-                                        stroke: 'rgba(255,255,255,0.05)',
-                                    }
-                                }}
-                                style={{ 
-                                    marginVertical: 8,
-                                    borderRadius: 16,
-                                    marginLeft: -20 // Compensar padding interno del chart kit
-                                }}
-                                verticalLabelRotation={0}
-                                fromZero={true}
-                                withInnerLines={true}
-                                showBarTops={true}
-                                flatColor={true}
-                            />
-                        )}
-                    </View>
-                </View>
+                <MasterBalanceCard 
+                    total={totalIncome} 
+                    profit={netProfit} 
+                    pending={totalPending}
+                    prevTotal={prevTotalIncome}
+                    range={range}
+                    chartData={chartData}
+                />
+
                 <View style={styles.quickActionsRow}>
-                    <TouchableOpacity style={styles.bigActionBtnPrimary} onPress={() => navigation.navigate('NewInvoice')}>
-                        <PlusSquare color={COLORS.background} size={32} />
-                        <Text style={styles.bigActionTextPrimary}>Nueva Factura</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.bigActionBtnGlass} onPress={() => navigation.navigate('ClientEdit')}>
-                        <UserPlus color={COLORS.secondary} size={32} />
-                        <Text style={styles.bigActionTextGlass}>Nuevo Cliente</Text>
-                    </TouchableOpacity>
+                    <QuickAction 
+                        icon={PlusSquare} 
+                        label="Facturar" 
+                        color={COLORS.success} 
+                        onPress={() => navigation.navigate('NewInvoice')} 
+                    />
+                    <QuickAction 
+                        icon={UserPlus} 
+                        label="Cliente" 
+                        color={COLORS.secondary} 
+                        onPress={() => navigation.navigate('ClientEdit')} 
+                    />
+                    <QuickAction 
+                        icon={ArrowRightLeft} 
+                        label="Actividad" 
+                        color={COLORS.primary} 
+                        onPress={() => navigation.navigate('Facturas')} 
+                    />
+                    <QuickAction 
+                        icon={Settings2} 
+                        label="Ajustes" 
+                        color="#64748b" 
+                        onPress={() => navigation.navigate('Profile')} 
+                    />
                 </View>
                 <View style={styles.recentPanel}>
                     <View style={styles.panelHeader}>
@@ -195,7 +233,7 @@ export default function DashboardScreen() {
                     </View>
                     <View style={styles.activityList}>
                         {loadingInvoices && !recentInvoices.length ? (
-                            <ActivityIndicator size="small" color={COLORS.primary} />
+                            <ActivityIndicator size="small" color={COLORS.accent} />
                         ) : recentInvoices.length === 0 ? (
                             <Text style={styles.emptyActivity}>No hay actividad reciente</Text>
                         ) : (
@@ -206,15 +244,15 @@ export default function DashboardScreen() {
                     </View>
                 </View>
             </ScrollView>
-        </View>
+        </LinearGradient>
     );
 }
 
 const RecentItem = ({ item, onPress }) => (
     <TouchableOpacity style={styles.recentItem} onPress={onPress}>
         <View style={styles.itemLeft}>
-            <View style={[styles.itemIconBox, { backgroundColor: item.status === 'paid' ? COLORS.primary + '15' : COLORS.accent + '15' }]}>
-                <FileText color={item.status === 'paid' ? COLORS.primary : COLORS.accent} size={20} />
+            <View style={[styles.itemIconBox, { backgroundColor: item.status === 'paid' ? COLORS.success + '15' : COLORS.warning + '15' }]}>
+                <FileText color={item.status === 'paid' ? COLORS.success : COLORS.warning} size={20} />
             </View>
             <View>
                 <Text style={styles.itemTitle}>{item.invoice_number}</Text>
@@ -222,8 +260,15 @@ const RecentItem = ({ item, onPress }) => (
             </View>
         </View>
         <View style={styles.itemRight}>
-            <Text style={styles.itemValue}>${(item.total || 0).toLocaleString()}</Text>
-            <Text style={[styles.itemStatus, { color: item.status === 'paid' ? COLORS.primary : COLORS.accent }]}>
+            <View style={{ alignItems: 'flex-end'}}>
+                <Text style={styles.itemValue}>${(item.total || 0).toLocaleString()}</Text>
+                {item.amount_paid > 0 && item.status !== 'paid' && (
+                    <Text style={{color: COLORS.warning, fontSize: 11, fontWeight: '700', marginTop: 2}}>
+                        Resta: ${(item.total - item.amount_paid).toLocaleString()}
+                    </Text>
+                )}
+            </View>
+            <Text style={[styles.itemStatus, { color: item.status === 'paid' ? COLORS.success : COLORS.warning }]}>
                 {item.status === 'paid' ? 'PAGADO' : 'PENDIENTE'}
             </Text>
         </View>
@@ -233,15 +278,20 @@ const RecentItem = ({ item, onPress }) => (
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
     },
     stickyHeader: {
-        backgroundColor: 'rgba(18, 18, 20, 0.85)',
+        backgroundColor: 'transparent',
         paddingTop: 60,
         paddingBottom: 16,
-        borderBottomWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
         zIndex: 100,
+    },
+    topLoader: {
+        position: 'absolute',
+        top: 60,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 999,
     },
     headerContent: {
         flexDirection: 'row',
@@ -287,7 +337,7 @@ const styles = StyleSheet.create({
         gap: 1,
     },
     businessSub: {
-        color: '#64748b', // slate-500
+        color: '#94a3b8', // slate-400
         fontSize: 10,
         fontWeight: '800',
         letterSpacing: 1.5,
@@ -324,7 +374,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 26,
         paddingVertical: 10,
         borderRadius: 24,
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: 'rgba(255,255,255,0.03)',
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.05)',
     },
@@ -333,7 +383,7 @@ const styles = StyleSheet.create({
         borderColor: COLORS.primary,
     },
     rangeText: {
-        color: '#64748b',
+        color: COLORS.textSecondary,
         fontSize: 13,
         fontWeight: '700',
     },
@@ -357,171 +407,113 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '600',
     },
-    kpiGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        paddingHorizontal: 16,
-        justifyContent: 'space-between',
-        marginBottom: 8,
+    masterCardWrapper: {
+        paddingHorizontal: 20,
+        marginBottom: 32,
     },
-    glassCardKPI: {
-        width: '47.5%',
-        height: 124,
-        backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        borderRadius: 24,
-        padding: 16,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
-        justifyContent: 'space-between',
+    masterCard: {
+        borderRadius: 32,
+        padding: 24,
         overflow: 'hidden',
+        minHeight: 240,
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.05)',
     },
-    blurSpot: {
-        position: 'absolute',
-        top: -30,
-        right: -30,
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        opacity: 0.8,
-    },
-    cardHeaderKPI: {
+    masterHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
     },
-    iconBox: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    growthBox: {
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 10,
-        borderWidth: 1,
-    },
-    growthText: {
-        fontSize: 10,
-        fontWeight: '800',
-    },
-    cardBodyKPI: {
-        gap: 2,
-    },
-    kpiLabel: {
-        color: '#94a3b8', // slate-400
-        fontSize: 11,
+    masterLabel: {
+        color: '#94a3b8',
+        fontSize: 13,
         fontWeight: '600',
+        marginBottom: 4,
     },
-    kpiValueMainText: {
+    masterValue: {
         color: '#ffffff',
-        fontSize: 22,
+        fontSize: 32,
         fontWeight: '800',
         letterSpacing: -1,
     },
-    kpiSubtitle: {
-        color: 'rgba(255,255,255,0.4)',
-        fontSize: 9,
-        fontWeight: '700',
-        marginTop: 2,
-    },
-    chartGlassCard: {
-        marginHorizontal: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        borderRadius: 28,
-        padding: 22,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
-        marginBottom: 28,
-    },
-    chartHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    chartTitle: {
-        color: '#ffffff',
-        fontSize: 15,
-        fontWeight: '800',
-        letterSpacing: -0.3,
-    },
-    chartLegend: {
-        flexDirection: 'row',
-        gap: 14,
-    },
-    legendDotBox: {
+    masterBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 4,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 20,
     },
-    dot: {
-        width: 7,
-        height: 7,
-        borderRadius: 4,
-    },
-    dotLabel: {
-        color: '#64748b',
-        fontSize: 9,
+    masterBadgeText: {
+        fontSize: 12,
         fontWeight: '800',
-        letterSpacing: 1,
     },
-    chartContainer: {
-        height: 180,
-        width: '100%',
+    masterChartContainer: {
+        height: 110,
         justifyContent: 'center',
         alignItems: 'center',
+        marginVertical: 10,
+        marginLeft: -10,
     },
-    xAxis: {
+    masterFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingHorizontal: 8,
-        marginBottom: -16,
+        alignItems: 'center',
+        marginTop: 10,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255, 255, 255, 0.05)',
     },
-    xLabel: {
-        color: '#475569', // slate-600
-        fontSize: 10,
-        fontWeight: '800',
+    footerItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    footerIcon: {
+        width: 24,
+        height: 24,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    footerLabel: {
+        color: COLORS.textSecondary,
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    footerValue: {
+        color: COLORS.text,
+        fontSize: 12,
+        fontWeight: '700',
     },
     quickActionsRow: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         paddingHorizontal: 20,
-        gap: 12,
         marginBottom: 36,
+        gap: 12,
     },
-    bigActionBtnPrimary: {
+    quickActionItem: {
         flex: 1,
-        backgroundColor: COLORS.primary,
-        height: 108,
-        borderRadius: 28,
+        alignItems: 'center',
+        gap: 8,
+    },
+    quickActionIcon: {
+        width: 58,
+        height: 58,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.04)',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 10,
-    },
-    bigActionBtnGlass: {
-        flex: 1,
-        backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        height: 108,
-        borderRadius: 28,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
+        borderColor: 'rgba(255, 255, 255, 0.05)',
     },
-    bigActionTextPrimary: {
-        color: COLORS.background,
-        fontSize: 15,
-        fontWeight: '800',
-        letterSpacing: -0.2,
-    },
-    bigActionTextGlass: {
-        color: '#ffffff',
-        fontSize: 15,
-        fontWeight: '800',
-        letterSpacing: -0.2,
+    quickActionLabel: {
+        color: '#94a3b8',
+        fontSize: 11,
+        fontWeight: '700',
+        textAlign: 'center',
     },
     recentPanel: {
         paddingHorizontal: 20,
@@ -538,11 +530,16 @@ const styles = StyleSheet.create({
         fontWeight: '800',
         letterSpacing: -0.4,
     },
-    linkText: {
+    viewAllText: {
         color: COLORS.secondary,
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: '800',
-        letterSpacing: 0.8,
+        letterSpacing: 1,
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 20,
+        overflow: 'hidden',
     },
     activityList: {
         gap: 14,
@@ -551,11 +548,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        backgroundColor: 'rgba(255, 255, 255, 0.02)',
         padding: 18,
         borderRadius: 28,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
+        borderColor: 'rgba(255, 255, 255, 0.05)',
     },
     itemLeft: {
         flexDirection: 'row',

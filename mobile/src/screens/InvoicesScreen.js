@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
 import { Search, Plus, DollarSign, AlertCircle } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SIZES } from '../constants/theme';
 import { useInvoices } from '../hooks/useInvoices';
 import { useNavigation } from '@react-navigation/native';
@@ -33,7 +34,14 @@ const InvoiceCard = ({ invoice, onPress }) => {
             <Text style={styles.clientName}>{invoice.client?.name || 'Cliente Genérico'}</Text>
             <View style={styles.cardFooter}>
                 <Text style={styles.date}>{new Date(invoice.created_at).toLocaleDateString()}</Text>
-                <Text style={styles.amount}>${(invoice.total || 0).toLocaleString()}</Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.amount}>${(invoice.total || 0).toLocaleString()}</Text>
+                    {invoice.amount_paid > 0 && invoice.status !== 'paid' && (
+                        <Text style={{ color: COLORS.warning, fontSize: 12, fontWeight: '700', marginTop: 2 }}>
+                            Resta: ${(invoice.total - invoice.amount_paid).toLocaleString()}
+                        </Text>
+                    )}
+                </View>
             </View>
         </TouchableOpacity>
     );
@@ -56,7 +64,12 @@ export default function InvoicesScreen() {
     });
 
     return (
-        <View style={styles.container}>
+        <LinearGradient colors={COLORS.darkGradient} style={styles.container}>
+            {loading && invoices.length > 0 && (
+                <View style={styles.topLoader}>
+                    <ActivityIndicator size="small" color={COLORS.success} />
+                </View>
+            )}
             <View style={styles.header}>
                 <Text style={styles.title}>Facturas</Text>
             </View>
@@ -132,15 +145,22 @@ export default function InvoicesScreen() {
             >
                 <Plus color="white" size={28} />
             </TouchableOpacity>
-        </View>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
         paddingTop: 60,
+    },
+    topLoader: {
+        position: 'absolute',
+        top: 60,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 999,
     },
     header: {
         flexDirection: 'row',
@@ -185,27 +205,28 @@ const styles = StyleSheet.create({
         borderColor: COLORS.border,
     },
     activeChip: {
-        backgroundColor: COLORS.primary + '22',
-        borderColor: COLORS.primary,
+        backgroundColor: COLORS.success + '22',
+        borderColor: COLORS.success,
     },
     chipText: {
         color: COLORS.textSecondary,
         fontSize: 12,
+        fontWeight: '600',
     },
     activeChipText: {
-        color: COLORS.primary,
+        color: COLORS.success,
         fontWeight: 'bold',
     },
     summaryCard: {
         flexDirection: 'row',
-        backgroundColor: COLORS.card,
+        backgroundColor: 'rgba(16, 185, 129, 0.05)',
         marginHorizontal: SIZES.padding,
-        padding: 15,
-        borderRadius: SIZES.radius,
-        marginBottom: 20,
+        padding: 20,
+        borderRadius: 28,
+        marginBottom: 24,
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: COLORS.secondary + '44',
+        borderWidth: 1.5,
+        borderColor: 'rgba(16, 185, 129, 0.15)',
     },
     summaryIcon: {
         width: 40,
@@ -221,9 +242,9 @@ const styles = StyleSheet.create({
         fontSize: 12,
     },
     summaryValue: {
-        color: COLORS.secondary,
-        fontSize: 18,
-        fontWeight: 'bold',
+        color: COLORS.success,
+        fontSize: 20,
+        fontWeight: '800',
     },
     errorBanner: {
         backgroundColor: COLORS.danger + '22',
@@ -296,14 +317,14 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: COLORS.primary,
+        backgroundColor: COLORS.success,
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 8,
-        shadowColor: COLORS.primary,
+        shadowColor: COLORS.success,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
     },
     emptyContainer: {
         justifyContent: 'center',

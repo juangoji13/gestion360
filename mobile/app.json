@@ -17,31 +17,42 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.juangoji13.gestion360"
+      "bundleIdentifier": "com.juangoji13.gestion360",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Gestión360 usa Face ID para iniciar sesión de forma rápida y segura."
+      }
     },
     "android": {
       "package": "com.juangoji13.gestion360",
+      "softwareKeyboardLayoutMode": "adjustResize",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Gestión360 usa Face ID para iniciar sesión de forma rápida y segura."
+        }
+      ]
     ],
     "extra": {
-      "eas": {
-        "projectId": "9b72aff3-a615-4ce7-a88f-36b334d2bc14"
-      }
+      "eas": {}
     },
-    "updates": {
-      "url": "https://u.expo.dev/9b72aff3-a615-4ce7-a88f-36b334d2bc14"
-    }
+    "owner": "juangoji13"
   }
 }

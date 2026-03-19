@@ -45,6 +45,7 @@ export default function ForgotPasswordScreen() {
                 <TouchableOpacity 
                     style={styles.backButton} 
                     onPress={() => navigation.goBack()}
+                    hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
                 >
                     <ChevronLeft color={COLORS.text} size={28} />
                 </TouchableOpacity>

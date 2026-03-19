@@ -23,7 +23,7 @@ const round2 = (val) => {
     return Math.round((num + EPSILON) * 100) / 100;
 };
 
-const GlassInput = ({ label, value, onChangeText, icon: Icon, keyboardType = 'default', multiline = false, placeholder, prefix, suffix, colSpan = 12 }) => (
+const GlassInput = ({ label, value, onChangeText, icon: Icon, keyboardType = 'default', multiline = false, placeholder, prefix, suffix, colSpan = 12, editable = true }) => (
     <View style={[styles.inputGroup, { width: `${(colSpan / 12) * 100}%` }]}>
         <Text style={styles.label}>{label} {label.includes('*') ? '' : ''}</Text>
         <View style={[styles.inputContainer, multiline && styles.inputMultiline]}>
@@ -32,7 +32,7 @@ const GlassInput = ({ label, value, onChangeText, icon: Icon, keyboardType = 'de
             </View>
             {prefix && <Text style={styles.prefixText}>{prefix}</Text>}
             <TextInput
-                style={[styles.input, multiline && { height: 80, paddingTop: 12 }]}
+                style={[styles.input, multiline && { height: 80, paddingTop: 12 }, !editable && styles.inputDisabled]}
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
@@ -40,6 +40,7 @@ const GlassInput = ({ label, value, onChangeText, icon: Icon, keyboardType = 'de
                 keyboardType={keyboardType}
                 multiline={multiline}
                 selectionColor={COLORS.primary}
+                editable={editable}
             />
         </View>
     </View>
@@ -49,6 +50,7 @@ export default function ProductEditScreen({ navigation, route }) {
     const { product } = route.params || {};
     const isEditing = !!product;
     const { createProduct, updateProduct, loading } = useProducts();
+    const [allowEditing, setAllowEditing] = useState(!isEditing);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -123,9 +125,21 @@ export default function ProductEditScreen({ navigation, route }) {
                 <View>
                     <Text style={styles.headerTitle}>{isEditing ? 'Editar Producto' : 'Añadir al Catálogo'}</Text>
                 </View>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
-                    <X color={COLORS.textSecondary} size={20} />
-                </TouchableOpacity>
+                {isEditing && (
+                    <TouchableOpacity 
+                        onPress={() => setAllowEditing(!allowEditing)}
+                        style={styles.editHeaderBtn}
+                    >
+                        <Text style={[styles.editText, allowEditing && styles.cancelTextRed]}>
+                            {allowEditing ? 'Cancelar' : 'Editar'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+                {!isEditing && (
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
+                        <X color={COLORS.textSecondary} size={20} />
+                    </TouchableOpacity>
+                )}
             </View>
 
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
@@ -140,7 +154,8 @@ export default function ProductEditScreen({ navigation, route }) {
                             value={formData.name}
                             onChangeText={(t) => setFormData({...formData, name: t})}
                             icon={Package}
-                        />
+                            editable={allowEditing}
+                    />
                         <View style={{ width: 12 }} />
                         <GlassInput 
                             label="SKU" 
@@ -149,7 +164,8 @@ export default function ProductEditScreen({ navigation, route }) {
                             value={formData.sku}
                             onChangeText={(t) => setFormData({...formData, sku: t})}
                             icon={Tag}
-                        />
+                            editable={allowEditing}
+                    />
                     </View>
 
                     {/* Row 2: Description */}
@@ -160,6 +176,7 @@ export default function ProductEditScreen({ navigation, route }) {
                         value={formData.description}
                         onChangeText={(t) => setFormData({...formData, description: t})}
                         icon={Info}
+                        editable={allowEditing}
                     />
 
                     {/* Row 3: Prices Grid */}
@@ -168,33 +185,36 @@ export default function ProductEditScreen({ navigation, route }) {
                             label="Precio Compra *" 
                             placeholder="0.00"
                             prefix="$"
-                            keyboardType="numeric"
+                            keyboardType="decimal-pad"
                             colSpan={6}
                             value={formData.base_price}
                             onChangeText={(t) => setFormData({...formData, base_price: t})}
                             icon={DollarSign}
-                        />
+                            editable={allowEditing}
+                    />
                         <View style={{ width: 12 }} />
                         <GlassInput 
                             label="Precio Venta *" 
                             placeholder="0.00"
                             prefix="$"
-                            keyboardType="numeric"
+                            keyboardType="decimal-pad"
                             colSpan={6}
                             value={formData.sale_price}
                             onChangeText={(t) => setFormData({...formData, sale_price: t})}
                             icon={DollarSign}
-                        />
+                            editable={allowEditing}
+                    />
                     </View>
 
                     {/* Row 4: Stock Initial */}
                     <GlassInput 
                         label="Stock Inicial" 
                         placeholder="Ej. 50"
-                        keyboardType="numeric"
+                        keyboardType="decimal-pad"
                         value={formData.stock}
                         onChangeText={(t) => setFormData({...formData, stock: t})}
                         icon={Package}
+                        editable={allowEditing}
                     />
 
                     {/* Row 5: Unit of Measure with Quick Selection Chips */}
@@ -205,11 +225,12 @@ export default function ProductEditScreen({ navigation, route }) {
                                 <BarChart size={18} color={COLORS.textSecondary} strokeWidth={1.5} />
                             </View>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, !allowEditing && styles.inputDisabled]}
                                 value={formData.unit}
                                 onChangeText={(t) => setFormData({...formData, unit: t})}
                                 placeholder="Ej. Kilogramos (kg)"
                                 placeholderTextColor={COLORS.textSecondary + '80'}
+                                editable={allowEditing}
                             />
                             <ChevronDown size={20} color={COLORS.textSecondary} style={{ marginRight: 12 }} />
                         </View>
@@ -220,15 +241,18 @@ export default function ProductEditScreen({ navigation, route }) {
                             showsHorizontalScrollIndicator={false} 
                             style={styles.chipsContainer}
                             contentContainerStyle={styles.chipsContent}
+                            disableScrollViewPanResponder={!allowEditing}
                         >
                             {['und', 'kg', 'lt', 'mt', 'par'].map((u) => (
                                 <TouchableOpacity 
                                     key={u} 
                                     style={[
                                         styles.unitChip, 
-                                        formData.unit === u && styles.activeChip
+                                        formData.unit === u && styles.activeChip,
+                                        !allowEditing && { opacity: 0.5 }
                                     ]}
                                     onPress={() => setFormData({...formData, unit: u})}
+                                    disabled={!allowEditing}
                                 >
                                     <Text style={[
                                         styles.chipText, 
@@ -260,6 +284,7 @@ export default function ProductEditScreen({ navigation, route }) {
                             trackColor={{ false: 'rgba(255,255,255,0.1)', true: COLORS.primary + '40' }}
                             thumbColor={formData.track_stock ? COLORS.primary : '#94a3b8'}
                             ios_backgroundColor="rgba(255,255,255,0.1)"
+                            disabled={!allowEditing}
                         />
                     </View>
 
@@ -275,17 +300,19 @@ export default function ProductEditScreen({ navigation, route }) {
 
             {/* Sticky Actions Footer */}
             <View style={styles.footer}>
-                <TouchableOpacity 
-                    style={[styles.mainActionBtn, loading && { opacity: 0.7 }]} 
-                    onPress={handleSave}
-                    disabled={loading}
-                >
-                    {loading ? <ActivityIndicator color="#fff" /> : (
-                        <Text style={styles.mainActionText}>
-                            {isEditing ? 'Guardar Cambios' : 'Crear Producto'}
-                        </Text>
-                    )}
-                </TouchableOpacity>
+                {allowEditing && (
+                    <TouchableOpacity 
+                        style={[styles.mainActionBtn, loading && { opacity: 0.7 }]} 
+                        onPress={handleSave}
+                        disabled={loading}
+                    >
+                        {loading ? <ActivityIndicator color="#fff" /> : (
+                            <Text style={styles.mainActionText}>
+                                {isEditing ? 'Guardar Cambios' : 'Crear Producto'}
+                            </Text>
+                        )}
+                    </TouchableOpacity>
+                )}
                 <TouchableOpacity 
                     style={styles.cancelBtn} 
                     onPress={() => navigation.goBack()}
@@ -496,5 +523,23 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
         flex: 1,
+    },
+    editHeaderBtn: {
+        minWidth: 80,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+    },
+    editText: {
+        color: COLORS.primary,
+        fontSize: 15,
+        fontWeight: 'bold',
+    },
+    cancelTextRed: {
+        color: '#ef4444',
+    },
+    inputDisabled: {
+        opacity: 0.6,
+        color: COLORS.textSecondary,
     }
 });

@@ -25,6 +25,7 @@ export function AuthProvider({ children }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null)
             if (session?.user) {
+                setLoading(true)
                 fetchBusiness(session.user.id)
             } else {
                 setBusiness(null)
@@ -145,6 +146,13 @@ export function AuthProvider({ children }) {
         return data
     }
 
+    const updateUser = async (updates) => {
+        const { data, error } = await supabase.auth.updateUser(updates)
+        if (error) throw error
+        setUser(data.user)
+        return data.user
+    }
+
     const value = {
         user,
         business,
@@ -157,6 +165,7 @@ export function AuthProvider({ children }) {
         resetPassword,
         signOut,
         updateBusiness,
+        updateUser,
         fetchBusiness,
     }
 

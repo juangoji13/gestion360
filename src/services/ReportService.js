@@ -154,9 +154,11 @@ export const ReportService = {
                         }
 
                         const lineTotal = parseFloat(it.total) || 0
-                        const baseCost = (parseFloat(p.base_price) || 0) * qty
+                        // Usamos el costo histórico guardado en el ítem, con fallback al costo actual del catálogo
+                        const purchasePrice = parseFloat(it.purchase_price) ?? parseFloat(p.base_price) ?? 0
+                        const baseCost = purchasePrice * qty
 
-                        // La ganancia bruta general de este ítem (Precio de Venta - Precio Contable Base)
+                        // La ganancia bruta general de este ítem (Precio de Venta - Precio de Compra guardado)
                         grossProfit += (lineTotal - baseCost)
                     }
                 })

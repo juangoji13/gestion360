@@ -25,7 +25,9 @@ export const ReportService = {
                             }
 
                             const lineTotal = parseFloat(it.total) || 0;
-                            const baseCost = (parseFloat(p.base_price) || 0) * qty;
+                            // Usamos el costo histórico guardado en el ítem (con fallback al actual)
+                            const purchasePrice = parseFloat(it.purchase_price) ?? parseFloat(p.base_price) ?? 0;
+                            const baseCost = purchasePrice * qty;
                             grossProfit += (lineTotal - baseCost);
                         }
                     });
