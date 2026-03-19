@@ -2,6 +2,7 @@
   "expo": {
     "name": "Gestion360",
     "slug": "mobile",
+    "owner": "gestion360",
     "scheme": "gestion360",
     "version": "1.0.0",
     "runtimeVersion": {
