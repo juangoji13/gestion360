@@ -300,18 +300,13 @@ export default function InvoiceDetailScreen() {
                     {isPreview ? (
                         <>
                             <TouchableOpacity 
-                                style={[styles.navItem, styles.centerAction]} 
-                                onPress={handleEmit}
-                                disabled={isSaving}
+                                style={styles.navItem} 
+                                onPress={handleEdit}
                             >
-                                <View style={styles.centerIconBox}>
-                                    {isSaving ? (
-                                        <ActivityIndicator color="#fff" />
-                                    ) : (
-                                        <Check color="#fff" size={24} strokeWidth={2.5} />
-                                    )}
+                                <View style={styles.navIconBox}>
+                                    <Edit2 color={COLORS.textSecondary} size={20} />
                                 </View>
-                                <Text style={[styles.navLabel, { color: COLORS.success, fontWeight: '800' }]}>Emitir</Text>
+                                <Text style={styles.navLabel}>Editar</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity style={styles.navItem} onPress={handleShare}>
@@ -323,12 +318,17 @@ export default function InvoiceDetailScreen() {
 
                             <TouchableOpacity 
                                 style={styles.navItem} 
-                                onPress={handleEdit}
+                                onPress={handleEmit}
+                                disabled={isSaving}
                             >
                                 <View style={styles.navIconBox}>
-                                    <Edit2 color={COLORS.textSecondary} size={20} />
+                                    {isSaving ? (
+                                        <ActivityIndicator color={COLORS.textSecondary} size="small" />
+                                    ) : (
+                                        <Check color={COLORS.textSecondary} size={20} />
+                                    )}
                                 </View>
-                                <Text style={styles.navLabel}>Editar</Text>
+                                <Text style={styles.navLabel}>Emitir</Text>
                             </TouchableOpacity>
                         </>
                     ) : (

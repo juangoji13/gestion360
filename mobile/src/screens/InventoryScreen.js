@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
         paddingTop: 60,
         paddingBottom: 20,
         zIndex: 100,
-        paddingHorizontal: 20,
+        paddingHorizontal: SIZES.padding,
     },
     topLoader: {
         position: 'absolute',
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     kpiGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        paddingHorizontal: 20,
+        paddingHorizontal: SIZES.padding,
         justifyContent: 'space-between',
         marginBottom: 8,
     },
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     glassCardKPI: {
-        width: '47.5%',
+        width: '48%',
         minHeight: 130,
         backgroundColor: 'rgba(255, 255, 255, 0.03)',
         borderRadius: 24,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     // Smaller Quick Action Buttons
     quickActionsRow: {
         flexDirection: 'row',
-        paddingHorizontal: 20,
+        paddingHorizontal: SIZES.padding,
         gap: 12,
         marginBottom: 36,
         marginTop: 8,
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
+        paddingHorizontal: SIZES.padding,
         marginBottom: 16,
     },
     listTitle: {
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
         fontWeight: '800',
     },
     productList: {
-        paddingHorizontal: 20,
+        paddingHorizontal: SIZES.padding,
         gap: 16,
         marginBottom: 32,
     },
